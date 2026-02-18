@@ -73,49 +73,58 @@ async function requireAdminUser() {
 export async function markReportReviewedAction(formData: FormData) {
   const user = await requireAdminUser();
   const reportId = readText(formData.get("reportId"));
+  const pollId = readText(formData.get("pollId"));
+  const returnTo = safePath(readText(formData.get("returnTo")), "/admin/reports");
 
-  if (!reportId) {
-    redirect("/admin/reports?type=error&message=Missing+report+id");
+  if (!reportId && !pollId) {
+    redirect(`${returnTo}?type=error&message=Missing+report+or+poll+id`);
   }
 
   const admin = createAdminClient();
-  const { error } = await admin
+  const updateQuery = admin
     .from("poll_reports")
     .update({ status: "reviewed", resolved_by: user.id })
-    .eq("id", reportId);
+    .eq("status", "open");
+
+  const { error } = pollId ? await updateQuery.eq("poll_id", pollId) : await updateQuery.eq("id", reportId);
 
   if (error) {
-    redirect(`/admin/reports?type=error&message=${encodeURIComponent(error.message)}`);
+    redirect(`${returnTo}?type=error&message=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/admin/reports");
-  redirect("/admin/reports?type=success&message=Report+marked+reviewed");
+  redirect(`${returnTo}?type=success&message=Marked+as+no+action+needed`);
 }
 
 export async function resolveReportAction(formData: FormData) {
   const user = await requireAdminUser();
   const reportId = readText(formData.get("reportId"));
+  const pollId = readText(formData.get("pollId"));
+  const returnTo = safePath(readText(formData.get("returnTo")), "/admin/reports");
 
-  if (!reportId) {
-    redirect("/admin/reports?type=error&message=Missing+report+id");
+  if (!reportId && !pollId) {
+    redirect(`${returnTo}?type=error&message=Missing+report+or+poll+id`);
   }
 
   const admin = createAdminClient();
-  const { error } = await admin
+  const updateQuery = admin
     .from("poll_reports")
     .update({ status: "resolved", resolved_by: user.id, resolved_at: new Date().toISOString() })
-    .eq("id", reportId);
+    .eq("status", "open");
+
+  const { error } = pollId ? await updateQuery.eq("poll_id", pollId) : await updateQuery.eq("id", reportId);
 
   if (error) {
-    redirect(`/admin/reports?type=error&message=${encodeURIComponent(error.message)}`);
+    redirect(`${returnTo}?type=error&message=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/admin/reports");
-  redirect("/admin/reports?type=success&message=Report+resolved");
+  redirect(`${returnTo}?type=success&message=Marked+as+resolved`);
 }
 
 export async function updatePollFromAdminAction(formData: FormData) {
   await requireAdminUser();
+  const returnTo = safePath(readText(formData.get("returnTo")), "/admin/reports");
 
   const pollId = readText(formData.get("pollId"));
   const title = readText(formData.get("title"));
@@ -125,16 +134,30 @@ export async function updatePollFromAdminAction(formData: FormData) {
   const endAtRaw = readText(formData.get("endAt"));
 
   if (!pollId || !title || !description || !isCategory(category)) {
-    redirect("/admin/reports?type=error&message=Invalid+poll+update+payload");
+    redirect(`${returnTo}?type=error&message=Invalid+poll+update+payload`);
   }
 
   if (options.length < 2 || options.length > 10) {
-    redirect("/admin/reports?type=error&message=Poll+must+have+2-10+options");
+    redirect(`${returnTo}?type=error&message=Poll+must+have+2-10+options`);
   }
 
   const admin = createAdminClient();
   const blurb = deriveBlurb(description, title);
   const endAt = endAtRaw ? new Date(endAtRaw).toISOString() : null;
+
+  const { data: existingOptions, error: existingOptionsError } = await admin
+    .from("poll_options")
+    .select("id,position")
+    .eq("poll_id", pollId)
+    .order("position", { ascending: true });
+
+  if (existingOptionsError) {
+    redirect(`${returnTo}?type=error&message=${encodeURIComponent(existingOptionsError.message)}`);
+  }
+
+  if (!existingOptions || existingOptions.length !== options.length) {
+    redirect(`${returnTo}?type=error&message=Option+count+cannot+change+in+admin+edit.+Rename+existing+options+only.`);
+  }
 
   const { error: pollError } = await admin
     .from("polls")
@@ -149,36 +172,34 @@ export async function updatePollFromAdminAction(formData: FormData) {
     .eq("id", pollId);
 
   if (pollError) {
-    redirect(`/admin/reports?type=error&message=${encodeURIComponent(pollError.message)}`);
+    redirect(`${returnTo}?type=error&message=${encodeURIComponent(pollError.message)}`);
   }
 
-  const { error: deleteOptionsError } = await admin.from("poll_options").delete().eq("poll_id", pollId);
-  if (deleteOptionsError) {
-    redirect(`/admin/reports?type=error&message=${encodeURIComponent(deleteOptionsError.message)}`);
-  }
+  for (let index = 0; index < existingOptions.length; index += 1) {
+    const existing = existingOptions[index];
+    const nextLabel = options[index];
+    const { error: optionUpdateError } = await admin
+      .from("poll_options")
+      .update({ label: nextLabel, position: index + 1 })
+      .eq("id", existing.id);
 
-  const newOptions = options.map((label, index) => ({
-    poll_id: pollId,
-    label,
-    position: index + 1
-  }));
-
-  const { error: optionsError } = await admin.from("poll_options").insert(newOptions);
-  if (optionsError) {
-    redirect(`/admin/reports?type=error&message=${encodeURIComponent(optionsError.message)}`);
+    if (optionUpdateError) {
+      redirect(`${returnTo}?type=error&message=${encodeURIComponent(optionUpdateError.message)}`);
+    }
   }
 
   revalidatePath("/");
   revalidatePath("/admin/reports");
-  redirect("/admin/reports?type=success&message=Poll+updated");
+  redirect(`${returnTo}?type=success&message=Poll+updated`);
 }
 
 export async function archivePollFromAdminAction(formData: FormData) {
-  await requireAdminUser();
+  const user = await requireAdminUser();
+  const returnTo = safePath(readText(formData.get("returnTo")), "/admin/reports");
 
   const pollId = readText(formData.get("pollId"));
   if (!pollId) {
-    redirect("/admin/reports?type=error&message=Missing+poll+id");
+    redirect(`${returnTo}?type=error&message=Missing+poll+id`);
   }
 
   const admin = createAdminClient();
@@ -188,10 +209,20 @@ export async function archivePollFromAdminAction(formData: FormData) {
     .eq("id", pollId);
 
   if (error) {
-    redirect(`/admin/reports?type=error&message=${encodeURIComponent(error.message)}`);
+    redirect(`${returnTo}?type=error&message=${encodeURIComponent(error.message)}`);
+  }
+
+  const { error: reportError } = await admin
+    .from("poll_reports")
+    .update({ status: "resolved", resolved_by: user.id, resolved_at: new Date().toISOString() })
+    .eq("poll_id", pollId)
+    .eq("status", "open");
+
+  if (reportError) {
+    redirect(`${returnTo}?type=error&message=${encodeURIComponent(reportError.message)}`);
   }
 
   revalidatePath("/");
   revalidatePath("/admin/reports");
-  redirect("/admin/reports?type=success&message=Poll+deleted+from+feed");
+  redirect(`${returnTo}?type=success&message=Poll+deleted+from+feed+and+reports+resolved`);
 }

@@ -297,6 +297,37 @@ h1 {
   margin-top: 20px;
 }
 
+.report-card-head {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.report-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.report-count-badge {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e40af;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.report-count-badge-open {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
 .trend-panel {
   margin-top: 10px;
   display: flex;
@@ -506,6 +537,59 @@ h1 {
   font-size: 18px;
 }
 
+.admin-review-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(720px, 2.6fr) minmax(240px, 0.8fr);
+  align-items: start;
+}
+
+.admin-review-shell {
+  width: min(1520px, 96vw);
+}
+
+.admin-report-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-report-item {
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 12px;
+}
+
+.admin-report-item-open {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.admin-report-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-status-badge {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-status-badge-open {
+  border-color: #6ee7b7;
+  background: #d1fae5;
+  color: #065f46;
+}
+
 @media (max-width: 920px) {
   .feed-grid {
     grid-template-columns: 1fr;
@@ -521,5 +605,9 @@ h1 {
 
   .trend-total {
     display: none;
+  }
+
+  .admin-review-grid {
+    grid-template-columns: 1fr;
   }
 }
