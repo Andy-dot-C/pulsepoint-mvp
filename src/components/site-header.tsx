@@ -1,3 +1,6 @@
+ "use client";
+
+import { useEffect, useRef, useState } from "react";
 import { categories, feedTabs } from "@/lib/mock-data";
 import { buildFeedHref } from "@/lib/feed-query";
 import { CategoryKey, FeedTabKey } from "@/lib/types";
@@ -9,6 +12,7 @@ type SiteHeaderProps = {
   searchQuery: string;
   signedIn: boolean;
   username: string | null;
+  role: "user" | "admin" | null;
 };
 
 export function SiteHeader({
@@ -16,8 +20,35 @@ export function SiteHeader({
   activeCategory,
   searchQuery,
   signedIn,
-  username
+  username,
+  role
 }: SiteHeaderProps) {
+  const avatarText = (username ?? "U").slice(0, 2).toUpperCase();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (!menuRef.current) return;
+      const target = event.target as Node | null;
+      if (!target || menuRef.current.contains(target)) return;
+      setMenuOpen(false);
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
   return (
     <header className="site-header">
       <div className="brand-row">
@@ -27,14 +58,45 @@ export function SiteHeader({
         </div>
         <div className="header-actions">
           {signedIn ? (
-            <>
-              <span className="signed-in-pill">{username ?? "Signed in"}</span>
-              <form action={signOutAction}>
-                <button className="ghost-btn" type="submit">
-                  Sign out
-                </button>
-              </form>
-            </>
+            <div className="user-menu" ref={menuRef}>
+              <button
+                className="avatar-btn"
+                type="button"
+                title="Account menu"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((current) => !current)}
+              >
+                {avatarText}
+              </button>
+              {menuOpen ? (
+                <div className="user-menu-pop" role="menu">
+                  <p className="eyebrow">Signed in as</p>
+                  <p className="user-menu-name">{username ?? "User"}</p>
+                  <a className="user-menu-link" href="/saved" onClick={() => setMenuOpen(false)}>
+                    Saved polls
+                  </a>
+                  <a className="user-menu-link" href="/my-polls" onClick={() => setMenuOpen(false)}>
+                    My polls
+                  </a>
+                  {role === "admin" ? (
+                    <>
+                      <a className="user-menu-link" href="/admin/submissions" onClick={() => setMenuOpen(false)}>
+                        Admin submissions
+                      </a>
+                      <a className="user-menu-link" href="/admin/reports" onClick={() => setMenuOpen(false)}>
+                        Admin reports
+                      </a>
+                    </>
+                  ) : null}
+                  <form action={signOutAction}>
+                    <button className="ghost-btn user-menu-signout" type="submit">
+                      Sign out
+                    </button>
+                  </form>
+                </div>
+              ) : null}
+            </div>
           ) : (
             <a className="ghost-btn" href="/auth">
               Sign in

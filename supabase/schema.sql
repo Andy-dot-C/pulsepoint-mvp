@@ -123,6 +123,17 @@ create table if not exists public.poll_reports (
 
 create index if not exists poll_reports_status_idx on public.poll_reports (status, created_at desc);
 
+create table if not exists public.poll_bookmarks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  poll_id uuid not null references public.polls(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (user_id, poll_id)
+);
+
+create index if not exists poll_bookmarks_user_idx on public.poll_bookmarks (user_id, created_at desc);
+create index if not exists poll_bookmarks_poll_idx on public.poll_bookmarks (poll_id);
+
 do $$
 begin
   if not exists (
@@ -270,6 +281,7 @@ alter table public.votes enable row level security;
 alter table public.vote_events enable row level security;
 alter table public.poll_submissions enable row level security;
 alter table public.poll_reports enable row level security;
+alter table public.poll_bookmarks enable row level security;
 
 -- Profiles policies
 create policy "profiles readable by authenticated users"
@@ -375,3 +387,19 @@ on public.poll_reports
 for update
 using (public.is_admin(auth.uid()))
 with check (public.is_admin(auth.uid()));
+
+-- Poll bookmark policies
+create policy "users read own bookmarks"
+on public.poll_bookmarks
+for select
+using (auth.uid() = user_id);
+
+create policy "users insert own bookmarks"
+on public.poll_bookmarks
+for insert
+with check (auth.uid() = user_id);
+
+create policy "users delete own bookmarks"
+on public.poll_bookmarks
+for delete
+using (auth.uid() = user_id);

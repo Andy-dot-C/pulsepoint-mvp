@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { TrendBars } from "@/components/trend-bars";
 import { VoteOptionForm } from "@/components/vote-option-form";
 import { ReportPollForm } from "@/components/report-poll-form";
+import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
 import { fetchPollBySlug } from "@/lib/data/polls";
 import { buildFeedHref } from "@/lib/feed-query";
 import { totalVotes } from "@/lib/mock-data";
@@ -25,6 +26,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const reportStatusType = readValue(resolvedSearchParams.report);
   const reportStatusMessage = readValue(resolvedSearchParams.message);
+  const bookmarkError = readValue(resolvedSearchParams.bookmarkError);
 
   if (!poll) {
     notFound();
@@ -46,10 +48,14 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
           <Link className="poll-category" href={buildFeedHref({ category: poll.category })}>
             {poll.category}
           </Link>
-          <p>{total.toLocaleString()} total votes</p>
+          <div className="detail-top-actions">
+            <p>{total.toLocaleString()} total votes</p>
+            <BookmarkToggleForm pollId={poll.id} isBookmarked={poll.isBookmarked} returnTo={`/polls/${poll.slug}`} />
+          </div>
         </div>
 
         <h1>{poll.title}</h1>
+        {bookmarkError ? <p className="auth-error">{bookmarkError}</p> : null}
         <p className="poll-blurb">{poll.blurb}</p>
         <p className="detail-description">{poll.description}</p>
 

@@ -41,6 +41,7 @@ export default async function Home({ searchParams }: HomePageProps) {
   const activeTab = resolveTab(asSingleValue(resolvedSearchParams.tab));
   const activeCategory = resolveCategory(asSingleValue(resolvedSearchParams.category));
   const searchQuery = asSingleValue(resolvedSearchParams.q)?.trim() ?? "";
+  const bookmarkError = asSingleValue(resolvedSearchParams.bookmarkError);
   const returnTo = buildFeedHref({
     tab: activeTab,
     category: activeCategory,
@@ -61,7 +62,13 @@ export default async function Home({ searchParams }: HomePageProps) {
         searchQuery={searchQuery}
         signedIn={authView.signedIn}
         username={authView.username}
+        role={authView.role}
       />
+      {bookmarkError ? (
+        <article className="side-card" style={{ marginTop: 12 }}>
+          <p className="auth-error">{bookmarkError}</p>
+        </article>
+      ) : null}
 
       <section className="feed-grid">
         <div className="feed-column">

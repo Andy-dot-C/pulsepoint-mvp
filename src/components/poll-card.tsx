@@ -3,6 +3,7 @@ import { buildFeedHref } from "@/lib/feed-query";
 import { Poll } from "@/lib/types";
 import { totalVotes } from "@/lib/mock-data";
 import { VoteOptionForm } from "@/components/vote-option-form";
+import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
 
 type PollCardProps = {
   poll: Poll;
@@ -51,7 +52,10 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
       {hiddenCount > 0 ? <p className="more-options">+{hiddenCount} more options</p> : null}
 
       <div className="poll-footer">
-        <p>{total.toLocaleString()} votes</p>
+        <div className="poll-footer-left">
+          <p>{total.toLocaleString()} votes</p>
+          <BookmarkToggleForm pollId={poll.id} isBookmarked={poll.isBookmarked} returnTo={returnTo} compact />
+        </div>
         <Link href={`/polls/${poll.slug}`}>View details</Link>
       </div>
     </article>

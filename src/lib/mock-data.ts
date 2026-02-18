@@ -26,6 +26,7 @@ export const polls: Poll[] = [
     createdAt: "2026-02-15T08:10:00Z",
     endsAt: "2026-03-01T00:00:00Z",
     isTrending: true,
+    isBookmarked: false,
     options: [
       { id: "yes", label: "Yes", votes: 1241 },
       { id: "no", label: "No", votes: 971 }
@@ -46,6 +47,7 @@ export const polls: Poll[] = [
     category: "entertainment",
     createdAt: "2026-02-16T09:00:00Z",
     isTrending: true,
+    isBookmarked: false,
     options: [
       { id: "candidate-a", label: "Candidate A", votes: 902 },
       { id: "candidate-b", label: "Candidate B", votes: 876 },
@@ -79,6 +81,7 @@ export const polls: Poll[] = [
     category: "sport",
     createdAt: "2026-02-14T13:45:00Z",
     isTrending: false,
+    isBookmarked: false,
     options: [
       { id: "player-a", label: "Player A", votes: 2210 },
       { id: "player-b", label: "Player B", votes: 1844 },

@@ -5,7 +5,7 @@ export type CategoryKey =
   | "culture"
   | "hot-takes";
 
-export type FeedTabKey = "trending" | "new" | "most-voted";
+export type FeedTabKey = "trending" | "new" | "most-voted" | "saved";
 
 export type PollOption = {
   id: string;
@@ -29,6 +29,7 @@ export type Poll = {
   createdAt: string;
   endsAt?: string;
   isTrending: boolean;
+  isBookmarked: boolean;
   options: PollOption[];
   trend: PollTrendPoint[];
 };
