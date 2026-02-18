@@ -4,9 +4,12 @@ import { TrendBars } from "@/components/trend-bars";
 import { VoteOptionForm } from "@/components/vote-option-form";
 import { ReportPollForm } from "@/components/report-poll-form";
 import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
+import { PollComments } from "@/components/poll-comments";
 import { fetchPollBySlug } from "@/lib/data/polls";
+import { fetchPollComments, resolveCommentSort } from "@/lib/data/comments";
 import { buildFeedHref } from "@/lib/feed-query";
 import { totalVotes } from "@/lib/mock-data";
+import { createClient } from "@/lib/supabase/server";
 
 type PollPageProps = {
   params: { slug: string } | Promise<{ slug: string }>;
@@ -27,10 +30,22 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
   const reportStatusType = readValue(resolvedSearchParams.report);
   const reportStatusMessage = readValue(resolvedSearchParams.message);
   const bookmarkError = readValue(resolvedSearchParams.bookmarkError);
+  const commentStatusType = readValue(resolvedSearchParams.commentType);
+  const commentStatusMessage = readValue(resolvedSearchParams.commentMessage);
+  const commentSort = resolveCommentSort(readValue(resolvedSearchParams.comments));
 
   if (!poll) {
     notFound();
   }
+
+  const supabase = await createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
+    : { data: null };
+  const comments = await fetchPollComments(poll.id, commentSort, user?.id ?? null);
 
   const total = totalVotes(poll);
   const rankedOptions = [...poll.options].sort(
@@ -50,7 +65,11 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
           </Link>
           <div className="detail-top-actions">
             <p>{total.toLocaleString()} total votes</p>
-            <BookmarkToggleForm pollId={poll.id} isBookmarked={poll.isBookmarked} returnTo={`/polls/${poll.slug}`} />
+            <BookmarkToggleForm
+              pollId={poll.id}
+              isBookmarked={poll.isBookmarked}
+              returnTo={`/polls/${poll.slug}?comments=${commentSort}`}
+            />
           </div>
         </div>
 
@@ -67,7 +86,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
                 key={option.id}
                 pollId={poll.id}
                 optionId={option.id}
-                returnTo={`/polls/${poll.slug}`}
+                returnTo={`/polls/${poll.slug}?comments=${commentSort}`}
                 label={option.label}
                 rightText={`${Math.round((option.votes / Math.max(total, 1)) * 100)}%`}
               />
@@ -91,9 +110,20 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
           </div>
         </section>
 
+        <PollComments
+          pollId={poll.id}
+          pollSlug={poll.slug}
+          comments={comments}
+          sort={commentSort}
+          commentStatusType={commentStatusType}
+          commentStatusMessage={commentStatusMessage}
+          signedIn={Boolean(user)}
+          isAdmin={profile?.role === "admin"}
+        />
+
         <ReportPollForm
           pollId={poll.id}
-          returnTo={`/polls/${poll.slug}`}
+          returnTo={`/polls/${poll.slug}?comments=${commentSort}`}
           statusType={reportStatusType}
           statusMessage={reportStatusMessage}
         />

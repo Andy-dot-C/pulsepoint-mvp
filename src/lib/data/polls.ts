@@ -39,6 +39,10 @@ type VoteEventRow = {
   changed_at: string;
 };
 
+type PollCommentRefRow = {
+  poll_id: string;
+};
+
 function hasSupabaseConfig(): boolean {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
@@ -143,7 +147,8 @@ function hydratePolls(
   optionRows: PollOptionRow[],
   totalRows: PollOptionTotalRow[],
   velocityByPollId: Map<string, number>,
-  bookmarkedPollIds: Set<string> = new Set()
+  bookmarkedPollIds: Set<string> = new Set(),
+  commentCountByPollId: Map<string, number> = new Map()
 ): Poll[] {
   return rows.map((row) => {
     const optionsForPoll = optionRows
@@ -171,6 +176,7 @@ function hydratePolls(
       endsAt: row.end_at ?? undefined,
       isTrending: (velocityByPollId.get(row.id) ?? 0) > 0,
       isBookmarked: bookmarkedPollIds.has(row.id),
+      commentCount: commentCountByPollId.get(row.id) ?? 0,
       options: optionsForPoll,
       trend: [
         {
@@ -274,8 +280,9 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
 
   const pollIds = rows.map((row) => row.id);
   const bookmarkedPollIds = new Set<string>();
+  const commentCountByPollId = new Map<string, number>();
 
-  const [optionsResult, totalsResult, velocityResult, bookmarksResult] = await Promise.all([
+  const [optionsResult, totalsResult, velocityResult, bookmarksResult, commentsResult] = await Promise.all([
     supabase
       .from("poll_options")
       .select("id,poll_id,label,position")
@@ -289,7 +296,8 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
       .gte("changed_at", nowMinusDays(1)),
     userId
       ? supabase.from("poll_bookmarks").select("poll_id").eq("user_id", userId).in("poll_id", pollIds)
-      : Promise.resolve({ data: [], error: null })
+      : Promise.resolve({ data: [], error: null }),
+    supabase.from("poll_comments").select("poll_id").in("poll_id", pollIds)
   ]);
 
   if (optionsResult.error || totalsResult.error || velocityResult.error) {
@@ -299,6 +307,12 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
   if (!bookmarksResult.error) {
     (bookmarksResult.data ?? []).forEach((row) => {
       bookmarkedPollIds.add(String(row.poll_id));
+    });
+  }
+
+  if (!commentsResult.error) {
+    ((commentsResult.data ?? []) as PollCommentRefRow[]).forEach((row) => {
+      commentCountByPollId.set(row.poll_id, (commentCountByPollId.get(row.poll_id) ?? 0) + 1);
     });
   }
 
@@ -312,7 +326,8 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
     (optionsResult.data ?? []) as PollOptionRow[],
     (totalsResult.data ?? []) as PollOptionTotalRow[],
     velocityByPollId,
-    bookmarkedPollIds
+    bookmarkedPollIds,
+    commentCountByPollId
   );
 
   return byTab(input.tab, hydrated, velocityByPollId);
@@ -339,7 +354,7 @@ export async function fetchPollBySlug(slug: string): Promise<Poll | null> {
     return null;
   }
 
-  const [optionsResult, totalsResult, eventsResult, bookmarkResult] = await Promise.all([
+  const [optionsResult, totalsResult, eventsResult, bookmarkResult, commentsResult] = await Promise.all([
     supabase
       .from("poll_options")
       .select("id,poll_id,label,position")
@@ -361,7 +376,8 @@ export async function fetchPollBySlug(slug: string): Promise<Poll | null> {
           .eq("user_id", userId)
           .eq("poll_id", row.id)
           .maybeSingle()
-      : Promise.resolve({ data: null, error: null })
+      : Promise.resolve({ data: null, error: null }),
+    supabase.from("poll_comments").select("id", { count: "exact", head: true }).eq("poll_id", row.id)
   ]);
 
   if (optionsResult.error || totalsResult.error || eventsResult.error) {
@@ -376,13 +392,16 @@ export async function fetchPollBySlug(slug: string): Promise<Poll | null> {
   if (bookmarkResult.data?.poll_id) {
     bookmarkedPollIds.add(String(bookmarkResult.data.poll_id));
   }
+  const commentCountByPollId = new Map<string, number>();
+  commentCountByPollId.set(row.id, Number(commentsResult.count ?? 0));
 
   const hydrated = hydratePolls(
     [row as PollRow],
     options,
     totals,
     new Map([[row.id, events.filter((event) => Date.parse(event.changed_at) >= Date.now() - 86400000).length]]),
-    bookmarkedPollIds
+    bookmarkedPollIds,
+    commentCountByPollId
   )[0];
 
   if (!hydrated) {
@@ -416,7 +435,7 @@ export async function fetchMyPolls(userId: string): Promise<Poll[]> {
   }
 
   const pollIds = rows.map((row) => row.id);
-  const [optionsResult, totalsResult, velocityResult, bookmarksResult] = await Promise.all([
+  const [optionsResult, totalsResult, velocityResult, bookmarksResult, commentsResult] = await Promise.all([
     supabase
       .from("poll_options")
       .select("id,poll_id,label,position")
@@ -428,7 +447,8 @@ export async function fetchMyPolls(userId: string): Promise<Poll[]> {
       .select("poll_id")
       .in("poll_id", pollIds)
       .gte("changed_at", nowMinusDays(1)),
-    supabase.from("poll_bookmarks").select("poll_id").eq("user_id", userId).in("poll_id", pollIds)
+    supabase.from("poll_bookmarks").select("poll_id").eq("user_id", userId).in("poll_id", pollIds),
+    supabase.from("poll_comments").select("poll_id").in("poll_id", pollIds)
   ]);
 
   if (optionsResult.error || totalsResult.error || velocityResult.error) {
@@ -444,12 +464,19 @@ export async function fetchMyPolls(userId: string): Promise<Poll[]> {
   if (!bookmarksResult.error) {
     (bookmarksResult.data ?? []).forEach((row) => bookmarkedPollIds.add(String(row.poll_id)));
   }
+  const commentCountByPollId = new Map<string, number>();
+  if (!commentsResult.error) {
+    ((commentsResult.data ?? []) as PollCommentRefRow[]).forEach((row) => {
+      commentCountByPollId.set(row.poll_id, (commentCountByPollId.get(row.poll_id) ?? 0) + 1);
+    });
+  }
 
   return hydratePolls(
     rows as PollRow[],
     (optionsResult.data ?? []) as PollOptionRow[],
     (totalsResult.data ?? []) as PollOptionTotalRow[],
     velocityByPollId,
-    bookmarkedPollIds
+    bookmarkedPollIds,
+    commentCountByPollId
   ).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }

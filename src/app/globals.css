@@ -325,6 +325,22 @@ h1 {
   gap: 10px;
 }
 
+.poll-comment-pill {
+  border: 1px solid var(--surface-border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.poll-comment-pill svg {
+  width: 14px;
+  height: 14px;
+}
+
 .bookmark-icon-btn {
   border: 1px solid var(--surface-border);
   border-radius: 999px;
@@ -402,6 +418,98 @@ h1 {
   margin-top: 12px;
   color: var(--muted);
   line-height: 1.55;
+}
+
+.comments-panel {
+  margin-top: 20px;
+  border-top: 1px solid var(--surface-border);
+  padding-top: 16px;
+}
+
+.comments-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.comments-sort-row {
+  display: flex;
+  gap: 8px;
+}
+
+.comments-sort-btn {
+  border: 1px solid var(--surface-border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.comments-sort-btn-active {
+  border-color: #93c5fd;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.comment-form {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comment-form textarea {
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.comments-list {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comment-card {
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 12px;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.comment-actions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comment-vote-btn {
+  border: 1px solid var(--surface-border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.comment-vote-btn-active {
+  border-color: #93c5fd;
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .detail-card section {

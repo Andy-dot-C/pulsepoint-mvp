@@ -30,6 +30,7 @@ export type Poll = {
   endsAt?: string;
   isTrending: boolean;
   isBookmarked: boolean;
+  commentCount: number;
   options: PollOption[];
   trend: PollTrendPoint[];
 };
