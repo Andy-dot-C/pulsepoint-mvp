@@ -1,15 +1,19 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TrendBars } from "@/components/trend-bars";
 import { VoteOptionForm } from "@/components/vote-option-form";
 import { ReportPollForm } from "@/components/report-poll-form";
 import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
 import { PollComments } from "@/components/poll-comments";
+import { SharePollButton } from "@/components/share-poll-button";
 import { fetchPollBySlug } from "@/lib/data/polls";
+import { fetchPollMetaBySlug } from "@/lib/data/polls";
 import { fetchPollComments, resolveCommentSort } from "@/lib/data/comments";
 import { buildFeedHref } from "@/lib/feed-query";
 import { totalVotes } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteUrl } from "@/lib/site-url";
 
 type PollPageProps = {
   params: { slug: string } | Promise<{ slug: string }>;
@@ -21,6 +25,41 @@ type PollPageProps = {
 function readValue(value: string | string[] | undefined): string | undefined {
   if (!value) return undefined;
   return Array.isArray(value) ? value[0] : value;
+}
+
+export async function generateMetadata({ params }: PollPageProps): Promise<Metadata> {
+  const { slug } = await Promise.resolve(params);
+  const poll = await fetchPollMetaBySlug(slug);
+  if (!poll) {
+    return {
+      title: "Poll not found | PulsePoint",
+      description: "This poll may have been removed or is unavailable."
+    };
+  }
+
+  const siteUrl = getSiteUrl();
+  const pollUrl = `${siteUrl}/polls/${poll.slug}`;
+  const title = `${poll.title} | PulsePoint`;
+  const description = poll.blurb;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: pollUrl,
+      siteName: "PulsePoint",
+      type: "article",
+      images: ["/opengraph-image"]
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/opengraph-image"]
+    }
+  };
 }
 
 export default async function PollPage({ params, searchParams }: PollPageProps) {
@@ -70,6 +109,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
               isBookmarked={poll.isBookmarked}
               returnTo={`/polls/${poll.slug}?comments=${commentSort}`}
             />
+            <SharePollButton title={poll.title} path={`/polls/${poll.slug}`} embedPath={`/embed/polls/${poll.slug}`} />
           </div>
         </div>
 

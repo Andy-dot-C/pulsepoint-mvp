@@ -4,6 +4,7 @@ import { Poll } from "@/lib/types";
 import { totalVotes } from "@/lib/mock-data";
 import { VoteOptionForm } from "@/components/vote-option-form";
 import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
+import { SharePollButton } from "@/components/share-poll-button";
 
 type PollCardProps = {
   poll: Poll;
@@ -73,7 +74,15 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
           </Link>
           <BookmarkToggleForm pollId={poll.id} isBookmarked={poll.isBookmarked} returnTo={returnTo} compact />
         </div>
-        <Link href={`/polls/${poll.slug}`}>View details</Link>
+        <div className="poll-footer-right">
+          <SharePollButton
+            title={poll.title}
+            path={`/polls/${poll.slug}`}
+            embedPath={`/embed/polls/${poll.slug}`}
+            compact
+          />
+          <Link href={`/polls/${poll.slug}`}>View details</Link>
+        </div>
       </div>
     </article>
   );

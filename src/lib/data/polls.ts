@@ -19,6 +19,13 @@ type PollRow = {
   end_at: string | null;
 };
 
+type PollMetaRow = {
+  slug: string;
+  title: string;
+  blurb: string;
+  category_key: CategoryKey;
+};
+
 type PollOptionRow = {
   id: string;
   poll_id: string;
@@ -479,4 +486,39 @@ export async function fetchMyPolls(userId: string): Promise<Poll[]> {
     bookmarkedPollIds,
     commentCountByPollId
   ).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+}
+
+export async function fetchPollMetaBySlug(
+  slug: string
+): Promise<{ slug: string; title: string; blurb: string; category: CategoryKey } | null> {
+  if (!hasSupabaseConfig()) {
+    const mock = mockPolls.find((poll) => poll.slug === slug);
+    if (!mock) return null;
+    return {
+      slug: mock.slug,
+      title: mock.title,
+      blurb: mock.blurb,
+      category: mock.category
+    };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("polls")
+    .select("slug,title,blurb,category_key")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  const row = data as PollMetaRow;
+  return {
+    slug: row.slug,
+    title: row.title,
+    blurb: row.blurb,
+    category: row.category_key
+  };
 }
