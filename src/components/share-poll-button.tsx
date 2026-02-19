@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 type SharePollButtonProps = {
   pollId: string;
@@ -14,18 +14,9 @@ type SharePollButtonProps = {
 export function SharePollButton({ pollId, title, path, embedPath, source, compact }: SharePollButtonProps) {
   const [copied, setCopied] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    function handlePointerDown(event: PointerEvent) {
-      if (!menuOpen) return;
-      if (!menuRef.current) return;
-      const target = event.target as Node | null;
-      if (!target || menuRef.current.contains(target)) return;
-      // First outside click should only dismiss the menu, not trigger card navigation underneath.
-      event.preventDefault();
-      setMenuOpen(false);
-    }
+    if (!menuOpen) return;
 
     function handleEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -33,10 +24,8 @@ export function SharePollButton({ pollId, title, path, embedPath, source, compac
       }
     }
 
-    document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleEscape);
     return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleEscape);
     };
   }, [menuOpen]);
@@ -103,7 +92,20 @@ export function SharePollButton({ pollId, title, path, embedPath, source, compac
   }
 
   return (
-    <div className="share-menu" ref={menuRef}>
+    <div className={`share-menu ${menuOpen ? "share-menu-open" : ""}`}>
+      {menuOpen ? (
+        <button
+          type="button"
+          className="share-menu-backdrop"
+          aria-label="Close share menu"
+          data-no-card-open="true"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setMenuOpen(false);
+          }}
+        />
+      ) : null}
       <button
         type="button"
         className={`share-btn ${compact ? "share-btn-compact" : ""}`}

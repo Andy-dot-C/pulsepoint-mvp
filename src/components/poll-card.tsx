@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { buildFeedHref } from "@/lib/feed-query";
 import { formatVoteLabel } from "@/lib/format-votes";
 import { Poll } from "@/lib/types";
@@ -11,6 +8,7 @@ import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
 import { SharePollButton } from "@/components/share-poll-button";
 import { PollImpressionTracker } from "@/components/poll-impression-tracker";
 import { getPollStatus } from "@/lib/poll-status";
+import { PollCardShell } from "@/components/poll-card-shell";
 
 type PollCardProps = {
   poll: Poll;
@@ -23,7 +21,6 @@ function percent(votes: number, total: number): string {
 }
 
 export function PollCard({ poll, returnTo }: PollCardProps) {
-  const router = useRouter();
   const total = totalVotes(poll);
   const status = getPollStatus(poll.endsAt);
   const voteRankedOptions = [...poll.options].sort(
@@ -34,29 +31,8 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
   const hiddenCount = Math.max(feedOptions.length - visibleOptions.length, 0);
   const pollHref = `/polls/${poll.slug}`;
 
-  function isInteractiveTarget(target: EventTarget | null): boolean {
-    if (!(target instanceof Element)) return false;
-    return Boolean(
-      target.closest("a,button,input,select,textarea,form,label,[role='button'],[data-no-card-nav='true']")
-    );
-  }
-
   return (
-    <article
-      className="poll-card poll-card-clickable"
-      role="link"
-      tabIndex={0}
-      onClick={(event) => {
-        if (isInteractiveTarget(event.target)) return;
-        router.push(pollHref);
-      }}
-      onKeyDown={(event) => {
-        if (event.key !== "Enter" && event.key !== " ") return;
-        if (isInteractiveTarget(event.target)) return;
-        event.preventDefault();
-        router.push(pollHref);
-      }}
-    >
+    <PollCardShell href={pollHref} ariaLabel={`Open poll: ${poll.title}`}>
       <PollImpressionTracker pollId={poll.id} />
       <div className="poll-top-row">
         <Link className="poll-category" href={buildFeedHref({ category: poll.category })}>
@@ -120,6 +96,6 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
           <Link href={`/polls/${poll.slug}`}>View details</Link>
         </div>
       </div>
-    </article>
+    </PollCardShell>
   );
 }
