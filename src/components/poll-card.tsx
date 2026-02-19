@@ -5,6 +5,7 @@ import { totalVotes } from "@/lib/mock-data";
 import { VoteOptionForm } from "@/components/vote-option-form";
 import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
 import { SharePollButton } from "@/components/share-poll-button";
+import { PollImpressionTracker } from "@/components/poll-impression-tracker";
 
 type PollCardProps = {
   poll: Poll;
@@ -27,6 +28,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
 
   return (
     <article className="poll-card">
+      <PollImpressionTracker pollId={poll.id} />
       <div className="poll-top-row">
         <Link className="poll-category" href={buildFeedHref({ category: poll.category })}>
           {poll.category}
@@ -76,9 +78,11 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
         </div>
         <div className="poll-footer-right">
           <SharePollButton
+            pollId={poll.id}
             title={poll.title}
             path={`/polls/${poll.slug}`}
             embedPath={`/embed/polls/${poll.slug}`}
+            source="feed_card"
             compact
           />
           <Link href={`/polls/${poll.slug}`}>View details</Link>

@@ -11,6 +11,12 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.sponsors (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.categories (
   key text primary key,
   label text not null,
@@ -35,6 +41,9 @@ create table if not exists public.polls (
   category_key text not null references public.categories(key),
   status text not null default 'published' check (status in ('draft', 'published', 'closed', 'archived')),
   source_type text not null default 'admin_seed' check (source_type in ('admin_seed', 'submission')),
+  is_sponsored boolean not null default false,
+  sponsor_id uuid references public.sponsors(id),
+  campaign_id text,
   created_by uuid references public.profiles(id),
   published_by uuid references public.profiles(id),
   start_at timestamptz not null default now(),
@@ -46,6 +55,7 @@ create table if not exists public.polls (
 create index if not exists polls_category_idx on public.polls (category_key);
 create index if not exists polls_status_idx on public.polls (status);
 create index if not exists polls_start_at_idx on public.polls (start_at desc);
+create index if not exists polls_sponsored_idx on public.polls (is_sponsored, sponsor_id, campaign_id);
 
 create table if not exists public.poll_options (
   id uuid primary key default gen_random_uuid(),
@@ -156,6 +166,36 @@ create table if not exists public.poll_comment_votes (
 
 create index if not exists poll_comment_votes_comment_idx on public.poll_comment_votes (comment_id);
 create index if not exists poll_comment_votes_user_idx on public.poll_comment_votes (user_id, created_at desc);
+
+create table if not exists public.poll_events (
+  id bigserial primary key,
+  poll_id uuid not null references public.polls(id) on delete cascade,
+  user_id uuid references public.profiles(id) on delete set null,
+  event_type text not null check (
+    event_type in (
+      'poll_impression',
+      'poll_view',
+      'poll_share',
+      'vote_cast',
+      'comment_post',
+      'comment_upvote',
+      'bookmark_add',
+      'bookmark_remove',
+      'report_submit'
+    )
+  ),
+  source text not null default 'web',
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists poll_events_poll_idx on public.poll_events (poll_id, created_at desc);
+create index if not exists poll_events_type_idx on public.poll_events (event_type, created_at desc);
+create index if not exists poll_events_user_idx on public.poll_events (user_id, created_at desc);
+
+alter table public.polls add column if not exists is_sponsored boolean not null default false;
+alter table public.polls add column if not exists sponsor_id uuid references public.sponsors(id);
+alter table public.polls add column if not exists campaign_id text;
 
 do $$
 begin
@@ -335,6 +375,8 @@ alter table public.poll_reports enable row level security;
 alter table public.poll_bookmarks enable row level security;
 alter table public.poll_comments enable row level security;
 alter table public.poll_comment_votes enable row level security;
+alter table public.sponsors enable row level security;
+alter table public.poll_events enable row level security;
 
 -- Profiles policies
 create policy "profiles readable by authenticated users"
@@ -502,3 +544,26 @@ create policy "users delete own comment votes"
 on public.poll_comment_votes
 for delete
 using (auth.uid() = user_id);
+
+-- Sponsor policies
+create policy "admins read sponsors"
+on public.sponsors
+for select
+using (public.is_admin(auth.uid()));
+
+create policy "admins manage sponsors"
+on public.sponsors
+for all
+using (public.is_admin(auth.uid()))
+with check (public.is_admin(auth.uid()));
+
+-- Poll events policies
+create policy "admins read poll events"
+on public.poll_events
+for select
+using (public.is_admin(auth.uid()));
+
+create policy "users insert own poll events"
+on public.poll_events
+for insert
+with check (auth.uid() = user_id or user_id is null);

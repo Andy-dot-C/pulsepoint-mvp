@@ -3,13 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 
 type SharePollButtonProps = {
+  pollId: string;
   title: string;
   path: string;
   embedPath?: string;
+  source?: string;
   compact?: boolean;
 };
 
-export function SharePollButton({ title, path, embedPath, compact }: SharePollButtonProps) {
+export function SharePollButton({ pollId, title, path, embedPath, source, compact }: SharePollButtonProps) {
   const [copied, setCopied] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -41,11 +43,26 @@ export function SharePollButton({ title, path, embedPath, compact }: SharePollBu
     window.setTimeout(() => setCopied(false), 1400);
   }
 
+  function trackShare() {
+    void fetch("/api/analytics/events", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        pollId,
+        eventType: "poll_share",
+        source: source ?? "web",
+        metadata: { path }
+      }),
+      keepalive: true
+    });
+  }
+
   async function copyLink() {
     const url = `${window.location.origin}${path}`;
     try {
       await navigator.clipboard.writeText(url);
       flashCopied();
+      trackShare();
       setMenuOpen(false);
     } catch {
       // No-op: user can still copy from address bar.
@@ -61,6 +78,7 @@ export function SharePollButton({ title, path, embedPath, compact }: SharePollBu
 
     try {
       await navigator.share({ title, url });
+      trackShare();
       setMenuOpen(false);
     } catch {
       // User cancelled share sheet.
@@ -74,6 +92,7 @@ export function SharePollButton({ title, path, embedPath, compact }: SharePollBu
     try {
       await navigator.clipboard.writeText(code);
       flashCopied();
+      trackShare();
       setMenuOpen(false);
     } catch {
       // No-op

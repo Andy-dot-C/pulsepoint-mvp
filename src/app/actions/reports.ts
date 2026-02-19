@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isReportReason } from "@/lib/report-reasons";
 import { deriveBlurb, isCategory, parseOptions } from "@/lib/submissions";
+import { trackPollEvent } from "@/lib/analytics/events";
 
 function safePath(value: string | null | undefined, fallback = "/"): string {
   if (!value || !value.startsWith("/")) return fallback;
@@ -47,6 +48,14 @@ export async function submitPollReportAction(formData: FormData) {
   if (error) {
     redirect(`${returnTo}?report=error&message=${encodeURIComponent(error.message)}`);
   }
+
+  await trackPollEvent({
+    pollId,
+    userId: user.id,
+    eventType: "report_submit",
+    source: "poll_detail",
+    metadata: { reason }
+  });
 
   revalidatePath("/admin/reports");
   redirect(`${returnTo}?report=success&message=${encodeURIComponent("Report submitted")}`);

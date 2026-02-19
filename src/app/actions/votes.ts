@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { trackPollEvent } from "@/lib/analytics/events";
 
 function safeReturnPath(input: string | null): string {
   if (!input || !input.startsWith("/")) return "/";
@@ -42,6 +43,13 @@ export async function submitVoteAction(formData: FormData) {
   if (error) {
     redirect(`${returnTo}?voteError=${encodeURIComponent(error.message)}`);
   }
+
+  await trackPollEvent({
+    pollId,
+    userId: user.id,
+    eventType: "vote_cast",
+    source: returnTo.includes("/polls/") ? "poll_detail" : "feed"
+  });
 
   revalidatePath("/");
   revalidatePath(returnTo);

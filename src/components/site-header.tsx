@@ -81,6 +81,9 @@ export function SiteHeader({
                   </a>
                   {role === "admin" ? (
                     <>
+                      <a className="user-menu-link" href="/admin/analytics" onClick={() => setMenuOpen(false)}>
+                        Admin analytics
+                      </a>
                       <a className="user-menu-link" href="/admin/submissions" onClick={() => setMenuOpen(false)}>
                         Admin submissions
                       </a>

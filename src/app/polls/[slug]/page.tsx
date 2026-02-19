@@ -7,6 +7,7 @@ import { ReportPollForm } from "@/components/report-poll-form";
 import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
 import { PollComments } from "@/components/poll-comments";
 import { SharePollButton } from "@/components/share-poll-button";
+import { PollViewTracker } from "@/components/poll-view-tracker";
 import { fetchPollBySlug } from "@/lib/data/polls";
 import { fetchPollMetaBySlug } from "@/lib/data/polls";
 import { fetchPollComments, resolveCommentSort } from "@/lib/data/comments";
@@ -93,6 +94,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
 
   return (
     <main className="page-shell detail-shell">
+      <PollViewTracker pollId={poll.id} />
       <Link href="/" className="back-link">
         Back to feed
       </Link>
@@ -109,7 +111,13 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
               isBookmarked={poll.isBookmarked}
               returnTo={`/polls/${poll.slug}?comments=${commentSort}`}
             />
-            <SharePollButton title={poll.title} path={`/polls/${poll.slug}`} embedPath={`/embed/polls/${poll.slug}`} />
+            <SharePollButton
+              pollId={poll.id}
+              title={poll.title}
+              path={`/polls/${poll.slug}`}
+              embedPath={`/embed/polls/${poll.slug}`}
+              source="poll_detail"
+            />
           </div>
         </div>
 

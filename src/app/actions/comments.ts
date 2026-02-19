@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { moderateComment } from "@/lib/moderation/comments";
+import { trackPollEvent } from "@/lib/analytics/events";
 
 function safePath(value: string | null | undefined, fallback = "/"): string {
   if (!value || !value.startsWith("/")) return fallback;
@@ -80,6 +81,13 @@ export async function submitCommentAction(formData: FormData) {
     redirect(withCommentStatus(returnTo, "error", error.message));
   }
 
+  await trackPollEvent({
+    pollId,
+    userId: user.id,
+    eventType: "comment_post",
+    source: "poll_detail"
+  });
+
   revalidatePath(revalidateTarget(returnTo));
   redirect(withCommentStatus(returnTo, "success", "Comment posted"));
 }
@@ -116,6 +124,12 @@ export async function toggleCommentUpvoteAction(formData: FormData) {
     if (error) {
       redirect(withCommentStatus(returnTo, "error", error.message));
     }
+    await trackPollEvent({
+      pollId,
+      userId: user.id,
+      eventType: "comment_upvote",
+      source: "poll_detail"
+    });
   }
 
   revalidatePath(revalidateTarget(returnTo));

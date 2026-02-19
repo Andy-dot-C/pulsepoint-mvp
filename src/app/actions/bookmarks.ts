@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { trackPollEvent } from "@/lib/analytics/events";
 
 function safeReturnPath(input: string | null): string {
   if (!input || !input.startsWith("/")) return "/";
@@ -36,6 +37,12 @@ export async function toggleBookmarkAction(formData: FormData) {
           : error.message;
       redirect(`${returnTo}?bookmarkError=${encodeURIComponent(message)}`);
     }
+    await trackPollEvent({
+      pollId,
+      userId: user.id,
+      eventType: "bookmark_remove",
+      source: returnTo.includes("/polls/") ? "poll_detail" : "feed"
+    });
   } else {
     const { error } = await supabase.from("poll_bookmarks").upsert(
       {
@@ -52,6 +59,12 @@ export async function toggleBookmarkAction(formData: FormData) {
           : error.message;
       redirect(`${returnTo}?bookmarkError=${encodeURIComponent(message)}`);
     }
+    await trackPollEvent({
+      pollId,
+      userId: user.id,
+      eventType: "bookmark_add",
+      source: returnTo.includes("/polls/") ? "poll_detail" : "feed"
+    });
   }
 
   revalidatePath("/");
