@@ -28,6 +28,7 @@ export function PollComments({
   isAdmin
 }: PollCommentsProps) {
   const returnTo = `/polls/${pollSlug}?comments=${sort}#comments`;
+  const signInHref = `/auth?next=${encodeURIComponent(returnTo)}`;
 
   return (
     <section className="comments-panel" id="comments">
@@ -55,21 +56,25 @@ export function PollComments({
         <p className={commentStatusType === "error" ? "auth-error" : "auth-success"}>{commentStatusMessage}</p>
       ) : null}
 
-      <form action={submitCommentAction} className="comment-form">
-        <input type="hidden" name="pollId" value={pollId} />
-        <input type="hidden" name="returnTo" value={returnTo} />
-        <textarea
-          name="body"
-          rows={3}
-          maxLength={1000}
-          placeholder={signedIn ? "Add your view..." : "Sign in to add a comment"}
-          disabled={!signedIn}
-          required
-        />
-        <button type="submit" className="create-btn" disabled={!signedIn}>
-          Post comment
-        </button>
-      </form>
+      {signedIn ? (
+        <form action={submitCommentAction} className="comment-form">
+          <input type="hidden" name="pollId" value={pollId} />
+          <input type="hidden" name="returnTo" value={returnTo} />
+          <textarea name="body" rows={3} maxLength={1000} placeholder="Add your view..." required />
+          <button type="submit" className="create-btn">
+            Post comment
+          </button>
+        </form>
+      ) : (
+        <div className="comment-form">
+          <a className="comment-signin-box" href={signInHref}>
+            Sign in to add a comment
+          </a>
+          <a className="create-btn comment-signin-btn" href={signInHref}>
+            Sign in to comment
+          </a>
+        </div>
+      )}
 
       <div className="comments-list">
         {comments.length === 0 ? (
