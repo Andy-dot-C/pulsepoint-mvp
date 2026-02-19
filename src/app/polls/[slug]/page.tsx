@@ -114,7 +114,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
             <BookmarkToggleForm
               pollId={poll.id}
               isBookmarked={poll.isBookmarked}
-              returnTo={`/polls/${poll.slug}?comments=${commentSort}`}
+              source="poll_detail"
             />
             <SharePollButton
               pollId={poll.id}

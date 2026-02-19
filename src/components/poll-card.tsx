@@ -82,7 +82,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
             </svg>
             {poll.commentCount}
           </Link>
-          <BookmarkToggleForm pollId={poll.id} isBookmarked={poll.isBookmarked} returnTo={returnTo} compact />
+          <BookmarkToggleForm pollId={poll.id} isBookmarked={poll.isBookmarked} source="feed_card" compact />
         </div>
         <div className="poll-footer-right">
           <SharePollButton
