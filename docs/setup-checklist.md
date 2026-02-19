@@ -41,3 +41,7 @@
 - Test duplicate poll submission handling in moderation queue.
 - Test report flow.
 - Confirm legal page links are visible in footer/nav.
+
+## 7) Post-deploy operations (every release)
+- Run the smoke test in `/Users/andycahill/Documents/New project/docs/admin-runbook.md`.
+- Confirm auth callback and admin pages before sharing release publicly.

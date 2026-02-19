@@ -19,7 +19,8 @@ npm run dev
 
 ## Key files
 - Product spec: `/Users/andycahill/Documents/New project/docs/mvp-spec.md`
-- Roadmap: `/Users/andycahill/Documents/New project/docs/build-roadmap.md`
+- Roadmap: `/Users/andycahill/Documents/New project/docs/ROADMAP.md`
 - Setup checklist: `/Users/andycahill/Documents/New project/docs/setup-checklist.md`
+- Admin runbook: `/Users/andycahill/Documents/New project/docs/admin-runbook.md`
 - Open decisions: `/Users/andycahill/Documents/New project/docs/open-questions.md`
 - DB schema: `/Users/andycahill/Documents/New project/supabase/schema.sql`

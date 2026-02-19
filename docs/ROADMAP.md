@@ -21,8 +21,8 @@ Last updated: 2026-02-19
 - [x] Poll embed endpoint (`/embed/polls/[slug]`)
 - [x] OG/Twitter metadata basics for share previews
 - [x] Analytics event pipeline (`poll_events`) + admin analytics dashboard
-- [ ] Verify production auth redirects and admin access after every deploy
-- [ ] Add short admin runbook doc (common fixes, SQL snippets, rollout checklist)
+- [x] Verify production auth redirects and admin access after every deploy (smoke checklist documented)
+- [x] Add short admin runbook doc (common fixes, SQL snippets, rollout checklist)
 
 ## Next (Post-MVP Priority)
 - [ ] Poll creation UX improvements
@@ -59,4 +59,3 @@ Last updated: 2026-02-19
 - [ ] Final sponsored poll labeling and user transparency requirements
 - [ ] Final definition of “trending” score
 - [ ] Final comment moderation strictness and appeals process
-
