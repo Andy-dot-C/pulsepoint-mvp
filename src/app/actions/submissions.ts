@@ -14,6 +14,7 @@ import {
   slugify
 } from "@/lib/submissions";
 import { shouldRequireModeration } from "@/lib/moderation/rules";
+import { findPossibleDuplicates } from "@/lib/duplicate-check";
 
 function toStatusMessage(type: "error" | "success", message: string): never {
   redirect(`/submit?type=${type}&message=${encodeURIComponent(message)}`);
@@ -65,6 +66,94 @@ async function isAdmin(userId: string): Promise<boolean> {
   return data?.role === "admin";
 }
 
+type DuplicateCandidatePollRow = {
+  id: string;
+  slug: string;
+  title: string;
+};
+
+type DuplicateCandidateOptionRow = {
+  poll_id: string;
+  label: string;
+};
+
+async function detectPossibleDuplicateIds(title: string, options: string[]): Promise<string[]> {
+  const admin = createAdminClient();
+  const { data: pollRowsData, error: pollError } = await admin
+    .from("polls")
+    .select("id,slug,title")
+    .eq("status", "published")
+    .order("created_at", { ascending: false })
+    .limit(300);
+
+  if (pollError || !pollRowsData || pollRowsData.length === 0) {
+    return [];
+  }
+
+  const pollRows = pollRowsData as DuplicateCandidatePollRow[];
+  const pollIds = pollRows.map((item) => item.id);
+  const { data: optionRowsData, error: optionError } = await admin
+    .from("poll_options")
+    .select("poll_id,label")
+    .in("poll_id", pollIds);
+
+  if (optionError) {
+    return [];
+  }
+
+  const optionRows = (optionRowsData ?? []) as DuplicateCandidateOptionRow[];
+  return findPossibleDuplicates(title, options, pollRows, optionRows).map((item) => item.pollId);
+}
+
+type PublishPollInput = {
+  slug: string;
+  title: string;
+  blurb: string;
+  description: string;
+  categoryKey: string;
+  userId: string;
+  endAt: string | null;
+  options: string[];
+};
+
+async function createPublishedPollWithOptions(input: PublishPollInput): Promise<{ id: string }> {
+  const admin = createAdminClient();
+  const { data: pollRow, error: pollError } = await admin
+    .from("polls")
+    .insert({
+      slug: input.slug,
+      title: input.title,
+      blurb: input.blurb,
+      description: input.description,
+      category_key: input.categoryKey,
+      status: "published",
+      source_type: "submission",
+      created_by: input.userId,
+      published_by: input.userId,
+      start_at: new Date().toISOString(),
+      end_at: input.endAt
+    })
+    .select("id")
+    .single();
+
+  if (pollError || !pollRow) {
+    throw new Error(pollError?.message ?? "Could not publish poll.");
+  }
+
+  const optionRows = input.options.map((label, index) => ({
+    poll_id: pollRow.id,
+    label,
+    position: index + 1
+  }));
+  const { error: optionError } = await admin.from("poll_options").insert(optionRows);
+  if (!optionError) {
+    return { id: String(pollRow.id) };
+  }
+
+  await admin.from("polls").delete().eq("id", pollRow.id);
+  throw new Error(optionError.message);
+}
+
 export async function submitPollAction(formData: FormData) {
   const { user } = await getAuthedUser();
 
@@ -81,13 +170,6 @@ export async function submitPollAction(formData: FormData) {
   const durationPreset = sanitizeText(formData.get("durationPreset")) || "30d";
   const endAt = resolveEndAt(durationPreset, endAtRaw);
   const duplicateOverride = sanitizeText(formData.get("duplicateOverride")) === "1";
-  const possibleDuplicateIdsRaw = sanitizeText(formData.get("possibleDuplicateIds"));
-  const possibleDuplicateIds = possibleDuplicateIdsRaw
-    ? possibleDuplicateIdsRaw
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean)
-    : [];
 
   if (!title || !description) {
     toStatusMessage("error", "Title and description are required.");
@@ -107,10 +189,13 @@ export async function submitPollAction(formData: FormData) {
     blurb,
     description
   });
-  const forceDuplicateModeration = duplicateOverride && possibleDuplicateIds.length > 0;
+  const possibleDuplicateIds = await detectPossibleDuplicateIds(title, options);
+  const forceDuplicateModeration = possibleDuplicateIds.length > 0;
   const willRequireModeration = requiresModeration || forceDuplicateModeration;
   const duplicateReviewNote = forceDuplicateModeration
-    ? `Duplicate warning overridden. Similar poll IDs: ${possibleDuplicateIds.join(", ")}`
+    ? `${
+        duplicateOverride ? "Duplicate warning overridden by submitter." : "Server duplicate scan matched existing polls."
+      } Similar poll IDs: ${possibleDuplicateIds.join(", ")}`
     : null;
 
   const admin = createAdminClient();
@@ -146,39 +231,29 @@ export async function submitPollAction(formData: FormData) {
 
   const baseSlug = slugify(title);
   const slug = await createUniqueSlug(baseSlug);
-
-  const { data: pollRow, error: pollError } = await admin
-    .from("polls")
-    .insert({
+  try {
+    await createPublishedPollWithOptions({
       slug,
       title,
       blurb,
       description,
-      category_key: categoryRaw,
-      status: "published",
-      source_type: "submission",
-      created_by: user.id,
-      published_by: user.id,
-      start_at: new Date().toISOString(),
-      end_at: endAt
-    })
-    .select("id")
-    .single();
-
-  if (pollError || !pollRow) {
-    toStatusMessage("error", pollError?.message ?? "Could not publish poll.");
-  }
-
-  const optionRows = options.map((label, index) => ({
-    poll_id: pollRow.id,
-    label,
-    position: index + 1
-  }));
-
-  const { error: optionError } = await admin.from("poll_options").insert(optionRows);
-
-  if (optionError) {
-    toStatusMessage("error", optionError.message);
+      categoryKey: categoryRaw,
+      userId: user.id,
+      endAt,
+      options
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not publish poll.";
+    await admin
+      .from("poll_submissions")
+      .update({
+        status: "pending",
+        review_notes: `Auto-publish failed: ${message}`,
+        reviewed_by: null,
+        reviewed_at: null
+      })
+      .eq("id", submission.id);
+    toStatusMessage("error", message);
   }
 
   revalidatePath("/");
@@ -215,38 +290,20 @@ export async function approveSubmissionAction(formData: FormData) {
   const admin = createAdminClient();
   const baseSlug = slugify(title);
   const slug = await createUniqueSlug(baseSlug);
-
-  const { data: pollRow, error: pollError } = await admin
-    .from("polls")
-    .insert({
+  try {
+    await createPublishedPollWithOptions({
       slug,
       title,
       blurb,
       description,
-      category_key: categoryRaw,
-      status: "published",
-      source_type: "submission",
-      created_by: user.id,
-      published_by: user.id,
-      start_at: new Date().toISOString(),
-      end_at: endAt
-    })
-    .select("id")
-    .single();
-
-  if (pollError || !pollRow) {
-    redirect(`/admin/submissions?type=error&message=${encodeURIComponent(pollError?.message ?? "Could not publish")}`);
-  }
-
-  const optionRows = options.map((label, index) => ({
-    poll_id: pollRow.id,
-    label,
-    position: index + 1
-  }));
-
-  const { error: optionError } = await admin.from("poll_options").insert(optionRows);
-  if (optionError) {
-    redirect(`/admin/submissions?type=error&message=${encodeURIComponent(optionError.message)}`);
+      categoryKey: categoryRaw,
+      userId: user.id,
+      endAt,
+      options
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not publish";
+    redirect(`/admin/submissions?type=error&message=${encodeURIComponent(message)}`);
   }
 
   const { error: updateError } = await admin

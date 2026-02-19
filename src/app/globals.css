@@ -172,6 +172,10 @@ h1 {
   gap: 10px;
 }
 
+.search-shell {
+  position: relative;
+}
+
 .search-input {
   width: 100%;
   flex: 1;
@@ -189,6 +193,109 @@ h1 {
   color: white;
   font-weight: 600;
   cursor: pointer;
+}
+
+.search-suggest-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  width: 100%;
+  z-index: 40;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.search-suggest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.search-suggest-item {
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  background: #f8fafc;
+  color: var(--text);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.search-suggest-item small {
+  color: var(--muted);
+}
+
+.search-suggest-item:hover {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.search-suggest-categories {
+  border-top: 1px solid var(--surface-border);
+  padding-top: 10px;
+}
+
+.preview-search-wrap {
+  margin-top: 16px;
+}
+
+.preview-search-shell {
+  position: relative;
+  margin-top: 8px;
+}
+
+.preview-typeahead-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  width: 100%;
+  z-index: 30;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preview-typeahead-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.preview-typeahead-item {
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  background: #f8fafc;
+  color: var(--text);
+  padding: 10px 12px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.preview-typeahead-item small {
+  color: var(--muted);
+}
+
+.preview-typeahead-item:hover {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.preview-category-strip {
+  border-top: 1px solid var(--surface-border);
+  padding-top: 10px;
 }
 
 .tab-row,

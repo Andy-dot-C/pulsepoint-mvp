@@ -352,7 +352,7 @@ export function SubmitPollForm({
           <div className="duplicate-modal">
             <h3>Possible duplicate found</h3>
             <p className="poll-blurb">
-              We found similar polls in this category. You can open them first, or submit anyway for manual review.
+              We found similar polls. You can open them first, or submit anyway for manual review.
             </p>
             <div className="duplicate-list">
               {possibleDuplicates.map((item) => (
