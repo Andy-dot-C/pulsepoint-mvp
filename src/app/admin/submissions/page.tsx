@@ -9,6 +9,7 @@ type SubmissionRow = {
   category_key: string;
   options: string[];
   created_at: string;
+  end_at: string | null;
 };
 
 type AdminPageProps = {
@@ -59,7 +60,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminPagePr
 
   const { data } = await supabase
     .from("poll_submissions")
-    .select("id,title,description,category_key,options,created_at")
+    .select("id,title,description,category_key,options,created_at,end_at")
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
@@ -69,7 +70,8 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminPagePr
     description: String(row.description),
     category_key: String(row.category_key),
     options: safeOptions(row.options),
-    created_at: String(row.created_at)
+    created_at: String(row.created_at),
+    end_at: row.end_at ? String(row.end_at) : null
   }));
 
   const resolved = searchParams ? await searchParams : {};

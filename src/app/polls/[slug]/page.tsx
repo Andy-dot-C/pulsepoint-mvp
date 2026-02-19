@@ -13,6 +13,7 @@ import { fetchPollMetaBySlug } from "@/lib/data/polls";
 import { fetchPollComments, resolveCommentSort } from "@/lib/data/comments";
 import { buildFeedHref } from "@/lib/feed-query";
 import { totalVotes } from "@/lib/mock-data";
+import { getPollStatus } from "@/lib/poll-status";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -88,6 +89,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
   const comments = await fetchPollComments(poll.id, commentSort, user?.id ?? null);
 
   const total = totalVotes(poll);
+  const status = getPollStatus(poll.endsAt);
   const rankedOptions = [...poll.options].sort(
     (left, right) => right.votes - left.votes || left.label.localeCompare(right.label)
   );
@@ -105,6 +107,8 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
             {poll.category}
           </Link>
           <div className="detail-top-actions">
+            {status.isClosingSoon ? <span className="poll-state-badge poll-state-badge-soon">Closing soon</span> : null}
+            {status.isClosed ? <span className="poll-state-badge poll-state-badge-closed">Closed</span> : null}
             <p>{total.toLocaleString()} total votes</p>
             <BookmarkToggleForm
               pollId={poll.id}
@@ -123,7 +127,6 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
 
         <h1>{poll.title}</h1>
         {bookmarkError ? <p className="auth-error">{bookmarkError}</p> : null}
-        <p className="poll-blurb">{poll.blurb}</p>
         <p className="detail-description">{poll.description}</p>
 
         <section>
@@ -137,9 +140,11 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
                 returnTo={`/polls/${poll.slug}?comments=${commentSort}`}
                 label={option.label}
                 rightText={`${Math.round((option.votes / Math.max(total, 1)) * 100)}%`}
+                disabled={status.isClosed}
               />
             ))}
           </div>
+          {status.isClosed ? <p className="poll-blurb">This poll is closed. Voting is disabled.</p> : null}
         </section>
 
         <section>

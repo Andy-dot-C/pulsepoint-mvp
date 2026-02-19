@@ -258,6 +258,12 @@ h1 {
   gap: 8px;
 }
 
+.poll-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .poll-category {
   text-transform: capitalize;
   font-size: 12px;
@@ -312,6 +318,16 @@ h1 {
 .option-btn:hover {
   border-color: var(--brand);
   background: var(--brand-soft);
+}
+
+.option-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.option-btn:disabled:hover {
+  border-color: var(--surface-border);
+  background: #f8fafc;
 }
 
 .poll-footer {
@@ -461,6 +477,28 @@ h1 {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.poll-state-badge {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.poll-state-badge-soon {
+  border-color: #fcd34d;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.poll-state-badge-closed {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
 }
 
 .side-column {

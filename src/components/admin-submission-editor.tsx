@@ -15,6 +15,7 @@ type Submission = {
   category_key: string;
   options: string[];
   created_at: string;
+  end_at: string | null;
 };
 
 type Props = {
@@ -87,6 +88,7 @@ export function AdminSubmissionEditor({ submission }: Props) {
       <p className="eyebrow">Submitted {new Date(submission.created_at).toLocaleString()}</p>
       <form action={approveSubmissionAction} className="submit-form">
         <input type="hidden" name="submissionId" value={submission.id} />
+        <input type="hidden" name="originalEndAt" value={submission.end_at ?? ""} />
 
         <label>
           Title
@@ -134,7 +136,11 @@ export function AdminSubmissionEditor({ submission }: Props) {
 
         <label>
           End date (optional)
-          <input type="datetime-local" name="endAt" />
+          <input
+            type="datetime-local"
+            name="endAt"
+            defaultValue={submission.end_at ? new Date(submission.end_at).toISOString().slice(0, 16) : ""}
+          />
         </label>
 
         <label>

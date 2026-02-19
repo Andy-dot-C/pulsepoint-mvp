@@ -100,6 +100,7 @@ create table if not exists public.poll_submissions (
   description text not null,
   category_key text not null references public.categories(key),
   options jsonb not null,
+  end_at timestamptz,
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected', 'merged')),
   review_notes text,
   duplicate_of_submission_id uuid references public.poll_submissions(id),

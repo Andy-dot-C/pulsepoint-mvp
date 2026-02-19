@@ -6,6 +6,7 @@ import { VoteOptionForm } from "@/components/vote-option-form";
 import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
 import { SharePollButton } from "@/components/share-poll-button";
 import { PollImpressionTracker } from "@/components/poll-impression-tracker";
+import { getPollStatus } from "@/lib/poll-status";
 
 type PollCardProps = {
   poll: Poll;
@@ -19,6 +20,7 @@ function percent(votes: number, total: number): string {
 
 export function PollCard({ poll, returnTo }: PollCardProps) {
   const total = totalVotes(poll);
+  const status = getPollStatus(poll.endsAt);
   const voteRankedOptions = [...poll.options].sort(
     (left, right) => right.votes - left.votes || left.label.localeCompare(right.label)
   );
@@ -33,13 +35,15 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
         <Link className="poll-category" href={buildFeedHref({ category: poll.category })}>
           {poll.category}
         </Link>
-        {poll.isTrending ? <span className="trend-badge">Trending</span> : null}
+        <div className="poll-badge-row">
+          {status.isClosed ? <span className="poll-state-badge poll-state-badge-closed">Closed</span> : null}
+          {poll.isTrending ? <span className="trend-badge">Trending</span> : null}
+        </div>
       </div>
 
       <h2>
         <Link href={`/polls/${poll.slug}`}>{poll.title}</Link>
       </h2>
-      <p className="poll-blurb">{poll.blurb}</p>
 
       <div className="option-list">
         {visibleOptions.map((option) => (
@@ -50,6 +54,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
             returnTo={returnTo}
             label={option.label}
             rightText={percent(option.votes, total)}
+            disabled={status.isClosed}
           />
         ))}
       </div>

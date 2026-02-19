@@ -110,6 +110,7 @@ export async function submitPollAction(formData: FormData) {
       description,
       category_key: categoryRaw,
       options,
+      end_at: endAt,
       status: requiresModeration ? "pending" : "approved",
       review_notes: requiresModeration ? null : "Auto-published by risk routing",
       reviewed_by: requiresModeration ? null : user.id,
@@ -183,7 +184,9 @@ export async function approveSubmissionAction(formData: FormData) {
   const categoryRaw = sanitizeText(formData.get("category"));
   const options = parseOptions(formData.getAll("options"));
   const reviewNotes = sanitizeText(formData.get("reviewNotes"));
-  const endAt = clampFutureDate(sanitizeText(formData.get("endAt")) || null) ?? defaultEndDate(30);
+  const requestedEndAt = clampFutureDate(sanitizeText(formData.get("endAt")) || null);
+  const originalEndAt = clampFutureDate(sanitizeText(formData.get("originalEndAt")) || null);
+  const endAt = requestedEndAt ?? originalEndAt ?? null;
 
   if (!submissionId || !title || !description || !isCategory(categoryRaw)) {
     redirect("/admin/submissions?type=error&message=Invalid+approval+payload");
