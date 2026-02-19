@@ -1,5 +1,6 @@
 import { PollCard } from "@/components/poll-card";
 import { SiteHeader } from "@/components/site-header";
+import { FlashBanner } from "@/components/flash-banner";
 import { buildFeedHref } from "@/lib/feed-query";
 import { fetchFeed } from "@/lib/data/polls";
 import { getAuthView } from "@/lib/auth";
@@ -36,12 +37,20 @@ function resolveCategory(value?: string): CategoryKey | "all" {
   return "all";
 }
 
+function resolveSubmissionMessage(value?: string): string | null {
+  if (value === "under-review") {
+    return "Possible duplicate flagged. Your poll was submitted for moderation review.";
+  }
+  return null;
+}
+
 export default async function Home({ searchParams }: HomePageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const activeTab = resolveTab(asSingleValue(resolvedSearchParams.tab));
   const activeCategory = resolveCategory(asSingleValue(resolvedSearchParams.category));
   const searchQuery = asSingleValue(resolvedSearchParams.q)?.trim() ?? "";
   const bookmarkError = asSingleValue(resolvedSearchParams.bookmarkError);
+  const submissionMessage = resolveSubmissionMessage(asSingleValue(resolvedSearchParams.submission));
   const returnTo = buildFeedHref({
     tab: activeTab,
     category: activeCategory,
@@ -69,6 +78,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           <p className="auth-error">{bookmarkError}</p>
         </article>
       ) : null}
+      {submissionMessage ? <FlashBanner message={submissionMessage} /> : null}
 
       <section className="feed-grid">
         <div className="feed-column">

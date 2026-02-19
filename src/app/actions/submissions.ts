@@ -80,6 +80,14 @@ export async function submitPollAction(formData: FormData) {
   const endAtRaw = sanitizeText(formData.get("endAt"));
   const durationPreset = sanitizeText(formData.get("durationPreset")) || "30d";
   const endAt = resolveEndAt(durationPreset, endAtRaw);
+  const duplicateOverride = sanitizeText(formData.get("duplicateOverride")) === "1";
+  const possibleDuplicateIdsRaw = sanitizeText(formData.get("possibleDuplicateIds"));
+  const possibleDuplicateIds = possibleDuplicateIdsRaw
+    ? possibleDuplicateIdsRaw
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : [];
 
   if (!title || !description) {
     toStatusMessage("error", "Title and description are required.");
@@ -99,6 +107,11 @@ export async function submitPollAction(formData: FormData) {
     blurb,
     description
   });
+  const forceDuplicateModeration = duplicateOverride && possibleDuplicateIds.length > 0;
+  const willRequireModeration = requiresModeration || forceDuplicateModeration;
+  const duplicateReviewNote = forceDuplicateModeration
+    ? `Duplicate warning overridden. Similar poll IDs: ${possibleDuplicateIds.join(", ")}`
+    : null;
 
   const admin = createAdminClient();
   const { data: submission, error: submissionError } = await admin
@@ -111,10 +124,10 @@ export async function submitPollAction(formData: FormData) {
       category_key: categoryRaw,
       options,
       end_at: endAt,
-      status: requiresModeration ? "pending" : "approved",
-      review_notes: requiresModeration ? null : "Auto-published by risk routing",
-      reviewed_by: requiresModeration ? null : user.id,
-      reviewed_at: requiresModeration ? null : new Date().toISOString()
+      status: willRequireModeration ? "pending" : "approved",
+      review_notes: willRequireModeration ? duplicateReviewNote : "Auto-published by risk routing",
+      reviewed_by: willRequireModeration ? null : user.id,
+      reviewed_at: willRequireModeration ? null : new Date().toISOString()
     })
     .select("id")
     .single();
@@ -123,8 +136,11 @@ export async function submitPollAction(formData: FormData) {
     toStatusMessage("error", submissionError?.message ?? "Could not save submission.");
   }
 
-  if (requiresModeration) {
+  if (willRequireModeration) {
     revalidatePath("/admin/submissions");
+    if (forceDuplicateModeration) {
+      redirect("/?submission=under-review");
+    }
     toStatusMessage("success", "Submitted for moderation review.");
   }
 

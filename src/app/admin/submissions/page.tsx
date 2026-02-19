@@ -10,6 +10,16 @@ type SubmissionRow = {
   options: string[];
   created_at: string;
   end_at: string | null;
+  review_notes: string | null;
+};
+
+type DuplicatePollPreview = {
+  id: string;
+  slug: string;
+  title: string;
+  blurb: string;
+  category_key: string;
+  options: string[];
 };
 
 type AdminPageProps = {
@@ -26,6 +36,13 @@ function readValue(value: string | string[] | undefined): string | undefined {
 function safeOptions(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.map((item) => String(item));
+}
+
+function extractUuidIds(value: string | null): string[] {
+  if (!value) return [];
+  const matches = value.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi);
+  if (!matches) return [];
+  return Array.from(new Set(matches.map((item) => item.toLowerCase())));
 }
 
 export default async function AdminSubmissionsPage({ searchParams }: AdminPageProps) {
@@ -60,7 +77,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminPagePr
 
   const { data } = await supabase
     .from("poll_submissions")
-    .select("id,title,description,category_key,options,created_at,end_at")
+    .select("id,title,description,category_key,options,created_at,end_at,review_notes")
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
@@ -71,15 +88,43 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminPagePr
     category_key: String(row.category_key),
     options: safeOptions(row.options),
     created_at: String(row.created_at),
-    end_at: row.end_at ? String(row.end_at) : null
+    end_at: row.end_at ? String(row.end_at) : null,
+    review_notes: row.review_notes ? String(row.review_notes) : null
   }));
+  const duplicateIds = Array.from(
+    new Set(submissions.flatMap((submission) => extractUuidIds(submission.review_notes)))
+  );
+  const { data: duplicatePollRowsData } =
+    duplicateIds.length > 0
+      ? await supabase.from("polls").select("id,slug,title,blurb,category_key").in("id", duplicateIds)
+      : { data: [] as DuplicatePollPreview[] };
+  const { data: duplicatePollOptionRowsData } =
+    duplicateIds.length > 0
+      ? await supabase.from("poll_options").select("poll_id,label,position").in("poll_id", duplicateIds).order("position", { ascending: true })
+      : { data: [] as Array<{ poll_id: string; label: string; position: number }> };
+  const duplicateOptionsByPollId = new Map<string, string[]>();
+  (duplicatePollOptionRowsData ?? []).forEach((row) => {
+    const key = String(row.poll_id).toLowerCase();
+    const existing = duplicateOptionsByPollId.get(key) ?? [];
+    existing.push(String(row.label));
+    duplicateOptionsByPollId.set(key, existing);
+  });
+  const duplicatePollMap = new Map(
+    ((duplicatePollRowsData ?? []) as Array<Omit<DuplicatePollPreview, "options">>).map((poll) => [
+      poll.id.toLowerCase(),
+      {
+        ...poll,
+        options: duplicateOptionsByPollId.get(poll.id.toLowerCase()) ?? []
+      }
+    ])
+  );
 
   const resolved = searchParams ? await searchParams : {};
   const statusType = readValue(resolved.type);
   const statusMessage = readValue(resolved.message);
 
   return (
-    <main className="page-shell submit-shell">
+    <main className="page-shell submit-shell admin-review-shell">
       <Link href="/" className="back-link">
         Back to feed
       </Link>
@@ -97,7 +142,15 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminPagePr
           <p>No pending submissions.</p>
         </article>
       ) : (
-        submissions.map((submission) => <AdminSubmissionEditor key={submission.id} submission={submission} />)
+        submissions.map((submission) => {
+          const submissionDuplicateIds = extractUuidIds(submission.review_notes);
+          const duplicatePolls = submissionDuplicateIds
+            .map((id) => duplicatePollMap.get(id))
+            .filter((item): item is DuplicatePollPreview => Boolean(item));
+          return (
+            <AdminSubmissionEditor key={submission.id} submission={submission} duplicatePolls={duplicatePolls} />
+          );
+        })
       )}
     </main>
   );
