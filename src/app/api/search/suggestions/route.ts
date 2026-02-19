@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { polls as mockPolls } from "@/lib/mock-data";
 
 type RequestPayload = {
   q?: string;
@@ -44,6 +45,39 @@ function scoreOptions(query: string, options: string[]): number {
   return 0;
 }
 
+function buildFallbackSuggestions(query: string) {
+  const ranked = mockPolls
+    .map((poll) => {
+      const titleScore = scoreText(query, poll.title);
+      const optionScore = scoreOptions(
+        query,
+        poll.options.map((option) => option.label)
+      );
+      return {
+        poll,
+        score: Math.max(titleScore, optionScore),
+        optionScore,
+        votes30d: poll.options.reduce((sum, option) => sum + option.votes, 0)
+      };
+    })
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        right.optionScore - left.optionScore ||
+        right.votes30d - left.votes30d
+    );
+
+  return ranked.slice(0, 6).map((item) => ({
+    id: item.poll.id,
+    slug: item.poll.slug,
+    title: item.poll.title,
+    category: item.poll.category,
+    votes30d: item.votes30d,
+    optionsPreview: item.poll.options.slice(0, 3).map((option) => option.label),
+    exactMatch: item.score > 0
+  }));
+}
+
 export async function POST(request: Request) {
   let payload: RequestPayload | null = null;
   try {
@@ -53,9 +87,6 @@ export async function POST(request: Request) {
   }
 
   const q = String(payload?.q ?? "").trim();
-  if (!q) {
-    return NextResponse.json({ ok: true, polls: [] });
-  }
 
   const supabase = await createClient();
   const { data: pollRowsData, error: pollError } = await supabase
@@ -66,12 +97,12 @@ export async function POST(request: Request) {
     .limit(300);
 
   if (pollError) {
-    return NextResponse.json({ ok: false, polls: [] }, { status: 500 });
+    return NextResponse.json({ ok: true, polls: buildFallbackSuggestions(q) });
   }
 
   const pollRows = (pollRowsData ?? []) as PollRow[];
   if (pollRows.length === 0) {
-    return NextResponse.json({ ok: true, polls: [] });
+    return NextResponse.json({ ok: true, polls: buildFallbackSuggestions(q) });
   }
 
   const pollIds = pollRows.map((item) => item.id);
@@ -79,6 +110,9 @@ export async function POST(request: Request) {
     supabase.from("poll_options").select("poll_id,label").in("poll_id", pollIds),
     supabase.from("poll_option_totals").select("poll_id,votes").in("poll_id", pollIds)
   ]);
+  if (optionRowsResult.error || totalsResult.error) {
+    return NextResponse.json({ ok: true, polls: buildFallbackSuggestions(q) });
+  }
 
   const optionRows = ((optionRowsResult.data ?? []) as PollOptionRow[]).filter((item) => item.poll_id && item.label);
   const totalsRows = ((totalsResult.data ?? []) as PollOptionTotalRow[]).filter((item) => item.poll_id);
@@ -119,8 +153,9 @@ export async function POST(request: Request) {
   const fallback = ranked
     .filter((item) => item.score === 0)
     .sort((left, right) => right.votes30d - left.votes30d);
+  const ordered = q ? [...matched, ...fallback] : fallback;
 
-  const suggestions = [...matched, ...fallback].slice(0, 6).map((item) => ({
+  const suggestions = ordered.slice(0, 6).map((item) => ({
     id: item.poll.id,
     slug: item.poll.slug,
     title: item.poll.title,

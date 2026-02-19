@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { categories, feedTabs } from "@/lib/mock-data";
 import { buildFeedHref } from "@/lib/feed-query";
+import { formatVoteLabel } from "@/lib/format-votes";
 import { CategoryKey, FeedTabKey } from "@/lib/types";
 import { signOutAction } from "@/app/actions/auth";
 
@@ -96,10 +97,6 @@ export function SiteHeader({
 
   useEffect(() => {
     const query = searchValue.trim();
-    if (!query) {
-      setPollSuggestions([]);
-      return;
-    }
 
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
@@ -119,7 +116,7 @@ export function SiteHeader({
       } catch {
         setPollSuggestions([]);
       }
-    }, 200);
+    }, query ? 200 : 0);
 
     return () => {
       controller.abort();
@@ -127,7 +124,7 @@ export function SiteHeader({
     };
   }, [searchValue]);
 
-  const showSearchDropdown = searchOpen && searchValue.trim().length > 0;
+  const showSearchDropdown = searchOpen;
   const hasExactPollMatch = pollSuggestions.some((item) => item.exactMatch);
 
   return (
@@ -205,9 +202,13 @@ export function SiteHeader({
               aria-label="Search polls"
               className="search-input"
               placeholder="Search polls..."
-              type="search"
+              type="text"
               name="q"
               value={searchValue}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               onChange={(event) => {
                 setSearchValue(event.target.value);
                 setSearchOpen(true);
@@ -221,7 +222,9 @@ export function SiteHeader({
 
           {showSearchDropdown ? (
             <section className="search-suggest-panel">
-              {!hasExactPollMatch ? (
+              {searchValue.trim().length === 0 ? (
+                <p className="poll-blurb">Trending polls</p>
+              ) : !hasExactPollMatch ? (
                 <p className="poll-blurb">No exact poll match. Showing related/trending polls.</p>
               ) : null}
               <div className="search-suggest-list">
@@ -233,12 +236,16 @@ export function SiteHeader({
                     onClick={() => setSearchOpen(false)}
                   >
                     <span>{item.title}</span>
-                    <small>
-                      {item.category} • {item.votes30d.toLocaleString()} votes
-                    </small>
-                    {item.optionsPreview.length > 0 ? (
-                      <small>Options: {item.optionsPreview.join(", ")}</small>
-                    ) : null}
+                    <div className="search-suggest-bottom">
+                      {item.optionsPreview.length > 0 ? (
+                        <small className="search-suggest-options">Options: {item.optionsPreview.join(", ")}</small>
+                      ) : (
+                        <small className="search-suggest-options">No options preview</small>
+                      )}
+                      <small className="search-suggest-meta">
+                        {item.category} • {formatVoteLabel(item.votes30d)}
+                      </small>
+                    </div>
                   </a>
                 ))}
               </div>

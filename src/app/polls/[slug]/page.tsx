@@ -12,6 +12,7 @@ import { fetchPollBySlug } from "@/lib/data/polls";
 import { fetchPollMetaBySlug } from "@/lib/data/polls";
 import { fetchPollComments, resolveCommentSort } from "@/lib/data/comments";
 import { buildFeedHref } from "@/lib/feed-query";
+import { formatTotalVoteLabel } from "@/lib/format-votes";
 import { totalVotes } from "@/lib/mock-data";
 import { getPollStatus } from "@/lib/poll-status";
 import { createClient } from "@/lib/supabase/server";
@@ -109,7 +110,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
           <div className="detail-top-actions">
             {status.isClosingSoon ? <span className="poll-state-badge poll-state-badge-soon">Closing soon</span> : null}
             {status.isClosed ? <span className="poll-state-badge poll-state-badge-closed">Closed</span> : null}
-            <p>{total.toLocaleString()} total votes</p>
+            <p>{formatTotalVoteLabel(total)}</p>
             <BookmarkToggleForm
               pollId={poll.id}
               isBookmarked={poll.isBookmarked}

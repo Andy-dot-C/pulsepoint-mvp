@@ -18,9 +18,12 @@ export function SharePollButton({ pollId, title, path, embedPath, source, compac
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
+      if (!menuOpen) return;
       if (!menuRef.current) return;
       const target = event.target as Node | null;
       if (!target || menuRef.current.contains(target)) return;
+      // First outside click should only dismiss the menu, not trigger card navigation underneath.
+      event.preventDefault();
       setMenuOpen(false);
     }
 
@@ -36,7 +39,7 @@ export function SharePollButton({ pollId, title, path, embedPath, source, compac
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, []);
+  }, [menuOpen]);
 
   function flashCopied() {
     setCopied(true);

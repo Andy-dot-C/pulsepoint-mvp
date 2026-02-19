@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { buildFeedHref } from "@/lib/feed-query";
+import { formatVoteLabel } from "@/lib/format-votes";
 import { Poll } from "@/lib/types";
 import { totalVotes } from "@/lib/mock-data";
 import { VoteOptionForm } from "@/components/vote-option-form";
@@ -19,6 +23,7 @@ function percent(votes: number, total: number): string {
 }
 
 export function PollCard({ poll, returnTo }: PollCardProps) {
+  const router = useRouter();
   const total = totalVotes(poll);
   const status = getPollStatus(poll.endsAt);
   const voteRankedOptions = [...poll.options].sort(
@@ -27,9 +32,31 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
   const feedOptions = poll.options.length > 4 ? voteRankedOptions : poll.options;
   const visibleOptions = feedOptions.slice(0, 4);
   const hiddenCount = Math.max(feedOptions.length - visibleOptions.length, 0);
+  const pollHref = `/polls/${poll.slug}`;
+
+  function isInteractiveTarget(target: EventTarget | null): boolean {
+    if (!(target instanceof Element)) return false;
+    return Boolean(
+      target.closest("a,button,input,select,textarea,form,label,[role='button'],[data-no-card-nav='true']")
+    );
+  }
 
   return (
-    <article className="poll-card">
+    <article
+      className="poll-card poll-card-clickable"
+      role="link"
+      tabIndex={0}
+      onClick={(event) => {
+        if (isInteractiveTarget(event.target)) return;
+        router.push(pollHref);
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        if (isInteractiveTarget(event.target)) return;
+        event.preventDefault();
+        router.push(pollHref);
+      }}
+    >
       <PollImpressionTracker pollId={poll.id} />
       <div className="poll-top-row">
         <Link className="poll-category" href={buildFeedHref({ category: poll.category })}>
@@ -42,7 +69,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
       </div>
 
       <h2>
-        <Link href={`/polls/${poll.slug}`}>{poll.title}</Link>
+        <Link href={pollHref}>{poll.title}</Link>
       </h2>
 
       <div className="option-list">
@@ -60,13 +87,13 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
       </div>
       {hiddenCount > 0 ? (
         <p className="more-options">
-          <Link href={`/polls/${poll.slug}`}>+{hiddenCount} more options</Link>
+          <Link href={pollHref}>+{hiddenCount} more options</Link>
         </p>
       ) : null}
 
       <div className="poll-footer">
         <div className="poll-footer-left">
-          <p>{total.toLocaleString()} votes</p>
+          <p>{formatVoteLabel(total)}</p>
           <Link className="poll-comment-pill" href={`/polls/${poll.slug}#comments`} title="View comments">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path

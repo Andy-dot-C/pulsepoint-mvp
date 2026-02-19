@@ -1,4 +1,5 @@
 import { Poll } from "@/lib/types";
+import { formatVoteLabel } from "@/lib/format-votes";
 
 type TrendBarsProps = {
   poll: Poll;
@@ -31,7 +32,7 @@ export function TrendBars({ poll }: TrendBarsProps) {
               );
             })}
           </div>
-          <p className="trend-total">{point.totalVotes.toLocaleString()} votes</p>
+          <p className="trend-total">{formatVoteLabel(point.totalVotes)}</p>
         </div>
       ))}
     </div>

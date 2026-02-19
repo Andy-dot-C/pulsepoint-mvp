@@ -231,6 +231,25 @@ h1 {
   color: var(--muted);
 }
 
+.search-suggest-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.search-suggest-options {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+}
+
+.search-suggest-meta {
+  white-space: nowrap;
+  text-align: right;
+}
+
 .search-suggest-item:hover {
   border-color: #bfdbfe;
   background: #eff6ff;
@@ -350,6 +369,10 @@ h1 {
 
 .poll-card {
   padding: 18px;
+}
+
+.poll-card-clickable {
+  cursor: pointer;
 }
 
 .poll-impression-anchor {
