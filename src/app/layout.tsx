@@ -1,8 +1,19 @@
 import type { Metadata } from "next";
+import { Manrope, Sora } from "next/font/google";
 import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 const siteUrl = getSiteUrl();
+const bodyFont = Manrope({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap"
+});
+const displayFont = Sora({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap"
+});
 
 export const metadata: Metadata = {
   title: "PulsePoint MVP",
@@ -31,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className={`${bodyFont.variable} ${displayFont.variable}`}>
         {children}
         <footer className="site-footer">
           <a href="/legal/terms">Terms</a>

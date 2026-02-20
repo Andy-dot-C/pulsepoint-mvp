@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { polls as mockPolls, totalVotes } from "@/lib/mock-data";
 import { CategoryKey, FeedTabKey, Poll, PollOption, PollTrendPoint } from "@/lib/types";
+import { selectTrendingPollIds } from "@/lib/trending";
 
 type FeedInput = {
   tab: FeedTabKey;
@@ -154,6 +155,7 @@ function hydratePolls(
   optionRows: PollOptionRow[],
   totalRows: PollOptionTotalRow[],
   velocityByPollId: Map<string, number>,
+  trendingPollIds: Set<string>,
   bookmarkedPollIds: Set<string> = new Set(),
   commentCountByPollId: Map<string, number> = new Map()
 ): Poll[] {
@@ -181,7 +183,7 @@ function hydratePolls(
       category: row.category_key,
       createdAt: row.created_at,
       endsAt: row.end_at ?? undefined,
-      isTrending: (velocityByPollId.get(row.id) ?? 0) > 0,
+      isTrending: trendingPollIds.has(row.id),
       isBookmarked: bookmarkedPollIds.has(row.id),
       commentCount: commentCountByPollId.get(row.id) ?? 0,
       options: optionsForPoll,
@@ -333,6 +335,7 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
     (optionsResult.data ?? []) as PollOptionRow[],
     (totalsResult.data ?? []) as PollOptionTotalRow[],
     velocityByPollId,
+    selectTrendingPollIds(velocityByPollId),
     bookmarkedPollIds,
     commentCountByPollId
   );
@@ -407,6 +410,7 @@ export async function fetchPollBySlug(slug: string): Promise<Poll | null> {
     options,
     totals,
     new Map([[row.id, events.filter((event) => Date.parse(event.changed_at) >= Date.now() - 86400000).length]]),
+    new Set([row.id]),
     bookmarkedPollIds,
     commentCountByPollId
   )[0];
@@ -483,6 +487,7 @@ export async function fetchMyPolls(userId: string): Promise<Poll[]> {
     (optionsResult.data ?? []) as PollOptionRow[],
     (totalsResult.data ?? []) as PollOptionTotalRow[],
     velocityByPollId,
+    selectTrendingPollIds(velocityByPollId),
     bookmarkedPollIds,
     commentCountByPollId
   ).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));

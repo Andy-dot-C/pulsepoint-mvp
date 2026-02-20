@@ -34,8 +34,17 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
   return (
     <PollCardShell href={pollHref} ariaLabel={`Open poll: ${poll.title}`}>
       <PollImpressionTracker pollId={poll.id} />
+      <div className="poll-title-row">
+        <span className="poll-icon-badge" aria-hidden="true">
+          {poll.category.slice(0, 1).toUpperCase()}
+        </span>
+        <h2>
+          <Link href={pollHref}>{poll.title}</Link>
+        </h2>
+      </div>
+
       <div className="poll-top-row">
-        <Link className="poll-category" href={buildFeedHref({ category: poll.category })}>
+        <Link className="poll-category" href={buildFeedHref({ filter: poll.category })}>
           {poll.category}
         </Link>
         <div className="poll-badge-row">
@@ -43,10 +52,6 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
           {poll.isTrending ? <span className="trend-badge">Trending</span> : null}
         </div>
       </div>
-
-      <h2>
-        <Link href={pollHref}>{poll.title}</Link>
-      </h2>
 
       <div className="option-list">
         {visibleOptions.map((option) => (
@@ -82,9 +87,9 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
             </svg>
             {poll.commentCount}
           </Link>
-          <BookmarkToggleForm pollId={poll.id} isBookmarked={poll.isBookmarked} source="feed_card" compact />
         </div>
         <div className="poll-footer-right">
+          <BookmarkToggleForm pollId={poll.id} isBookmarked={poll.isBookmarked} source="feed_card" compact />
           <SharePollButton
             pollId={poll.id}
             title={poll.title}
@@ -93,7 +98,6 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
             source="feed_card"
             compact
           />
-          <Link href={`/polls/${poll.slug}`}>View details</Link>
         </div>
       </div>
     </PollCardShell>

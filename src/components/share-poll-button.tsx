@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type SharePollButtonProps = {
   pollId: string;
@@ -14,6 +14,30 @@ type SharePollButtonProps = {
 export function SharePollButton({ pollId, title, path, embedPath, source, compact }: SharePollButtonProps) {
   const [copied, setCopied] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleOtherMenuOpen(event: Event) {
+      const customEvent = event as CustomEvent<{ pollId?: string }>;
+      if (customEvent.detail?.pollId !== pollId) {
+        setMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("poll-share-menu-open", handleOtherMenuOpen as EventListener);
+    return () => {
+      window.removeEventListener("poll-share-menu-open", handleOtherMenuOpen as EventListener);
+    };
+  }, [pollId]);
+
+  useEffect(() => {
+    const parentCard = wrapperRef.current?.closest(".poll-card") ?? null;
+    if (!parentCard) return;
+    parentCard.classList.toggle("poll-card-share-open", menuOpen);
+    return () => {
+      parentCard.classList.remove("poll-card-share-open");
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -24,9 +48,20 @@ export function SharePollButton({ pollId, title, path, embedPath, source, compac
       }
     }
 
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target as Node | null;
+      if (!target) return;
+      const wrapper = wrapperRef.current;
+      if (!wrapper) return;
+      if (wrapper.contains(target)) return;
+      setMenuOpen(false);
+    }
+
     document.addEventListener("keydown", handleEscape);
+    document.addEventListener("pointerdown", handlePointerDown, true);
     return () => {
       document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("pointerdown", handlePointerDown, true);
     };
   }, [menuOpen]);
 
@@ -92,7 +127,11 @@ export function SharePollButton({ pollId, title, path, embedPath, source, compac
   }
 
   return (
-    <div className={`share-menu ${menuOpen ? "share-menu-open" : ""}`}>
+    <div
+      className={`share-menu ${compact ? "share-menu-compact-anchor" : ""} ${menuOpen ? "share-menu-open" : ""}`}
+      data-share-poll-id={pollId}
+      ref={wrapperRef}
+    >
       {menuOpen ? (
         <button
           type="button"
@@ -109,7 +148,15 @@ export function SharePollButton({ pollId, title, path, embedPath, source, compac
       <button
         type="button"
         className={`share-btn ${compact ? "share-btn-compact" : ""}`}
-        onClick={() => setMenuOpen((current) => !current)}
+        onClick={() =>
+          setMenuOpen((current) => {
+            const next = !current;
+            if (next) {
+              window.dispatchEvent(new CustomEvent("poll-share-menu-open", { detail: { pollId } }));
+            }
+            return next;
+          })
+        }
         aria-label="Share poll"
         aria-haspopup="menu"
         aria-expanded={menuOpen}

@@ -1,15 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { categories, feedTabs } from "@/lib/mock-data";
 import { buildFeedHref } from "@/lib/feed-query";
-import { formatVoteLabel } from "@/lib/format-votes";
-import { CategoryKey, FeedTabKey } from "@/lib/types";
+import { FeedFilterKey } from "@/lib/types";
 import { signOutAction } from "@/app/actions/auth";
 
 type SiteHeaderProps = {
-  activeTab: FeedTabKey;
-  activeCategory: CategoryKey | "all";
+  activeFilter: FeedFilterKey;
   searchQuery: string;
   signedIn: boolean;
   username: string | null;
@@ -20,10 +19,7 @@ type SuggestionPoll = {
   id: string;
   slug: string;
   title: string;
-  category: string;
-  votes30d: number;
-  optionsPreview: string[];
-  exactMatch: boolean;
+  isTrending: boolean;
 };
 
 const MIN_SUGGESTIONS = 5;
@@ -39,8 +35,7 @@ function scoreCategoryMatch(query: string, label: string): number {
 }
 
 export function SiteHeader({
-  activeTab,
-  activeCategory,
+  activeFilter,
   searchQuery,
   signedIn,
   username,
@@ -125,188 +120,177 @@ export function SiteHeader({
   }, [searchValue]);
 
   const showSearchDropdown = searchOpen;
-  const hasExactPollMatch = pollSuggestions.some((item) => item.exactMatch);
 
   return (
     <header className="site-header">
-      <div className="brand-row">
-        <div>
-          <p className="eyebrow">MVP</p>
-          <h1>PulsePoint</h1>
-        </div>
-        <div className="header-actions">
-          {signedIn ? (
-            <div className="user-menu" ref={menuRef}>
-              <button
-                className="avatar-btn"
-                type="button"
-                title="Account menu"
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                onClick={() => setMenuOpen((current) => !current)}
-              >
-                {avatarText}
-              </button>
-              {menuOpen ? (
-                <div className="user-menu-pop" role="menu">
-                  <p className="eyebrow">Signed in as</p>
-                  <p className="user-menu-name">{username ?? "User"}</p>
-                  <a className="user-menu-link" href="/saved" onClick={() => setMenuOpen(false)}>
-                    Saved polls
-                  </a>
-                  <a className="user-menu-link" href="/my-polls" onClick={() => setMenuOpen(false)}>
-                    My polls
-                  </a>
-                  {role === "admin" ? (
-                    <>
-                      <a className="user-menu-link" href="/admin/analytics" onClick={() => setMenuOpen(false)}>
-                        Admin analytics
-                      </a>
-                      <a className="user-menu-link" href="/admin/submissions" onClick={() => setMenuOpen(false)}>
-                        Admin submissions
-                      </a>
-                      <a className="user-menu-link" href="/admin/reports" onClick={() => setMenuOpen(false)}>
-                        Admin reports
-                      </a>
-                    </>
-                  ) : null}
-                  <form action={signOutAction}>
-                    <button className="ghost-btn user-menu-signout" type="submit">
-                      Sign out
-                    </button>
-                  </form>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <a className="ghost-btn" href="/auth">
-              Sign in
-            </a>
-          )}
-          <a className="create-btn" href="/submit">
-            Submit Poll
-          </a>
-        </div>
-      </div>
+      <div className="site-header-inner">
+        <div className="brand-row">
+          <Link className="brand-lockup" href="/" aria-label="Go to homepage">
+            <p className="eyebrow">MVP</p>
+            <h1>PulsePoint</h1>
+          </Link>
 
-      <div className="search-row">
-        <div className="search-shell" ref={searchRef}>
-          <form className="search-form" action="/" method="get" onSubmit={() => setSearchOpen(false)}>
-            {activeTab !== "trending" ? (
-              <input type="hidden" name="tab" value={activeTab} />
-            ) : null}
-            {activeCategory !== "all" ? (
-              <input type="hidden" name="category" value={activeCategory} />
-            ) : null}
-            <input
-              aria-label="Search polls"
-              className="search-input"
-              placeholder="Search polls..."
-              type="text"
-              name="q"
-              value={searchValue}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck={false}
-              onChange={(event) => {
-                setSearchValue(event.target.value);
-                setSearchOpen(true);
-              }}
-              onFocus={() => setSearchOpen(true)}
-            />
-            <button className="search-submit" type="submit">
-              Search
-            </button>
-          </form>
+          <div className="search-shell" ref={searchRef}>
+            <form className="search-form" action="/" method="get" onSubmit={() => setSearchOpen(false)}>
+              {activeFilter !== "trending" ? <input type="hidden" name="filter" value={activeFilter} /> : null}
+              <input
+                aria-label="Search polls"
+                className="search-input"
+                placeholder="Search polls..."
+                type="text"
+                name="q"
+                value={searchValue}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                onChange={(event) => {
+                  setSearchValue(event.target.value);
+                  setSearchOpen(true);
+                }}
+                onFocus={() => setSearchOpen(true)}
+              />
+            </form>
 
-          {showSearchDropdown ? (
-            <section className="search-suggest-panel">
-              {searchValue.trim().length === 0 ? (
-                <p className="poll-blurb">Trending polls</p>
-              ) : !hasExactPollMatch ? (
-                <p className="poll-blurb">No exact poll match. Showing related/trending polls.</p>
-              ) : null}
-              <div className="search-suggest-list">
-                {pollSuggestions.map((item) => (
-                  <a
-                    key={item.id}
-                    className="search-suggest-item"
-                    href={`/polls/${item.slug}`}
-                    onClick={() => setSearchOpen(false)}
-                  >
-                    <span>{item.title}</span>
-                    <div className="search-suggest-bottom">
-                      {item.optionsPreview.length > 0 ? (
-                        <small className="search-suggest-options">Options: {item.optionsPreview.join(", ")}</small>
-                      ) : (
-                        <small className="search-suggest-options">No options preview</small>
-                      )}
-                      <small className="search-suggest-meta">
-                        {item.category} • {formatVoteLabel(item.votes30d)}
-                      </small>
-                    </div>
-                  </a>
-                ))}
-              </div>
-
-              <div className="search-suggest-categories">
-                <p className="eyebrow">Categories</p>
-                <div className="category-row">
-                  {categoriesOpen.map((item) => (
+            {showSearchDropdown ? (
+              <section className="search-suggest-panel">
+                <div className="search-suggest-list">
+                  {pollSuggestions.map((item) => (
                     <a
-                      key={item.key}
-                      className={`category ${activeCategory === item.key ? "category-active" : ""}`}
-                      href={buildFeedHref({ tab: activeTab, category: item.key })}
+                      key={item.id}
+                      className="search-suggest-item"
+                      href={`/polls/${item.slug}`}
                       onClick={() => setSearchOpen(false)}
                     >
-                      {item.label}
+                      <span className="search-suggest-row">
+                        <span>{item.title}</span>
+                        {item.isTrending ? (
+                          <span className="search-suggest-trend" aria-hidden="true">
+                            <svg viewBox="0 0 20 20" focusable="false">
+                              <path
+                                d="M4 13.5 8 9.5l2.5 2.5L16 6.5M12 6.5h4v4"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </span>
+                        ) : null}
+                      </span>
                     </a>
                   ))}
                 </div>
+
+                <div className="search-suggest-categories">
+                  <p className="eyebrow">Categories</p>
+                  <div className="category-row">
+                    {categoriesOpen.map((item) => (
+                      <a
+                        key={item.key}
+                        className={`category ${activeFilter === item.key ? "category-active" : ""}`}
+                        href={buildFeedHref({ filter: item.key })}
+                        onClick={() => setSearchOpen(false)}
+                      >
+                        {item.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            ) : null}
+          </div>
+
+          <div className="header-actions">
+            <a className="create-btn" href="/submit">
+              Create poll
+            </a>
+            {signedIn ? (
+              <div className="user-menu" ref={menuRef}>
+                <button
+                  className="avatar-btn"
+                  type="button"
+                  title="Account menu"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen((current) => !current)}
+                >
+                  {avatarText}
+                </button>
+                {menuOpen ? (
+                  <div className="user-menu-pop" role="menu">
+                    <p className="eyebrow">Signed in as</p>
+                    <p className="user-menu-name">{username ?? "User"}</p>
+                    <a className="user-menu-link" href="/saved" onClick={() => setMenuOpen(false)}>
+                      Saved polls
+                    </a>
+                    <a className="user-menu-link" href="/my-polls" onClick={() => setMenuOpen(false)}>
+                      My polls
+                    </a>
+                    {role === "admin" ? (
+                      <>
+                        <a className="user-menu-link" href="/admin/analytics" onClick={() => setMenuOpen(false)}>
+                          Admin analytics
+                        </a>
+                        <a className="user-menu-link" href="/admin/submissions" onClick={() => setMenuOpen(false)}>
+                          Admin submissions
+                        </a>
+                        <a className="user-menu-link" href="/admin/reports" onClick={() => setMenuOpen(false)}>
+                          Admin reports
+                        </a>
+                      </>
+                    ) : null}
+                    <form action={signOutAction}>
+                      <button className="ghost-btn user-menu-signout" type="submit">
+                        Sign out
+                      </button>
+                    </form>
+                  </div>
+                ) : null}
               </div>
-            </section>
-          ) : null}
+            ) : (
+              <a className="ghost-btn" href="/auth">
+                Sign in
+              </a>
+            )}
+          </div>
+        </div>
+
+        <div className="discover-row">
+          <nav className="tab-row" aria-label="Feed tabs">
+            {feedTabs.map((tab) => (
+              <a
+                key={tab.key}
+                className={`pill ${tab.key === activeFilter ? "pill-active" : ""}`}
+                href={buildFeedHref({
+                  filter: tab.key,
+                  q: searchQuery
+                })}
+              >
+                {tab.label}
+              </a>
+            ))}
+          </nav>
+
+          <span className="discover-divider" aria-hidden="true" />
+
+          <nav className="category-row" aria-label="Categories">
+            {categories.map((category) => (
+              <a
+                key={category.key}
+                className={`category ${category.key === activeFilter ? "category-active" : ""}`}
+                href={buildFeedHref({
+                  filter: category.key,
+                  q: searchQuery
+                })}
+              >
+                {category.label}
+              </a>
+            ))}
+          </nav>
         </div>
       </div>
-
-      <nav className="tab-row" aria-label="Feed tabs">
-        {feedTabs.map((tab) => (
-          <a
-            key={tab.key}
-            className={`pill ${tab.key === activeTab ? "pill-active" : ""}`}
-            href={buildFeedHref({
-              tab: tab.key,
-              category: activeCategory,
-              q: searchQuery
-            })}
-          >
-            {tab.label}
-          </a>
-        ))}
-      </nav>
-
-      <nav className="category-row" aria-label="Categories">
-        <a
-          className={`category ${activeCategory === "all" ? "category-active" : ""}`}
-          href={buildFeedHref({ tab: activeTab, category: "all", q: searchQuery })}
-        >
-          All
-        </a>
-        {categories.map((category) => (
-          <a
-            key={category.key}
-            className={`category ${category.key === activeCategory ? "category-active" : ""}`}
-            href={buildFeedHref({
-              tab: activeTab,
-              category: category.key,
-              q: searchQuery
-            })}
-          >
-            {category.label}
-          </a>
-        ))}
-      </nav>
     </header>
   );
 }

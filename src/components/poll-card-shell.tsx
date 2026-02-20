@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 type PollCardShellProps = {
   href: string;
   ariaLabel: string;
+  className?: string;
   children: ReactNode;
 };
 
@@ -16,7 +17,7 @@ function hasModifierKey(event: MouseEvent<HTMLElement>) {
   return event.metaKey || event.ctrlKey || event.altKey || event.shiftKey;
 }
 
-export function PollCardShell({ href, ariaLabel, children }: PollCardShellProps) {
+export function PollCardShell({ href, ariaLabel, className, children }: PollCardShellProps) {
   const router = useRouter();
 
   function openPoll() {
@@ -42,7 +43,7 @@ export function PollCardShell({ href, ariaLabel, children }: PollCardShellProps)
 
   return (
     <article
-      className="poll-card poll-card-clickable"
+      className={`poll-card poll-card-clickable${className ? ` ${className}` : ""}`}
       role="link"
       aria-label={ariaLabel}
       tabIndex={0}

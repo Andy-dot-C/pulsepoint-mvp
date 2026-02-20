@@ -104,7 +104,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
 
       <article className="detail-card">
         <div className="detail-top-row">
-          <Link className="poll-category" href={buildFeedHref({ category: poll.category })}>
+          <Link className="poll-category" href={buildFeedHref({ filter: poll.category })}>
             {poll.category}
           </Link>
           <div className="detail-top-actions">
