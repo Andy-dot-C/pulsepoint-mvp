@@ -515,10 +515,16 @@ h3 {
 }
 
 .feed-cards-grid .poll-card .poll-footer-left {
+  display: flex;
+  align-items: center;
+  min-height: 22px;
   gap: 16px;
 }
 
 .feed-cards-grid .poll-card .poll-footer-right {
+  display: flex;
+  align-items: center;
+  min-height: 22px;
   gap: 14px;
 }
 
@@ -533,12 +539,21 @@ h3 {
   align-items: center;
   gap: 5px;
   font-size: 13px;
+  line-height: 20px;
 }
 
 .feed-cards-grid .poll-card .poll-meta-pill svg,
 .feed-cards-grid .poll-card .poll-comment-pill svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.feed-cards-grid .poll-card .poll-meta-pill svg {
   width: 21px;
   height: 21px;
+  transform: translateY(-1px);
 }
 
 .feed-cards-grid .poll-card .poll-comment-pill:hover,
@@ -563,13 +578,13 @@ h3 {
 }
 
 .feed-cards-grid .poll-card .bookmark-icon-btn-compact {
-  transform: translateX(6px);
+  transform: translate(6px, 1px);
 }
 
 .feed-cards-grid .poll-card .bookmark-icon-btn-compact svg,
 .feed-cards-grid .poll-card .share-btn-compact svg {
-  width: 20px;
-  height: 20px;
+  width: 19px;
+  height: 19px;
 }
 
 .feed-cards-grid .poll-card .bookmark-icon-btn-compact:hover,
@@ -597,10 +612,16 @@ h3 {
 }
 
 .featured-poll-card .poll-footer-left {
+  display: flex;
+  align-items: center;
+  min-height: 22px;
   gap: 16px;
 }
 
 .featured-poll-card .poll-footer-right {
+  display: flex;
+  align-items: center;
+  min-height: 22px;
   gap: 14px;
 }
 
@@ -615,12 +636,21 @@ h3 {
   align-items: center;
   gap: 5px;
   font-size: 13px;
+  line-height: 20px;
 }
 
 .featured-poll-card .poll-meta-pill svg,
 .featured-poll-card .poll-comment-pill svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.featured-poll-card .poll-meta-pill svg {
   width: 21px;
   height: 21px;
+  transform: translateY(-1px);
 }
 
 .featured-poll-card .poll-comment-pill:hover,
@@ -645,13 +675,13 @@ h3 {
 }
 
 .featured-poll-card .bookmark-icon-btn-compact {
-  transform: translateX(6px);
+  transform: translate(6px, 1px);
 }
 
 .featured-poll-card .bookmark-icon-btn-compact svg,
 .featured-poll-card .share-btn-compact svg {
-  width: 20px;
-  height: 20px;
+  width: 19px;
+  height: 19px;
 }
 
 .featured-poll-card .bookmark-icon-btn-compact:hover,

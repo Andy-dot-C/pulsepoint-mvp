@@ -90,7 +90,7 @@ export function BookmarkToggleForm({ pollId, isBookmarked, source, compact }: Bo
           d="M7 3.5h10a1.5 1.5 0 0 1 1.5 1.5v15l-6.5-3.9-6.5 3.9V5A1.5 1.5 0 0 1 7 3.5Z"
           fill={optimisticBookmarked ? "currentColor" : "none"}
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1.8"
           strokeLinejoin="round"
         />
       </svg>
