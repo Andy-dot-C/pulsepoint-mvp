@@ -141,6 +141,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
                 returnTo={`/polls/${poll.slug}?comments=${commentSort}`}
                 label={option.label}
                 rightText={`${Math.round((option.votes / Math.max(total, 1)) * 100)}%`}
+                percent={(option.votes / Math.max(total, 1)) * 100}
                 disabled={status.isClosed}
               />
             ))}

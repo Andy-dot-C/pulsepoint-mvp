@@ -13,6 +13,14 @@ function topShare(poll: Poll): number {
   return Math.round((lead / total) * 100);
 }
 
+function topOptionLabel(poll: Poll): string {
+  if (poll.options.length === 0) return "No options";
+  const ranked = [...poll.options].sort(
+    (left, right) => right.votes - left.votes || left.label.localeCompare(right.label)
+  );
+  return ranked[0]?.label ?? "No options";
+}
+
 function trendingList(polls: Poll[]): Poll[] {
   const trending = polls.filter((poll) => poll.isTrending);
   if (trending.length >= 5) return trending.slice(0, 5);
@@ -49,7 +57,10 @@ export function FeedRail({ polls }: FeedRailProps) {
               <li key={poll.id} className="rail-item">
                 <Link href={`/polls/${poll.slug}`} className="rail-link">
                   <span className="rail-title">{poll.title}</span>
-                  <span className="rail-score">{topShare(poll)}%</span>
+                  <span className="rail-answer-row">
+                    <span className="rail-answer">{topOptionLabel(poll)}</span>
+                    <span className="rail-score">{topShare(poll)}%</span>
+                  </span>
                 </Link>
               </li>
             ))}
@@ -65,7 +76,10 @@ export function FeedRail({ polls }: FeedRailProps) {
               <li key={poll.id} className="rail-item">
                 <Link href={`/polls/${poll.slug}`} className="rail-link">
                   <span className="rail-title">{poll.title}</span>
-                  <span className="rail-score">{topShare(poll)}%</span>
+                  <span className="rail-answer-row">
+                    <span className="rail-answer">{topOptionLabel(poll)}</span>
+                    <span className="rail-score">{topShare(poll)}%</span>
+                  </span>
                 </Link>
               </li>
             ))}
@@ -81,7 +95,10 @@ export function FeedRail({ polls }: FeedRailProps) {
               <li key={poll.id} className="rail-item">
                 <Link href={`/polls/${poll.slug}`} className="rail-link">
                   <span className="rail-title">{poll.title}</span>
-                  <span className="rail-score">{topShare(poll)}%</span>
+                  <span className="rail-answer-row">
+                    <span className="rail-answer">{topOptionLabel(poll)}</span>
+                    <span className="rail-score">{topShare(poll)}%</span>
+                  </span>
                 </Link>
               </li>
             ))}

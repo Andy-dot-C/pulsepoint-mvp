@@ -120,10 +120,10 @@ export default async function Home({ searchParams }: HomePageProps) {
       ) : null}
       {submissionMessage ? <FlashBanner message={submissionMessage} /> : null}
 
-      <section className="feed-grid">
+      <section className="feed-grid feed-grid-cards-3">
         <div className="feed-column">
           {featuredPoll ? <FeedFeaturedPollCard poll={featuredPoll} returnTo={returnTo} /> : null}
-          <div className="feed-cards-grid">
+          <div className="feed-cards-grid feed-cards-grid-3">
             {gridPolls.map((poll) => (
               <PollCard key={poll.id} poll={poll} returnTo={returnTo} />
             ))}

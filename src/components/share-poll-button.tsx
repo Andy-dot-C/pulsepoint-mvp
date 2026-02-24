@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 type SharePollButtonProps = {
   pollId: string;
@@ -14,7 +15,10 @@ type SharePollButtonProps = {
 export function SharePollButton({ pollId, title, path, embedPath, source, compact }: SharePollButtonProps) {
   const [copied, setCopied] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     function handleOtherMenuOpen(event: Event) {
@@ -52,16 +56,39 @@ export function SharePollButton({ pollId, title, path, embedPath, source, compac
       const target = event.target as Node | null;
       if (!target) return;
       const wrapper = wrapperRef.current;
-      if (!wrapper) return;
-      if (wrapper.contains(target)) return;
+      const menu = menuRef.current;
+      if (wrapper?.contains(target)) return;
+      if (menu?.contains(target)) return;
       setMenuOpen(false);
     }
 
+    function updateMenuPosition() {
+      const trigger = buttonRef.current;
+      if (!trigger) return;
+      const rect = trigger.getBoundingClientRect();
+      const parentCard = wrapperRef.current?.closest(".poll-card") as HTMLElement | null;
+      const cardRect = parentCard?.getBoundingClientRect();
+      const menuWidth = 180;
+      const desiredRightEdge = cardRect?.right ?? rect.right;
+      const left = Math.min(
+        window.innerWidth - menuWidth - 8,
+        Math.max(8, desiredRightEdge - menuWidth)
+      );
+      const top = Math.max(8, rect.top - 6);
+      setMenuPosition({ top, left });
+    }
+
+    updateMenuPosition();
+
     document.addEventListener("keydown", handleEscape);
     document.addEventListener("pointerdown", handlePointerDown, true);
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
     return () => {
       document.removeEventListener("keydown", handleEscape);
       document.removeEventListener("pointerdown", handlePointerDown, true);
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
     };
   }, [menuOpen]);
 
@@ -132,20 +159,8 @@ export function SharePollButton({ pollId, title, path, embedPath, source, compac
       data-share-poll-id={pollId}
       ref={wrapperRef}
     >
-      {menuOpen ? (
-        <button
-          type="button"
-          className="share-menu-backdrop"
-          aria-label="Close share menu"
-          data-no-card-open="true"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            setMenuOpen(false);
-          }}
-        />
-      ) : null}
       <button
+        ref={buttonRef}
         type="button"
         className={`share-btn ${compact ? "share-btn-compact" : ""}`}
         onClick={() =>
@@ -163,32 +178,52 @@ export function SharePollButton({ pollId, title, path, embedPath, source, compac
         title={copied ? "Copied" : "Share poll"}
       >
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path
-            d="M12 16V4M12 4 8 8M12 4 16 8M5 12v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <circle cx="6" cy="12" r="2.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+          <circle cx="17.5" cy="6" r="2.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+          <circle cx="17.5" cy="18" r="2.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+          <path d="M8 11 15.3 7.1M8 13l7.3 3.9" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
         {compact ? null : copied ? "Copied" : "Share"}
       </button>
-      {menuOpen ? (
-        <div className="share-menu-pop" role="menu">
-          <button type="button" className="share-menu-item" onClick={copyLink}>
-            Copy link
-          </button>
-          <button type="button" className="share-menu-item" onClick={shareViaDevice}>
-            Share via device
-          </button>
-          {embedPath ? (
-            <button type="button" className="share-menu-item" onClick={copyEmbedCode}>
-              Copy embed code
-            </button>
-          ) : null}
-        </div>
-      ) : null}
+      {menuOpen && typeof document !== "undefined"
+        ? createPortal(
+            <>
+              <button
+                type="button"
+                className="share-menu-backdrop"
+                aria-label="Close share menu"
+                data-no-card-open="true"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setMenuOpen(false);
+                }}
+              />
+              <div
+                ref={menuRef}
+                className="share-menu-pop share-menu-pop-floating"
+                role="menu"
+                style={{
+                  top: menuPosition?.top ?? 0,
+                  left: menuPosition?.left ?? 0
+                }}
+              >
+                <button type="button" className="share-menu-item" onClick={copyLink}>
+                  Copy link
+                </button>
+                <button type="button" className="share-menu-item" onClick={shareViaDevice}>
+                  Share via device
+                </button>
+                {embedPath ? (
+                  <button type="button" className="share-menu-item" onClick={copyEmbedCode}>
+                    Copy embed code
+                  </button>
+                ) : null}
+              </div>
+            </>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

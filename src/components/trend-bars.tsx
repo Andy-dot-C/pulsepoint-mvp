@@ -6,7 +6,7 @@ type TrendBarsProps = {
 };
 
 function colorFor(index: number): string {
-  const palette = ["#0f766e", "#2563eb", "#c2410c", "#6d28d9"];
+  const palette = ["#4b5563", "#6b7280", "#9ca3af", "#d1d5db"];
   return palette[index % palette.length];
 }
 
