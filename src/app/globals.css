@@ -476,7 +476,7 @@ h3 {
 }
 
 .feed-cards-grid .poll-card {
-  height: 300px;
+  height: 276px;
   display: flex;
   flex-direction: column;
   overflow: visible;
@@ -494,6 +494,11 @@ h3 {
   flex: 1;
   min-height: 0;
   overflow: hidden;
+}
+
+.feed-cards-grid .poll-card-binary .option-list {
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
 .feed-cards-grid .poll-card .more-options {
@@ -868,7 +873,7 @@ h3 {
 }
 
 .poll-card-binary .option-list {
-  margin-top: 34px;
+  margin-top: 24px;
   display: grid;
   grid-template-columns: repeat(2, 126px);
   justify-content: center;
@@ -880,12 +885,16 @@ h3 {
 }
 
 .binary-split-bar {
-  margin-top: 28px;
+  margin-top: 24px;
   height: 10px;
   border-radius: 999px;
   background: #cfd4dc;
   overflow: hidden;
   display: flex;
+}
+
+.poll-card-binary .poll-top-row {
+  display: none;
 }
 
 .binary-split-bar-left {
