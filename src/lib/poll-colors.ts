@@ -69,3 +69,11 @@ export function getPollOptionFillColor(seed: string, optionIndex: number): strin
   if (optionIndex === 2) return theme.optionFill[2];
   return theme.optionFill[3];
 }
+
+export function getPollOptionLineColor(seed: string, optionIndex: number): string {
+  const theme = getPollColorTheme(seed);
+  if (optionIndex === 0) {
+    return theme.primary;
+  }
+  return "#94a3b8";
+}

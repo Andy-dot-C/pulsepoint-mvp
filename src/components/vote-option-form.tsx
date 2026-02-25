@@ -8,7 +8,7 @@ type VoteOptionFormProps = {
   label: string;
   rightText: string;
   percent: number;
-  variant?: "default" | "binary";
+  variant?: "default" | "binary" | "line";
   fillColor?: string;
   accentColor?: string;
   selected?: boolean;
@@ -57,24 +57,39 @@ export function VoteOptionForm({
       <input type="hidden" name="optionId" value={optionId} />
       <input type="hidden" name="returnTo" value={returnTo} />
       <button
-        className={`option-btn ${variant === "binary" ? "option-btn-binary" : ""}${selected ? " option-btn-selected" : ""}`}
+        className={`option-btn ${variant === "binary" ? "option-btn-binary" : ""}${variant === "line" ? " option-btn-line" : ""}${selected ? " option-btn-selected" : ""}`}
         type="submit"
         disabled={disabled}
         aria-disabled={disabled}
         aria-pressed={selected}
         style={Object.keys(style).length > 0 ? style : undefined}
       >
-        {variant === "binary" ? null : (
+        {variant === "binary" || variant === "line" ? null : (
           <span
             className="option-btn-fill"
             aria-hidden="true"
             style={{ width: `${safePercent}%`, ...(fillColor ? { backgroundColor: fillColor } : {}) }}
           />
         )}
-        <span className="option-btn-content">
-          <span>{label}</span>
-          <strong>{rightText}</strong>
-        </span>
+        {variant === "line" ? (
+          <span className="option-btn-line-content">
+            <span className="option-btn-line-header">
+              <span className="option-btn-line-label">{label}</span>
+              <strong className="option-btn-line-percent">{rightText}</strong>
+            </span>
+            <span className="option-btn-line-track" aria-hidden="true">
+              <span
+                className="option-btn-line-fill"
+                style={{ width: `${safePercent}%`, ...(accentColor ? { backgroundColor: accentColor } : {}) }}
+              />
+            </span>
+          </span>
+        ) : (
+          <span className="option-btn-content">
+            <span>{label}</span>
+            <strong>{rightText}</strong>
+          </span>
+        )}
       </button>
     </form>
   );

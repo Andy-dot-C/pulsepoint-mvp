@@ -476,7 +476,7 @@ h3 {
 }
 
 .feed-cards-grid .poll-card {
-  height: 276px;
+  height: 244px;
   display: flex;
   flex-direction: column;
   overflow: visible;
@@ -872,6 +872,10 @@ h3 {
   gap: 8px;
 }
 
+.poll-card:not(.poll-card-binary) .option-list {
+  gap: 11px;
+}
+
 .poll-card-binary .option-list {
   margin-top: 24px;
   display: grid;
@@ -886,7 +890,7 @@ h3 {
 
 .binary-split-bar {
   margin-top: 24px;
-  height: 7px;
+  height: 5px;
   border-radius: 999px;
   background: #cfd4dc;
   overflow: hidden;
@@ -928,8 +932,8 @@ h3 {
 
 .option-btn-binary {
   width: 126px;
-  height: 98px;
-  min-height: 98px;
+  height: 66px;
+  min-height: 66px;
   justify-content: center;
 }
 
@@ -952,6 +956,78 @@ h3 {
   line-height: 1.2;
   font-weight: 600;
   color: var(--binary-percent-color, var(--muted));
+}
+
+.option-btn-line {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  display: block;
+  width: 100%;
+}
+
+.option-btn-line:hover {
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.option-btn-line-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.poll-card:not(.poll-card-binary) .option-list form {
+  width: 100%;
+}
+
+.option-btn-line-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.option-btn-line-label {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 400;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.option-btn-line-percent {
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 700;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.option-btn-line.option-btn-selected .option-btn-line-percent {
+  color: var(--option-selected-color, #374151);
+}
+
+.option-btn-line-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+  display: block;
+}
+
+.option-btn-line-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--option-selected-color, #2563eb);
+  display: block;
 }
 
 .option-btn-fill {

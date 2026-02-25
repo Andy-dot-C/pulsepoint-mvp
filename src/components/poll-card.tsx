@@ -7,7 +7,7 @@ import { SharePollButton } from "@/components/share-poll-button";
 import { PollImpressionTracker } from "@/components/poll-impression-tracker";
 import { getPollStatus } from "@/lib/poll-status";
 import { PollCardShell } from "@/components/poll-card-shell";
-import { getPollColorTheme, getPollOptionFillColor } from "@/lib/poll-colors";
+import { getPollColorTheme, getPollOptionFillColor, getPollOptionLineColor } from "@/lib/poll-colors";
 
 type PollCardProps = {
   poll: Poll;
@@ -69,7 +69,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
   const voteRankedOptions = [...poll.options].sort(
     (left, right) => right.votes - left.votes || left.label.localeCompare(right.label)
   );
-  const feedOptions = poll.options.length > 4 ? voteRankedOptions : poll.options;
+  const feedOptions = isBinary ? poll.options : voteRankedOptions;
   const isBinaryDemoMode = isBinary && total === 0;
   const demoVotes = isBinaryDemoMode ? getBinaryDemoVotes(poll.id) : null;
   const optionVotesById = new Map(
@@ -82,7 +82,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
     })
   );
   const displayTotal = demoVotes ? demoVotes.yesVotes + demoVotes.noVotes : total;
-  const visibleOptions = feedOptions.slice(0, isBinary ? 2 : 4);
+  const visibleOptions = feedOptions.slice(0, 2);
   const hiddenCount = Math.max(feedOptions.length - visibleOptions.length, 0);
   const pollHref = `/polls/${poll.slug}`;
   const colorTheme = getPollColorTheme(poll.id);
@@ -137,9 +137,11 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
             label={option.label}
             rightText={percent(optionVotesById.get(option.id) ?? 0, displayTotal)}
             percent={((optionVotesById.get(option.id) ?? 0) / Math.max(displayTotal, 1)) * 100}
-            variant={isBinary ? "binary" : "default"}
+            variant={isBinary ? "binary" : "line"}
             fillColor={getPollOptionFillColor(poll.id, optionIndex)}
-            accentColor={isBinary ? (optionIndex === 0 ? colorTheme.primary : colorTheme.secondary) : undefined}
+            accentColor={
+              isBinary ? (optionIndex === 0 ? colorTheme.primary : colorTheme.secondary) : getPollOptionLineColor(poll.id, optionIndex)
+            }
             selected={poll.viewerVoteOptionId === option.id}
             disabled={status.isClosed}
           />
