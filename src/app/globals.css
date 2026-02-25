@@ -452,7 +452,7 @@ h3 {
   margin-top: 22px;
   display: grid;
   grid-template-columns: minmax(0, 1.82fr) minmax(300px, 1fr);
-  gap: 18px;
+  gap: 28px;
 }
 
 .feed-grid-cards-3 {
@@ -988,7 +988,7 @@ h3 {
 }
 
 .option-btn-binary.option-btn-selected {
-  background: #f8fafc;
+  background: var(--option-selected-tint, #f8fafc);
 }
 
 .option-btn:disabled {

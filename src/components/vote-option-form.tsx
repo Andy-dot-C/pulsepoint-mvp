@@ -15,6 +15,15 @@ type VoteOptionFormProps = {
   disabled?: boolean;
 };
 
+function colorToTint(color: string): string | null {
+  const hex = color.trim().replace(/^#/, "");
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return null;
+  const red = Number.parseInt(hex.slice(0, 2), 16);
+  const green = Number.parseInt(hex.slice(2, 4), 16);
+  const blue = Number.parseInt(hex.slice(4, 6), 16);
+  return `rgba(${red}, ${green}, ${blue}, 0.12)`;
+}
+
 export function VoteOptionForm({
   pollId,
   optionId,
@@ -36,6 +45,10 @@ export function VoteOptionForm({
   }
   if (selectedColor) {
     style["--option-selected-color" as string] = selectedColor;
+    const selectedTint = colorToTint(selectedColor);
+    if (selectedTint) {
+      style["--option-selected-tint" as string] = selectedTint;
+    }
   }
 
   return (
