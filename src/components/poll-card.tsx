@@ -18,6 +18,10 @@ function percent(votes: number, total: number): string {
   return `${Math.round((votes / total) * 100)}%`;
 }
 
+function pollIconImageUrl(seed: string): string {
+  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/96/96`;
+}
+
 function formatCompactCount(value: number): string {
   const rounded = Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
   if (rounded >= 1_000_000) {
@@ -47,7 +51,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
       <PollImpressionTracker pollId={poll.id} />
       <div className="poll-title-row">
         <span className="poll-icon-badge" aria-hidden="true">
-          {poll.category.slice(0, 1).toUpperCase()}
+          <img src={pollIconImageUrl(poll.id)} alt="" loading="lazy" decoding="async" />
         </span>
         <h2>
           <Link href={pollHref}>{poll.title}</Link>
