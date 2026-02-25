@@ -32,6 +32,7 @@ export type Poll = {
   isTrending: boolean;
   isBookmarked: boolean;
   commentCount: number;
+  viewerVoteOptionId?: string;
   options: PollOption[];
   trend: PollTrendPoint[];
 };

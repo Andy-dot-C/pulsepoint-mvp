@@ -886,7 +886,7 @@ h3 {
 
 .binary-split-bar {
   margin-top: 24px;
-  height: 10px;
+  height: 7px;
   border-radius: 999px;
   background: #cfd4dc;
   overflow: hidden;
@@ -977,6 +977,18 @@ h3 {
   border-color: #c8ced8;
   background: #f3f4f6;
   color: var(--brand-strong);
+}
+
+.option-btn-selected {
+  border-color: var(--option-selected-color, #6b7280);
+}
+
+.option-btn-selected:hover {
+  border-color: var(--option-selected-color, #4b5563);
+}
+
+.option-btn-binary.option-btn-selected {
+  background: #f8fafc;
 }
 
 .option-btn:disabled {

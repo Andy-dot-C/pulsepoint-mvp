@@ -439,6 +439,11 @@ for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
+create policy "users can delete own vote"
+on public.votes
+for delete
+using (auth.uid() = user_id);
+
 -- Vote events policies
 create policy "admins read vote events"
 on public.vote_events

@@ -11,6 +11,7 @@ type VoteOptionFormProps = {
   variant?: "default" | "binary";
   fillColor?: string;
   accentColor?: string;
+  selected?: boolean;
   disabled?: boolean;
 };
 
@@ -24,9 +25,18 @@ export function VoteOptionForm({
   variant = "default",
   fillColor,
   accentColor,
+  selected = false,
   disabled = false
 }: VoteOptionFormProps) {
   const safePercent = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
+  const selectedColor = accentColor ?? fillColor;
+  const style: CSSProperties = {};
+  if (accentColor) {
+    style["--binary-percent-color" as string] = accentColor;
+  }
+  if (selectedColor) {
+    style["--option-selected-color" as string] = selectedColor;
+  }
 
   return (
     <form action={submitVoteAction}>
@@ -34,11 +44,12 @@ export function VoteOptionForm({
       <input type="hidden" name="optionId" value={optionId} />
       <input type="hidden" name="returnTo" value={returnTo} />
       <button
-        className={`option-btn ${variant === "binary" ? "option-btn-binary" : ""}`}
+        className={`option-btn ${variant === "binary" ? "option-btn-binary" : ""}${selected ? " option-btn-selected" : ""}`}
         type="submit"
         disabled={disabled}
         aria-disabled={disabled}
-        style={accentColor ? ({ ["--binary-percent-color" as string]: accentColor } as CSSProperties) : undefined}
+        aria-pressed={selected}
+        style={Object.keys(style).length > 0 ? style : undefined}
       >
         {variant === "binary" ? null : (
           <span

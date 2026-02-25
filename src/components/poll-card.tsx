@@ -140,6 +140,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
             variant={isBinary ? "binary" : "default"}
             fillColor={getPollOptionFillColor(poll.id, optionIndex)}
             accentColor={isBinary ? (optionIndex === 0 ? colorTheme.primary : colorTheme.secondary) : undefined}
+            selected={poll.viewerVoteOptionId === option.id}
             disabled={status.isClosed}
           />
         ))}

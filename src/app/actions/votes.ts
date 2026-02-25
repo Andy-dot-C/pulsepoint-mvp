@@ -28,28 +28,50 @@ export async function submitVoteAction(formData: FormData) {
     redirect(`/auth?next=${encodeURIComponent(returnTo)}`);
   }
 
-  const { error } = await supabase.from("votes").upsert(
-    {
-      poll_id: pollId,
-      option_id: optionId,
-      user_id: user.id,
-      updated_at: new Date().toISOString()
-    },
-    {
-      onConflict: "poll_id,user_id"
-    }
-  );
+  const { data: existingVote, error: existingVoteError } = await supabase
+    .from("votes")
+    .select("option_id")
+    .eq("poll_id", pollId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existingVoteError) {
+    redirect(`${returnTo}?voteError=${encodeURIComponent(existingVoteError.message)}`);
+  }
+
+  const isRemovingVote = existingVote?.option_id === optionId;
+
+  const { error } = isRemovingVote
+    ? await supabase
+        .from("votes")
+        .delete()
+        .eq("poll_id", pollId)
+        .eq("user_id", user.id)
+        .eq("option_id", optionId)
+    : await supabase.from("votes").upsert(
+        {
+          poll_id: pollId,
+          option_id: optionId,
+          user_id: user.id,
+          updated_at: new Date().toISOString()
+        },
+        {
+          onConflict: "poll_id,user_id"
+        }
+      );
 
   if (error) {
     redirect(`${returnTo}?voteError=${encodeURIComponent(error.message)}`);
   }
 
-  await trackPollEvent({
-    pollId,
-    userId: user.id,
-    eventType: "vote_cast",
-    source: returnTo.includes("/polls/") ? "poll_detail" : "feed"
-  });
+  if (!isRemovingVote) {
+    await trackPollEvent({
+      pollId,
+      userId: user.id,
+      eventType: "vote_cast",
+      source: returnTo.includes("/polls/") ? "poll_detail" : "feed"
+    });
+  }
 
   revalidatePath("/");
   revalidatePath(returnTo);

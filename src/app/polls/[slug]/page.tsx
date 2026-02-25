@@ -144,6 +144,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
                 rightText={`${Math.round((option.votes / Math.max(total, 1)) * 100)}%`}
                 percent={(option.votes / Math.max(total, 1)) * 100}
                 fillColor={getPollOptionFillColor(poll.id, optionIndex)}
+                selected={poll.viewerVoteOptionId === option.id}
                 disabled={status.isClosed}
               />
             ))}
