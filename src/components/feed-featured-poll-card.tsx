@@ -8,6 +8,7 @@ import { TrendBars } from "@/components/trend-bars";
 import { SharePollButton } from "@/components/share-poll-button";
 import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
 import { PollCardShell } from "@/components/poll-card-shell";
+import { getPollOptionFillColor } from "@/lib/poll-colors";
 
 type FeedFeaturedPollCardProps = {
   poll: Poll;
@@ -52,7 +53,7 @@ export function FeedFeaturedPollCard({ poll, returnTo }: FeedFeaturedPollCardPro
       <div className="featured-poll-main">
         <div className="featured-poll-left">
           <div className="option-list">
-            {featuredOptions.map((option) => (
+            {featuredOptions.map((option, optionIndex) => (
               <VoteOptionForm
                 key={option.id}
                 pollId={poll.id}
@@ -61,6 +62,7 @@ export function FeedFeaturedPollCard({ poll, returnTo }: FeedFeaturedPollCardPro
                 label={option.label}
                 rightText={percent(option.votes, total)}
                 percent={(option.votes / Math.max(total, 1)) * 100}
+                fillColor={getPollOptionFillColor(poll.id, optionIndex)}
               />
             ))}
           </div>

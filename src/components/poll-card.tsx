@@ -7,6 +7,7 @@ import { SharePollButton } from "@/components/share-poll-button";
 import { PollImpressionTracker } from "@/components/poll-impression-tracker";
 import { getPollStatus } from "@/lib/poll-status";
 import { PollCardShell } from "@/components/poll-card-shell";
+import { getPollColorTheme, getPollOptionFillColor } from "@/lib/poll-colors";
 
 type PollCardProps = {
   poll: Poll;
@@ -20,6 +21,32 @@ function percent(votes: number, total: number): string {
 
 function pollIconImageUrl(seed: string): string {
   return `https://picsum.photos/seed/${encodeURIComponent(seed)}/96/96`;
+}
+
+function normalizeBinaryLabel(value: string): string {
+  return value.trim().toLowerCase().replace(/[^a-z]/g, "");
+}
+
+function hashSeed(seed: string): number {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
+
+function getBinaryDemoVotes(seed: string): { yesVotes: number; noVotes: number } {
+  const hash = hashSeed(seed);
+  const total = 220 + (hash % 980); // 220..1199
+  const yesShare = 42 + (hash % 17); // 42..58
+  const yesVotes = Math.round((total * yesShare) / 100);
+  return { yesVotes, noVotes: total - yesVotes };
+}
+
+function isYesNoPoll(poll: Poll): boolean {
+  if (poll.options.length !== 2) return false;
+  const labels = poll.options.map((option) => normalizeBinaryLabel(option.label));
+  return labels.includes("yes") && labels.includes("no");
 }
 
 function formatCompactCount(value: number): string {
@@ -38,16 +65,38 @@ function formatCompactCount(value: number): string {
 export function PollCard({ poll, returnTo }: PollCardProps) {
   const total = totalVotes(poll);
   const status = getPollStatus(poll.endsAt);
+  const isBinary = isYesNoPoll(poll);
   const voteRankedOptions = [...poll.options].sort(
     (left, right) => right.votes - left.votes || left.label.localeCompare(right.label)
   );
   const feedOptions = poll.options.length > 4 ? voteRankedOptions : poll.options;
-  const visibleOptions = feedOptions.slice(0, 4);
+  const isBinaryDemoMode = isBinary && total === 0;
+  const demoVotes = isBinaryDemoMode ? getBinaryDemoVotes(poll.id) : null;
+  const optionVotesById = new Map(
+    poll.options.map((option) => {
+      if (!demoVotes) return [option.id, option.votes] as const;
+      const normalized = normalizeBinaryLabel(option.label);
+      if (normalized === "yes") return [option.id, demoVotes.yesVotes] as const;
+      if (normalized === "no") return [option.id, demoVotes.noVotes] as const;
+      return [option.id, option.votes] as const;
+    })
+  );
+  const displayTotal = demoVotes ? demoVotes.yesVotes + demoVotes.noVotes : total;
+  const visibleOptions = feedOptions.slice(0, isBinary ? 2 : 4);
   const hiddenCount = Math.max(feedOptions.length - visibleOptions.length, 0);
   const pollHref = `/polls/${poll.slug}`;
+  const colorTheme = getPollColorTheme(poll.id);
+  const leftVotes = optionVotesById.get(visibleOptions[0]?.id ?? "") ?? 0;
+  const leftSplit =
+    displayTotal === 0 ? 50 : Math.round((leftVotes / Math.max(displayTotal, 1)) * 100);
+  const rightSplit = Math.max(0, 100 - leftSplit);
 
   return (
-    <PollCardShell href={pollHref} ariaLabel={`Open poll: ${poll.title}`}>
+    <PollCardShell
+      href={pollHref}
+      ariaLabel={`Open poll: ${poll.title}`}
+      className={isBinary ? "poll-card-binary" : undefined}
+    >
       <PollImpressionTracker pollId={poll.id} />
       <div className="poll-title-row">
         <span className="poll-icon-badge" aria-hidden="true">
@@ -65,21 +114,37 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
         </div>
       </div>
 
+      {isBinary && visibleOptions.length === 2 ? (
+        <div className="binary-split-bar" aria-hidden="true">
+          <span
+            className="binary-split-bar-left"
+            style={{ width: `${leftSplit}%`, backgroundColor: colorTheme.primary }}
+          />
+          <span
+            className="binary-split-bar-right"
+            style={{ width: `${rightSplit}%`, backgroundColor: colorTheme.secondary }}
+          />
+        </div>
+      ) : null}
+
       <div className="option-list">
-        {visibleOptions.map((option) => (
+        {visibleOptions.map((option, optionIndex) => (
           <VoteOptionForm
             key={option.id}
             pollId={poll.id}
             optionId={option.id}
             returnTo={returnTo}
             label={option.label}
-            rightText={percent(option.votes, total)}
-            percent={(option.votes / Math.max(total, 1)) * 100}
+            rightText={percent(optionVotesById.get(option.id) ?? 0, displayTotal)}
+            percent={((optionVotesById.get(option.id) ?? 0) / Math.max(displayTotal, 1)) * 100}
+            variant={isBinary ? "binary" : "default"}
+            fillColor={getPollOptionFillColor(poll.id, optionIndex)}
+            accentColor={isBinary ? (optionIndex === 0 ? colorTheme.primary : colorTheme.secondary) : undefined}
             disabled={status.isClosed}
           />
         ))}
       </div>
-      {hiddenCount > 0 ? (
+      {!isBinary && hiddenCount > 0 ? (
         <p className="more-options">
           <Link href={pollHref}>+{hiddenCount} more options</Link>
         </p>

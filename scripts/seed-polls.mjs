@@ -78,6 +78,61 @@ const seed = [
     voteRange: [120, 220]
   },
   {
+    slug: "should-the-uk-rejoin-the-eu-single-market-within-the-next-parliament",
+    title: "Should the UK rejoin the EU single market?",
+    blurb: "A high-salience constitutional and economic question with broad voter interest.",
+    description:
+      "Tracks support for renewed economic integration and whether voters see single-market access as worth the political trade-offs.",
+    category_key: "politics",
+    options: ["Yes", "No"],
+    endDays: 30,
+    voteRange: [140, 280]
+  },
+  {
+    slug: "should-clubs-publish-live-var-audio-during-premier-league-matches",
+    title: "Publish live VAR audio during matches?",
+    blurb: "A transparency debate with strong engagement among football fans.",
+    description:
+      "Measures whether live referee and VAR communication should be public to increase trust and reduce controversy.",
+    category_key: "sport",
+    options: ["Yes", "No"],
+    endDays: 20,
+    voteRange: [110, 240]
+  },
+  {
+    slug: "should-the-oscars-introduce-a-best-stunt-design-category",
+    title: "Should the Oscars add Best Stunt Design?",
+    blurb: "A recurring industry conversation around recognition of stunt professionals.",
+    description:
+      "Captures audience support for expanding awards categories to better represent behind-the-scenes craft and risk.",
+    category_key: "entertainment",
+    options: ["Yes", "No"],
+    endDays: 24,
+    voteRange: [90, 210]
+  },
+  {
+    slug: "should-social-media-platforms-hide-like-counts-by-default",
+    title: "Hide like counts by default?",
+    blurb: "A culture and wellbeing topic with split views on social pressure versus transparency.",
+    description:
+      "Tracks sentiment on whether visible engagement metrics help discovery or create unhealthy incentives.",
+    category_key: "culture",
+    options: ["Yes", "No"],
+    endDays: 28,
+    voteRange: [80, 190]
+  },
+  {
+    slug: "should-uk-commuter-rail-be-renationalised",
+    title: "Should UK commuter rail be renationalised?",
+    blurb: "A policy question balancing public control, costs, and service reliability.",
+    description:
+      "Measures public appetite for rail restructuring and whether voters trust state-led operation to improve outcomes.",
+    category_key: "hot-takes",
+    options: ["Yes", "No"],
+    endDays: 26,
+    voteRange: [95, 220]
+  },
+  {
     slug: "should-mps-be-banned-from-taking-second-jobs-while-they-are-in-elected-office",
     title: "Ban MPs from second jobs?",
     blurb: "A governance and trust issue with strong public interest.",

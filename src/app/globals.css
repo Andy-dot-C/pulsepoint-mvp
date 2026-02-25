@@ -867,6 +867,35 @@ h3 {
   gap: 8px;
 }
 
+.poll-card-binary .option-list {
+  margin-top: 34px;
+  display: grid;
+  grid-template-columns: repeat(2, 126px);
+  justify-content: center;
+  gap: 12px;
+}
+
+.poll-card-binary .option-list form {
+  width: 126px;
+}
+
+.binary-split-bar {
+  margin-top: 28px;
+  height: 10px;
+  border-radius: 999px;
+  background: #cfd4dc;
+  overflow: hidden;
+  display: flex;
+}
+
+.binary-split-bar-left {
+  background: var(--accent);
+}
+
+.binary-split-bar-right {
+  background: #9ca3af;
+}
+
 .more-options {
   margin-top: 8px;
   font-size: 13px;
@@ -886,6 +915,34 @@ h3 {
   cursor: pointer;
   font-size: 15px;
   font-weight: 600;
+}
+
+.option-btn-binary {
+  width: 126px;
+  height: 98px;
+  min-height: 98px;
+  justify-content: center;
+}
+
+.option-btn-binary .option-btn-content {
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.option-btn-binary .option-btn-content span {
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.option-btn-binary .option-btn-content strong {
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 600;
+  color: var(--binary-percent-color, var(--muted));
 }
 
 .option-btn-fill {
