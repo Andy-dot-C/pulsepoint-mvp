@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { polls as mockPolls } from "@/lib/mock-data";
+import { selectTrendingPollIds } from "@/lib/trending";
 
 type RequestPayload = {
   q?: string;
@@ -22,6 +23,14 @@ type PollOptionTotalRow = {
   poll_id: string;
   votes: number;
 };
+
+type VoteEventRow = {
+  poll_id: string;
+};
+
+function nowMinusDays(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
 
 function scoreText(query: string, value: string): number {
   const q = query.toLowerCase().trim();
@@ -67,14 +76,16 @@ function buildFallbackSuggestions(query: string) {
         right.votes30d - left.votes30d
     );
 
+  const velocityByPollId = new Map<string, number>(
+    ranked.map((item) => [item.poll.id, item.poll.options.reduce((sum, option) => sum + option.votes, 0)])
+  );
+  const trendingPollIds = selectTrendingPollIds(velocityByPollId);
+
   return ranked.slice(0, 6).map((item) => ({
     id: item.poll.id,
     slug: item.poll.slug,
     title: item.poll.title,
-    category: item.poll.category,
-    votes30d: item.votes30d,
-    optionsPreview: item.poll.options.slice(0, 3).map((option) => option.label),
-    exactMatch: item.score > 0
+    isTrending: trendingPollIds.has(item.poll.id)
   }));
 }
 
@@ -106,11 +117,16 @@ export async function POST(request: Request) {
   }
 
   const pollIds = pollRows.map((item) => item.id);
-  const [optionRowsResult, totalsResult] = await Promise.all([
+  const [optionRowsResult, totalsResult, velocityResult] = await Promise.all([
     supabase.from("poll_options").select("poll_id,label").in("poll_id", pollIds),
-    supabase.from("poll_option_totals").select("poll_id,votes").in("poll_id", pollIds)
+    supabase.from("poll_option_totals").select("poll_id,votes").in("poll_id", pollIds),
+    supabase
+      .from("vote_events")
+      .select("poll_id")
+      .in("poll_id", pollIds)
+      .gte("changed_at", nowMinusDays(1))
   ]);
-  if (optionRowsResult.error || totalsResult.error) {
+  if (optionRowsResult.error || totalsResult.error || velocityResult.error) {
     return NextResponse.json({ ok: true, polls: buildFallbackSuggestions(q) });
   }
 
@@ -128,6 +144,12 @@ export async function POST(request: Request) {
   totalsRows.forEach((item) => {
     votesByPollId.set(item.poll_id, (votesByPollId.get(item.poll_id) ?? 0) + Number(item.votes ?? 0));
   });
+
+  const velocityByPollId = new Map<string, number>();
+  ((velocityResult.data ?? []) as VoteEventRow[]).forEach((event) => {
+    velocityByPollId.set(event.poll_id, (velocityByPollId.get(event.poll_id) ?? 0) + 1);
+  });
+  const trendingPollIds = selectTrendingPollIds(velocityByPollId);
 
   const ranked = pollRows.map((poll) => {
     const options = optionsByPollId.get(poll.id) ?? [];
@@ -159,10 +181,7 @@ export async function POST(request: Request) {
     id: item.poll.id,
     slug: item.poll.slug,
     title: item.poll.title,
-    category: item.poll.category_key,
-    votes30d: item.votes30d,
-    optionsPreview: (optionsByPollId.get(item.poll.id) ?? []).slice(0, 3),
-    exactMatch: item.score > 0
+    isTrending: trendingPollIds.has(item.poll.id)
   }));
 
   return NextResponse.json({ ok: true, polls: suggestions });

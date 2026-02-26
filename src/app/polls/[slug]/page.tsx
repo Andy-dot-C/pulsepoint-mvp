@@ -15,6 +15,7 @@ import { buildFeedHref } from "@/lib/feed-query";
 import { formatTotalVoteLabel } from "@/lib/format-votes";
 import { totalVotes } from "@/lib/mock-data";
 import { getPollStatus } from "@/lib/poll-status";
+import { getPollOptionFillColor } from "@/lib/poll-colors";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -104,7 +105,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
 
       <article className="detail-card">
         <div className="detail-top-row">
-          <Link className="poll-category" href={buildFeedHref({ category: poll.category })}>
+          <Link className="poll-category" href={buildFeedHref({ filter: poll.category })}>
             {poll.category}
           </Link>
           <div className="detail-top-actions">
@@ -133,7 +134,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
         <section>
           <h2>Vote now</h2>
           <div className="option-list">
-            {rankedOptions.map((option) => (
+            {rankedOptions.map((option, optionIndex) => (
               <VoteOptionForm
                 key={option.id}
                 pollId={poll.id}
@@ -141,6 +142,9 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
                 returnTo={`/polls/${poll.slug}?comments=${commentSort}`}
                 label={option.label}
                 rightText={`${Math.round((option.votes / Math.max(total, 1)) * 100)}%`}
+                percent={(option.votes / Math.max(total, 1)) * 100}
+                fillColor={getPollOptionFillColor(poll.id, optionIndex)}
+                selected={poll.viewerVoteOptionId === option.id}
                 disabled={status.isClosed}
               />
             ))}

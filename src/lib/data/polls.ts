@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { polls as mockPolls, totalVotes } from "@/lib/mock-data";
 import { CategoryKey, FeedTabKey, Poll, PollOption, PollTrendPoint } from "@/lib/types";
+import { selectTrendingPollIds } from "@/lib/trending";
 
 type FeedInput = {
   tab: FeedTabKey;
@@ -46,6 +47,11 @@ type VoteEventRow = {
   changed_at: string;
 };
 
+type VoteRow = {
+  poll_id: string;
+  option_id: string;
+};
+
 type PollCommentRefRow = {
   poll_id: string;
 };
@@ -60,6 +66,19 @@ function normalizeQuery(query: string): string {
 
 function nowMinusDays(days: number): string {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+function isPollOpenByEndAt(endAt?: string | null): boolean {
+  if (!endAt) {
+    return true;
+  }
+
+  const parsed = Date.parse(endAt);
+  if (Number.isNaN(parsed)) {
+    return true;
+  }
+
+  return parsed > Date.now();
 }
 
 function byTab(tab: FeedTabKey, input: Poll[], velocityByPollId?: Map<string, number>): Poll[] {
@@ -85,8 +104,10 @@ function applyLocalFilters({ tab, category, q }: FeedInput, source: Poll[]): Pol
     return [];
   }
 
+  const openPolls = source.filter((poll) => isPollOpenByEndAt(poll.endsAt));
+
   const byCategory =
-    category === "all" ? source : source.filter((poll) => poll.category === category);
+    category === "all" ? openPolls : openPolls.filter((poll) => poll.category === category);
 
   const byQuery = q
     ? byCategory.filter((poll) => {
@@ -154,8 +175,10 @@ function hydratePolls(
   optionRows: PollOptionRow[],
   totalRows: PollOptionTotalRow[],
   velocityByPollId: Map<string, number>,
+  trendingPollIds: Set<string>,
   bookmarkedPollIds: Set<string> = new Set(),
-  commentCountByPollId: Map<string, number> = new Map()
+  commentCountByPollId: Map<string, number> = new Map(),
+  viewerVoteByPollId: Map<string, string> = new Map()
 ): Poll[] {
   return rows.map((row) => {
     const optionsForPoll = optionRows
@@ -181,9 +204,10 @@ function hydratePolls(
       category: row.category_key,
       createdAt: row.created_at,
       endsAt: row.end_at ?? undefined,
-      isTrending: (velocityByPollId.get(row.id) ?? 0) > 0,
+      isTrending: trendingPollIds.has(row.id),
       isBookmarked: bookmarkedPollIds.has(row.id),
       commentCount: commentCountByPollId.get(row.id) ?? 0,
+      viewerVoteOptionId: viewerVoteByPollId.get(row.id),
       options: optionsForPoll,
       trend: [
         {
@@ -281,15 +305,18 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
     return applyLocalFilters(input, mockPolls);
   }
 
-  if (rows.length === 0) {
+  const openRows = (rows as PollRow[]).filter((row) => isPollOpenByEndAt(row.end_at));
+
+  if (openRows.length === 0) {
     return [];
   }
 
-  const pollIds = rows.map((row) => row.id);
+  const pollIds = openRows.map((row) => row.id);
   const bookmarkedPollIds = new Set<string>();
   const commentCountByPollId = new Map<string, number>();
+  const viewerVoteByPollId = new Map<string, string>();
 
-  const [optionsResult, totalsResult, velocityResult, bookmarksResult, commentsResult] = await Promise.all([
+  const [optionsResult, totalsResult, velocityResult, bookmarksResult, commentsResult, votesResult] = await Promise.all([
     supabase
       .from("poll_options")
       .select("id,poll_id,label,position")
@@ -304,7 +331,10 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
     userId
       ? supabase.from("poll_bookmarks").select("poll_id").eq("user_id", userId).in("poll_id", pollIds)
       : Promise.resolve({ data: [], error: null }),
-    supabase.from("poll_comments").select("poll_id").in("poll_id", pollIds)
+    supabase.from("poll_comments").select("poll_id").in("poll_id", pollIds),
+    userId
+      ? supabase.from("votes").select("poll_id,option_id").eq("user_id", userId).in("poll_id", pollIds)
+      : Promise.resolve({ data: [], error: null })
   ]);
 
   if (optionsResult.error || totalsResult.error || velocityResult.error) {
@@ -322,6 +352,11 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
       commentCountByPollId.set(row.poll_id, (commentCountByPollId.get(row.poll_id) ?? 0) + 1);
     });
   }
+  if (!votesResult.error) {
+    ((votesResult.data ?? []) as VoteRow[]).forEach((row) => {
+      viewerVoteByPollId.set(row.poll_id, row.option_id);
+    });
+  }
 
   const velocityByPollId = new Map<string, number>();
   (velocityResult.data ?? []).forEach((event) => {
@@ -329,12 +364,14 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
   });
 
   const hydrated = hydratePolls(
-    rows as PollRow[],
+    openRows,
     (optionsResult.data ?? []) as PollOptionRow[],
     (totalsResult.data ?? []) as PollOptionTotalRow[],
     velocityByPollId,
+    selectTrendingPollIds(velocityByPollId),
     bookmarkedPollIds,
-    commentCountByPollId
+    commentCountByPollId,
+    viewerVoteByPollId
   );
 
   return byTab(input.tab, hydrated, velocityByPollId);
@@ -361,7 +398,7 @@ export async function fetchPollBySlug(slug: string): Promise<Poll | null> {
     return null;
   }
 
-  const [optionsResult, totalsResult, eventsResult, bookmarkResult, commentsResult] = await Promise.all([
+  const [optionsResult, totalsResult, eventsResult, bookmarkResult, commentsResult, voteResult] = await Promise.all([
     supabase
       .from("poll_options")
       .select("id,poll_id,label,position")
@@ -384,7 +421,10 @@ export async function fetchPollBySlug(slug: string): Promise<Poll | null> {
           .eq("poll_id", row.id)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
-    supabase.from("poll_comments").select("id", { count: "exact", head: true }).eq("poll_id", row.id)
+    supabase.from("poll_comments").select("id", { count: "exact", head: true }).eq("poll_id", row.id),
+    userId
+      ? supabase.from("votes").select("option_id").eq("user_id", userId).eq("poll_id", row.id).maybeSingle()
+      : Promise.resolve({ data: null, error: null })
   ]);
 
   if (optionsResult.error || totalsResult.error || eventsResult.error) {
@@ -401,14 +441,20 @@ export async function fetchPollBySlug(slug: string): Promise<Poll | null> {
   }
   const commentCountByPollId = new Map<string, number>();
   commentCountByPollId.set(row.id, Number(commentsResult.count ?? 0));
+  const viewerVoteByPollId = new Map<string, string>();
+  if (!voteResult.error && voteResult.data?.option_id) {
+    viewerVoteByPollId.set(row.id, String(voteResult.data.option_id));
+  }
 
   const hydrated = hydratePolls(
     [row as PollRow],
     options,
     totals,
     new Map([[row.id, events.filter((event) => Date.parse(event.changed_at) >= Date.now() - 86400000).length]]),
+    new Set([row.id]),
     bookmarkedPollIds,
-    commentCountByPollId
+    commentCountByPollId,
+    viewerVoteByPollId
   )[0];
 
   if (!hydrated) {
@@ -442,7 +488,7 @@ export async function fetchMyPolls(userId: string): Promise<Poll[]> {
   }
 
   const pollIds = rows.map((row) => row.id);
-  const [optionsResult, totalsResult, velocityResult, bookmarksResult, commentsResult] = await Promise.all([
+  const [optionsResult, totalsResult, velocityResult, bookmarksResult, commentsResult, votesResult] = await Promise.all([
     supabase
       .from("poll_options")
       .select("id,poll_id,label,position")
@@ -455,7 +501,8 @@ export async function fetchMyPolls(userId: string): Promise<Poll[]> {
       .in("poll_id", pollIds)
       .gte("changed_at", nowMinusDays(1)),
     supabase.from("poll_bookmarks").select("poll_id").eq("user_id", userId).in("poll_id", pollIds),
-    supabase.from("poll_comments").select("poll_id").in("poll_id", pollIds)
+    supabase.from("poll_comments").select("poll_id").in("poll_id", pollIds),
+    supabase.from("votes").select("poll_id,option_id").eq("user_id", userId).in("poll_id", pollIds)
   ]);
 
   if (optionsResult.error || totalsResult.error || velocityResult.error) {
@@ -477,14 +524,22 @@ export async function fetchMyPolls(userId: string): Promise<Poll[]> {
       commentCountByPollId.set(row.poll_id, (commentCountByPollId.get(row.poll_id) ?? 0) + 1);
     });
   }
+  const viewerVoteByPollId = new Map<string, string>();
+  if (!votesResult.error) {
+    ((votesResult.data ?? []) as VoteRow[]).forEach((row) => {
+      viewerVoteByPollId.set(row.poll_id, row.option_id);
+    });
+  }
 
   return hydratePolls(
     rows as PollRow[],
     (optionsResult.data ?? []) as PollOptionRow[],
     (totalsResult.data ?? []) as PollOptionTotalRow[],
     velocityByPollId,
+    selectTrendingPollIds(velocityByPollId),
     bookmarkedPollIds,
-    commentCountByPollId
+    commentCountByPollId,
+    viewerVoteByPollId
   ).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 

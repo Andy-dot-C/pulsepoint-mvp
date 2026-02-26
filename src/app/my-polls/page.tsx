@@ -59,7 +59,7 @@ export default async function MyPollsPage() {
           {feed.length === 0 ? (
             <article className="side-card">
               <h3>No polls created yet</h3>
-              <p>Create your first poll from the Submit Poll button in the header.</p>
+              <p>Create your first poll from the Create poll button in the header.</p>
             </article>
           ) : (
             feed.map((poll) => <PollCard key={poll.id} poll={poll} returnTo="/my-polls" />)

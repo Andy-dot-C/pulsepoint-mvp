@@ -100,7 +100,13 @@ with check (auth.uid() = user_id);
 - In Supabase Auth URL settings, keep correct redirect URLs:
 - `http://localhost:3000/auth/callback`
 - `http://localhost:3001/auth/callback` (if used)
+- `http://127.0.0.1:3000/auth/callback`
+- `http://127.0.0.1:3001/auth/callback` (if used)
 - `https://pulsepoint-mvp-deploy.vercel.app/auth/callback`
+- Ensure `Site URL` matches the environment you are actively testing:
+  - local test: `http://localhost:3001` (or `:3000`)
+  - production: `https://pulsepoint-mvp-deploy.vercel.app`
+- Important: if Supabase does not accept the provided `redirect_to`, it falls back to `Site URL`.
 - In Vercel, verify all 3 env vars are present with correct values (URL vs anon key vs service key).
 
 ### 5) Bookmark/report/comment actions feel broken in production only

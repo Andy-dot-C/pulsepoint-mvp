@@ -11,6 +11,15 @@
   - Email (magic link)
   - Google OAuth
 - Configure Google OAuth callback URL from Supabase instructions.
+- In `Authentication -> URL Configuration`:
+  - Set `Site URL` to your active environment (local while testing local, Vercel for production).
+  - Add Redirect URLs for both local and production callbacks:
+    - `http://localhost:3000/auth/callback`
+    - `http://localhost:3001/auth/callback`
+    - `http://127.0.0.1:3000/auth/callback`
+    - `http://127.0.0.1:3001/auth/callback`
+    - `https://pulsepoint-mvp-deploy.vercel.app/auth/callback`
+  - Note: if Supabase rejects `redirect_to`, it falls back to `Site URL`.
 - Create first admin user, then set role to `admin` in `public.profiles`.
 
 ## 3) App env vars
