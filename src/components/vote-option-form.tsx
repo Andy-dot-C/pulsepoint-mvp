@@ -21,7 +21,7 @@ function colorToTint(color: string): string | null {
   const red = Number.parseInt(hex.slice(0, 2), 16);
   const green = Number.parseInt(hex.slice(2, 4), 16);
   const blue = Number.parseInt(hex.slice(4, 6), 16);
-  return `rgba(${red}, ${green}, ${blue}, 0.12)`;
+  return `rgba(${red}, ${green}, ${blue}, 0.04)`;
 }
 
 export function VoteOptionForm({
@@ -42,6 +42,9 @@ export function VoteOptionForm({
   const style: CSSProperties = {};
   if (accentColor) {
     style["--binary-percent-color" as string] = accentColor;
+    if (variant === "line") {
+      style["--option-line-percent-color" as string] = accentColor;
+    }
   }
   if (selectedColor) {
     style["--option-selected-color" as string] = selectedColor;

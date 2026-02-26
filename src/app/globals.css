@@ -9,7 +9,7 @@
   --brand: #4b5563;
   --brand-strong: #374151;
   --brand-soft: #eceff3;
-  --accent: #0071e3;
+  --accent: #3b82f6;
   --danger: #c23b3b;
   --warning: #b7791f;
   --shadow: 0 6px 20px rgba(16, 24, 40, 0.06);
@@ -176,7 +176,7 @@ h3 {
   background: var(--accent);
   color: white;
   border-radius: var(--control-radius);
-  border: 1px solid #005bb8;
+  border: 1px solid #2563eb;
   height: var(--control-height);
   padding: 0 16px;
   font-weight: 700;
@@ -187,7 +187,7 @@ h3 {
 }
 
 .create-btn:hover {
-  background: #005bb8;
+  background: #2563eb;
   transform: translateY(-1px);
 }
 
@@ -452,7 +452,7 @@ h3 {
   margin-top: 22px;
   display: grid;
   grid-template-columns: minmax(0, 1.82fr) minmax(300px, 1fr);
-  gap: 28px;
+  gap: 36px;
 }
 
 .feed-grid-cards-3 {
@@ -891,7 +891,7 @@ h3 {
 
 .binary-split-bar {
   margin-top: 24px;
-  height: 5px;
+  height: 4px;
   border-radius: 999px;
   background: #cfd4dc;
   overflow: hidden;
@@ -946,10 +946,10 @@ h3 {
 }
 
 .option-btn-binary .option-btn-content span {
-  font-size: 20px;
-  line-height: 1;
-  font-weight: 700;
-  color: var(--text);
+  font-size: 17px;
+  line-height: 1.05;
+  font-weight: 600;
+  color: var(--brand-strong);
 }
 
 .option-btn-binary .option-btn-content strong {
@@ -964,6 +964,7 @@ h3 {
   border-radius: 0;
   background: transparent;
   padding: 0;
+  overflow: visible;
   display: block;
   width: 100%;
 }
@@ -1004,10 +1005,10 @@ h3 {
 }
 
 .option-btn-line-percent {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1;
   font-weight: 700;
-  color: #374151;
+  color: var(--option-line-percent-color, #374151);
   white-space: nowrap;
 }
 
@@ -1017,7 +1018,7 @@ h3 {
 
 .option-btn-line-track {
   width: 100%;
-  height: 5px;
+  height: 4px;
   border-radius: 999px;
   background: #e2e8f0;
   overflow: hidden;
@@ -1026,7 +1027,10 @@ h3 {
 
 .option-btn-line-fill {
   height: 100%;
-  border-radius: 999px;
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
   background: var(--option-selected-color, #2563eb);
   display: block;
 }
@@ -1065,6 +1069,15 @@ h3 {
 }
 
 .option-btn-binary.option-btn-selected {
+  background: var(--option-selected-tint, #f8fafc);
+}
+
+.option-btn-line.option-btn-selected {
+  background: var(--option-selected-tint, #f8fafc);
+  border-radius: 8px;
+}
+
+.option-btn-line.option-btn-selected:hover {
   background: var(--option-selected-tint, #f8fafc);
 }
 

@@ -68,6 +68,19 @@ function nowMinusDays(days: number): string {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 }
 
+function isPollOpenByEndAt(endAt?: string | null): boolean {
+  if (!endAt) {
+    return true;
+  }
+
+  const parsed = Date.parse(endAt);
+  if (Number.isNaN(parsed)) {
+    return true;
+  }
+
+  return parsed > Date.now();
+}
+
 function byTab(tab: FeedTabKey, input: Poll[], velocityByPollId?: Map<string, number>): Poll[] {
   const copy = [...input];
 
@@ -91,8 +104,10 @@ function applyLocalFilters({ tab, category, q }: FeedInput, source: Poll[]): Pol
     return [];
   }
 
+  const openPolls = source.filter((poll) => isPollOpenByEndAt(poll.endsAt));
+
   const byCategory =
-    category === "all" ? source : source.filter((poll) => poll.category === category);
+    category === "all" ? openPolls : openPolls.filter((poll) => poll.category === category);
 
   const byQuery = q
     ? byCategory.filter((poll) => {
@@ -290,11 +305,13 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
     return applyLocalFilters(input, mockPolls);
   }
 
-  if (rows.length === 0) {
+  const openRows = (rows as PollRow[]).filter((row) => isPollOpenByEndAt(row.end_at));
+
+  if (openRows.length === 0) {
     return [];
   }
 
-  const pollIds = rows.map((row) => row.id);
+  const pollIds = openRows.map((row) => row.id);
   const bookmarkedPollIds = new Set<string>();
   const commentCountByPollId = new Map<string, number>();
   const viewerVoteByPollId = new Map<string, string>();
@@ -347,7 +364,7 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
   });
 
   const hydrated = hydratePolls(
-    rows as PollRow[],
+    openRows,
     (optionsResult.data ?? []) as PollOptionRow[],
     (totalsResult.data ?? []) as PollOptionTotalRow[],
     velocityByPollId,

@@ -7,7 +7,12 @@ import { SharePollButton } from "@/components/share-poll-button";
 import { PollImpressionTracker } from "@/components/poll-impression-tracker";
 import { getPollStatus } from "@/lib/poll-status";
 import { PollCardShell } from "@/components/poll-card-shell";
-import { getPollColorTheme, getPollOptionFillColor, getPollOptionLineColor } from "@/lib/poll-colors";
+import {
+  YES_NO_COLOR_THEME,
+  getPollColorTheme,
+  getPollOptionFillColor,
+  getPollOptionLineColor
+} from "@/lib/poll-colors";
 
 type PollCardProps = {
   poll: Poll;
@@ -85,7 +90,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
   const visibleOptions = feedOptions.slice(0, 2);
   const hiddenCount = Math.max(feedOptions.length - visibleOptions.length, 0);
   const pollHref = `/polls/${poll.slug}`;
-  const colorTheme = getPollColorTheme(poll.id);
+  const colorTheme = isBinary ? YES_NO_COLOR_THEME : getPollColorTheme(poll.id);
   const leftVotes = optionVotesById.get(visibleOptions[0]?.id ?? "") ?? 0;
   const leftSplit =
     displayTotal === 0 ? 50 : Math.round((leftVotes / Math.max(displayTotal, 1)) * 100);
