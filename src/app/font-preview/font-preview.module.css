@@ -1,0 +1,238 @@
+.page {
+  min-height: 100vh;
+  background: #ffffff;
+  padding: 24px 18px 40px;
+}
+
+.wrap {
+  width: min(1240px, 96vw);
+  margin: 0 auto;
+}
+
+.heading {
+  font-family: var(--preview-display-font), "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 24px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #111827;
+}
+
+.subheading {
+  margin-top: 6px;
+  font-family: var(--preview-body-font), "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.switcher {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.switchBtn {
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  border-radius: 10px;
+  height: 34px;
+  padding: 0 12px;
+  font-family: var(--preview-body-font), "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.switchBtn:hover {
+  border-color: #9ca3af;
+  color: #111827;
+}
+
+.switchBtnActive {
+  border-color: #111827;
+  color: #111827;
+  background: #f8fafc;
+}
+
+.mock {
+  margin-top: 16px;
+  border: 1px solid #d4d7dd;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.mockHeader {
+  border-bottom: 1px solid #d4d7dd;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: auto minmax(220px, 520px) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.logo {
+  font-family: var(--preview-display-font), "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #111827;
+}
+
+.search {
+  height: 38px;
+  border: 1px solid #d4d7dd;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-family: var(--preview-body-font), "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 14px;
+}
+
+.create {
+  height: 38px;
+  border: 1px solid #005bb8;
+  border-radius: 12px;
+  background: #0071e3;
+  color: #fff;
+  font-family: var(--preview-body-font), "Avenir Next", "Segoe UI", sans-serif;
+  font-weight: 700;
+  padding: 0 14px;
+}
+
+.mockNav {
+  border-bottom: 1px solid #d4d7dd;
+  padding: 10px 14px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-family: var(--preview-body-font), "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.active {
+  color: #111827;
+  font-weight: 700;
+}
+
+.sep {
+  color: #c4c8cf;
+}
+
+.mockGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(220px, 1fr);
+  gap: 24px;
+  padding: 14px;
+}
+
+.leftCol {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  border: 1px solid #d4d7dd;
+  border-radius: 14px;
+  background: #fcfcfd;
+  padding: 14px;
+}
+
+.card h2 {
+  font-family: var(--preview-display-font), "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 17px;
+  line-height: 1.22;
+  letter-spacing: -0.01em;
+  color: #111827;
+}
+
+.optionRow {
+  margin-top: 12px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--preview-body-font), "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 14px;
+  color: #111827;
+}
+
+.optionRow strong {
+  font-size: 14px;
+  color: #374151;
+}
+
+.barTrack {
+  margin-top: 4px;
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: #dbe2ec;
+  overflow: hidden;
+}
+
+.barFillA {
+  display: block;
+  height: 100%;
+  width: 58%;
+  background: #ff5b5b;
+}
+
+.barFillB {
+  display: block;
+  height: 100%;
+  width: 42%;
+  background: #3b82f6;
+}
+
+.barFillNeutral {
+  display: block;
+  height: 100%;
+  background: #94a3b8;
+}
+
+.rail {
+  border-left: 1px solid #e1e4ea;
+  padding-left: 14px;
+}
+
+.rail h3 {
+  margin: 0;
+  font-family: var(--preview-display-font), "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 18px;
+  color: #111827;
+}
+
+.rail p {
+  margin-top: 10px;
+  font-family: var(--preview-body-font), "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #4b5563;
+}
+
+@media (max-width: 960px) {
+  .mockHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .mockGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .leftCol {
+    grid-template-columns: 1fr;
+  }
+
+  .rail {
+    border-left: 0;
+    border-top: 1px solid #e1e4ea;
+    padding-left: 0;
+    padding-top: 12px;
+  }
+}
