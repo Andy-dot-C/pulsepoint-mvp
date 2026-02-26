@@ -12,8 +12,7 @@ export default async function MyPollsPage() {
     return (
       <main className="page-shell">
         <SiteHeader
-          activeTab="trending"
-          activeCategory="all"
+          activeFilter="trending"
           searchQuery=""
           signedIn={authView.signedIn}
           username={authView.username}
@@ -41,8 +40,7 @@ export default async function MyPollsPage() {
   return (
     <main className="page-shell">
       <SiteHeader
-        activeTab="trending"
-        activeCategory="all"
+        activeFilter="trending"
         searchQuery=""
         signedIn={authView.signedIn}
         username={authView.username}

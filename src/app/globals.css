@@ -1,4 +1,6 @@
 :root {
+  --font-body: "Avenir Next";
+  --font-display: "Avenir Next";
   --bg: #ffffff;
   --surface: #ffffff;
   --surface-border: #d4d7dd;

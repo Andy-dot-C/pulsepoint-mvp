@@ -39,7 +39,7 @@ export function VoteOptionForm({
 }: VoteOptionFormProps) {
   const safePercent = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
   const selectedColor = accentColor ?? fillColor;
-  const style: CSSProperties = {};
+  const style: CSSProperties & Record<string, string> = {};
   if (accentColor) {
     style["--binary-percent-color" as string] = accentColor;
     if (variant === "line") {
