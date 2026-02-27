@@ -5,7 +5,7 @@ import { AdminSubmissionEditor } from "@/components/admin-submission-editor";
 type SubmissionRow = {
   id: string;
   title: string;
-  description: string;
+  summary: string;
   category_key: string;
   options: string[];
   created_at: string;
@@ -17,7 +17,7 @@ type DuplicatePollPreview = {
   id: string;
   slug: string;
   title: string;
-  blurb: string;
+  summary: string;
   category_key: string;
   options: string[];
 };
@@ -77,14 +77,14 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminPagePr
 
   const { data } = await supabase
     .from("poll_submissions")
-    .select("id,title,description,category_key,options,created_at,end_at,review_notes")
+    .select("id,title,blurb,description,category_key,options,created_at,end_at,review_notes")
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
   const submissions: SubmissionRow[] = (data ?? []).map((row) => ({
     id: String(row.id),
     title: String(row.title),
-    description: String(row.description),
+    summary: String(row.blurb || row.description || ""),
     category_key: String(row.category_key),
     options: safeOptions(row.options),
     created_at: String(row.created_at),
@@ -96,7 +96,7 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminPagePr
   );
   const { data: duplicatePollRowsData } =
     duplicateIds.length > 0
-      ? await supabase.from("polls").select("id,slug,title,blurb,category_key").in("id", duplicateIds)
+      ? await supabase.from("polls").select("id,slug,title,blurb,description,category_key").in("id", duplicateIds)
       : { data: [] as DuplicatePollPreview[] };
   const { data: duplicatePollOptionRowsData } =
     duplicateIds.length > 0
@@ -110,10 +110,18 @@ export default async function AdminSubmissionsPage({ searchParams }: AdminPagePr
     duplicateOptionsByPollId.set(key, existing);
   });
   const duplicatePollMap = new Map(
-    ((duplicatePollRowsData ?? []) as Array<Omit<DuplicatePollPreview, "options">>).map((poll) => [
+    (
+      (duplicatePollRowsData ?? []) as Array<
+        Omit<DuplicatePollPreview, "summary" | "options"> & { blurb?: string | null; description?: string | null }
+      >
+    ).map((poll) => [
       poll.id.toLowerCase(),
       {
-        ...poll,
+        id: poll.id,
+        slug: poll.slug,
+        title: poll.title,
+        summary: String(poll.blurb || poll.description || ""),
+        category_key: poll.category_key,
         options: duplicateOptionsByPollId.get(poll.id.toLowerCase()) ?? []
       }
     ])

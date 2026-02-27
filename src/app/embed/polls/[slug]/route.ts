@@ -54,7 +54,7 @@ export async function GET(
   <div class="wrap">
     <article class="card">
       <h1>${escapeHtml(poll.title)}</h1>
-      <p>${escapeHtml(poll.blurb)}</p>
+      <p>${escapeHtml(poll.summary)}</p>
       <ul>${optionRows}</ul>
       <a href="/polls/${encodeURIComponent(poll.slug)}" target="_top" rel="noopener noreferrer">Vote on PulsePoint</a>
     </article>

@@ -1,21 +1,21 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { TrendBars } from "@/components/trend-bars";
 import { VoteOptionForm } from "@/components/vote-option-form";
 import { ReportPollForm } from "@/components/report-poll-form";
 import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
 import { PollComments } from "@/components/poll-comments";
 import { SharePollButton } from "@/components/share-poll-button";
 import { PollViewTracker } from "@/components/poll-view-tracker";
+import { PollResultsGraph } from "@/components/poll-results-graph";
 import { fetchPollBySlug } from "@/lib/data/polls";
 import { fetchPollMetaBySlug } from "@/lib/data/polls";
 import { fetchPollComments, resolveCommentSort } from "@/lib/data/comments";
 import { buildFeedHref } from "@/lib/feed-query";
 import { formatTotalVoteLabel } from "@/lib/format-votes";
-import { totalVotes } from "@/lib/mock-data";
 import { getPollStatus } from "@/lib/poll-status";
 import { getPollOptionFillColor } from "@/lib/poll-colors";
+import { buildPollChartData, parsePollGraphTimeframe, parsePollGraphVariant } from "@/lib/poll-chart-data";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -31,6 +31,15 @@ function readValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function formatDetailDate(value: string | null): string {
+  if (!value) return "No end date";
+  return new Date(value).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
 export async function generateMetadata({ params }: PollPageProps): Promise<Metadata> {
   const { slug } = await Promise.resolve(params);
   const poll = await fetchPollMetaBySlug(slug);
@@ -44,7 +53,7 @@ export async function generateMetadata({ params }: PollPageProps): Promise<Metad
   const siteUrl = getSiteUrl();
   const pollUrl = `${siteUrl}/polls/${poll.slug}`;
   const title = `${poll.title} | PulsePoint`;
-  const description = poll.blurb;
+  const description = poll.summary;
 
   return {
     title,
@@ -76,6 +85,8 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
   const commentStatusType = readValue(resolvedSearchParams.commentType);
   const commentStatusMessage = readValue(resolvedSearchParams.commentMessage);
   const commentSort = resolveCommentSort(readValue(resolvedSearchParams.comments));
+  const graphVariant = parsePollGraphVariant(readValue(resolvedSearchParams.graph));
+  const graphTimeframe = parsePollGraphTimeframe(readValue(resolvedSearchParams.time));
 
   if (!poll) {
     notFound();
@@ -90,11 +101,14 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
     : { data: null };
   const comments = await fetchPollComments(poll.id, commentSort, user?.id ?? null);
 
-  const total = totalVotes(poll);
+  const chartData = buildPollChartData(poll);
+  const total = chartData.totalVotes;
   const status = getPollStatus(poll.endsAt);
-  const rankedOptions = [...poll.options].sort(
-    (left, right) => right.votes - left.votes || left.label.localeCompare(right.label)
-  );
+  const rankedOptions = chartData.options;
+  const createdLabel = formatDetailDate(poll.createdAt);
+  const endsLabel = formatDetailDate(poll.endsAt);
+  const statusLabel = status.isClosed ? "Closed" : status.isClosingSoon ? "Closing soon" : "Open";
+  const returnTo = `/polls/${poll.slug}?comments=${commentSort}&graph=${graphVariant}&time=${graphTimeframe}`;
 
   return (
     <main className="page-shell detail-shell">
@@ -103,68 +117,72 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
         Back to feed
       </Link>
 
-      <article className="detail-card">
-        <div className="detail-top-row">
-          <Link className="poll-category" href={buildFeedHref({ filter: poll.category })}>
-            {poll.category}
-          </Link>
-          <div className="detail-top-actions">
-            {status.isClosingSoon ? <span className="poll-state-badge poll-state-badge-soon">Closing soon</span> : null}
-            {status.isClosed ? <span className="poll-state-badge poll-state-badge-closed">Closed</span> : null}
-            <p>{formatTotalVoteLabel(total)}</p>
-            <BookmarkToggleForm
-              pollId={poll.id}
-              isBookmarked={poll.isBookmarked}
-              source="poll_detail"
-            />
-            <SharePollButton
-              pollId={poll.id}
-              title={poll.title}
-              path={`/polls/${poll.slug}`}
-              embedPath={`/embed/polls/${poll.slug}`}
-              source="poll_detail"
-            />
-          </div>
-        </div>
-
-        <h1>{poll.title}</h1>
-        {bookmarkError ? <p className="auth-error">{bookmarkError}</p> : null}
-        <p className="detail-description">{poll.description}</p>
-
-        <section>
-          <h2>Vote now</h2>
-          <div className="option-list">
-            {rankedOptions.map((option, optionIndex) => (
-              <VoteOptionForm
-                key={option.id}
+      <article className="detail-card detail-card-opened">
+        <section className="detail-hero">
+          <div className="detail-top-row">
+            <Link className="poll-category" href={buildFeedHref({ filter: poll.category })}>
+              {poll.category}
+            </Link>
+            <div className="detail-top-actions">
+              {status.isClosingSoon ? <span className="poll-state-badge poll-state-badge-soon">Closing soon</span> : null}
+              {status.isClosed ? <span className="poll-state-badge poll-state-badge-closed">Closed</span> : null}
+              <BookmarkToggleForm
                 pollId={poll.id}
-                optionId={option.id}
-                returnTo={`/polls/${poll.slug}?comments=${commentSort}`}
-                label={option.label}
-                rightText={`${Math.round((option.votes / Math.max(total, 1)) * 100)}%`}
-                percent={(option.votes / Math.max(total, 1)) * 100}
-                fillColor={getPollOptionFillColor(poll.id, optionIndex)}
-                selected={poll.viewerVoteOptionId === option.id}
-                disabled={status.isClosed}
+                isBookmarked={poll.isBookmarked}
+                source="poll_detail"
               />
-            ))}
+              <SharePollButton
+                pollId={poll.id}
+                title={poll.title}
+                path={`/polls/${poll.slug}`}
+                embedPath={`/embed/polls/${poll.slug}`}
+                source="poll_detail"
+              />
+            </div>
           </div>
-          {status.isClosed ? <p className="poll-blurb">This poll is closed. Voting is disabled.</p> : null}
+
+          <h1>{poll.title}</h1>
+          <p className="detail-description">{poll.summary}</p>
+          {bookmarkError ? <p className="auth-error">{bookmarkError}</p> : null}
+          <div className="detail-stat-row" aria-label="Poll quick stats">
+            <p className="detail-stat-pill">{formatTotalVoteLabel(total)}</p>
+            <Link className="detail-stat-pill detail-stat-link" href="#comments">
+              {poll.commentCount} comments
+            </Link>
+            <p className="detail-stat-pill">Created {createdLabel}</p>
+            <p className="detail-stat-pill">Ends {endsLabel}</p>
+            <p className="detail-stat-pill">Status: {statusLabel}</p>
+          </div>
         </section>
 
-        <section>
-          <h2>Vote activity split over time</h2>
-          <TrendBars poll={poll} />
-        </section>
+        <section className="detail-results-vote-section">
+          <PollResultsGraph
+            pollSlug={poll.slug}
+            commentSort={commentSort}
+            activeVariant={graphVariant}
+            activeTimeframe={graphTimeframe}
+            data={chartData}
+          />
 
-        <section className="meta-grid">
-          <div>
-            <h3>Created</h3>
-            <p>{new Date(poll.createdAt).toLocaleDateString()}</p>
-          </div>
-          <div>
-            <h3>Ends</h3>
-            <p>{poll.endsAt ? new Date(poll.endsAt).toLocaleDateString() : "No end date"}</p>
+          <div className="detail-vote-section">
+            <h2>Vote</h2>
+            <div className="option-list">
+              {rankedOptions.map((option, optionIndex) => (
+                <VoteOptionForm
+                  key={option.id}
+                  pollId={poll.id}
+                  optionId={option.id}
+                  returnTo={returnTo}
+                  label={option.label}
+                  rightText={`${Math.round(option.percent)}%`}
+                  percent={option.percent}
+                  fillColor={getPollOptionFillColor(poll.id, optionIndex)}
+                  selected={poll.viewerVoteOptionId === option.id}
+                  disabled={status.isClosed}
+                />
+              ))}
+            </div>
+            {status.isClosed ? <p className="poll-blurb">This poll is closed. Voting is disabled.</p> : null}
           </div>
         </section>
 
@@ -173,15 +191,28 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
           pollSlug={poll.slug}
           comments={comments}
           sort={commentSort}
+          graph={graphVariant}
+          timeframe={graphTimeframe}
           commentStatusType={commentStatusType}
           commentStatusMessage={commentStatusMessage}
           signedIn={Boolean(user)}
           isAdmin={profile?.role === "admin"}
         />
 
+        <section className="meta-grid detail-meta-grid">
+          <div>
+            <h3>Created</h3>
+            <p>{createdLabel}</p>
+          </div>
+          <div>
+            <h3>Ends</h3>
+            <p>{endsLabel}</p>
+          </div>
+        </section>
+
         <ReportPollForm
           pollId={poll.id}
-          returnTo={`/polls/${poll.slug}?comments=${commentSort}`}
+          returnTo={returnTo}
           statusType={reportStatusType}
           statusMessage={reportStatusMessage}
         />

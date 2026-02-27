@@ -7,7 +7,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   clampFutureDate,
   defaultEndDate,
-  deriveBlurb,
   isCategory,
   parseOptions,
   sanitizeText,
@@ -108,8 +107,7 @@ async function detectPossibleDuplicateIds(title: string, options: string[]): Pro
 type PublishPollInput = {
   slug: string;
   title: string;
-  blurb: string;
-  description: string;
+  summary: string;
   categoryKey: string;
   userId: string;
   endAt: string | null;
@@ -123,8 +121,8 @@ async function createPublishedPollWithOptions(input: PublishPollInput): Promise<
     .insert({
       slug: input.slug,
       title: input.title,
-      blurb: input.blurb,
-      description: input.description,
+      blurb: input.summary,
+      description: input.summary,
       category_key: input.categoryKey,
       status: "published",
       source_type: "submission",
@@ -162,8 +160,7 @@ export async function submitPollAction(formData: FormData) {
   }
 
   const title = sanitizeText(formData.get("title"));
-  const description = sanitizeText(formData.get("description"));
-  const blurb = deriveBlurb(description, title);
+  const summary = sanitizeText(formData.get("summary")) || sanitizeText(formData.get("description"));
   const categoryRaw = sanitizeText(formData.get("category"));
   const options = parseOptions(formData.getAll("options"));
   const endAtRaw = sanitizeText(formData.get("endAt"));
@@ -171,8 +168,8 @@ export async function submitPollAction(formData: FormData) {
   const endAt = resolveEndAt(durationPreset, endAtRaw);
   const duplicateOverride = sanitizeText(formData.get("duplicateOverride")) === "1";
 
-  if (!title || !description) {
-    toStatusMessage("error", "Title and description are required.");
+  if (!title || !summary) {
+    toStatusMessage("error", "Title and summary are required.");
   }
 
   if (!isCategory(categoryRaw)) {
@@ -186,8 +183,7 @@ export async function submitPollAction(formData: FormData) {
   const requiresModeration = shouldRequireModeration({
     category: categoryRaw,
     title,
-    blurb,
-    description
+    summary
   });
   const possibleDuplicateIds = await detectPossibleDuplicateIds(title, options);
   const forceDuplicateModeration = possibleDuplicateIds.length > 0;
@@ -204,8 +200,8 @@ export async function submitPollAction(formData: FormData) {
     .insert({
       submitted_by: user.id,
       title,
-      blurb,
-      description,
+      blurb: summary,
+      description: summary,
       category_key: categoryRaw,
       options,
       end_at: endAt,
@@ -235,8 +231,7 @@ export async function submitPollAction(formData: FormData) {
     await createPublishedPollWithOptions({
       slug,
       title,
-      blurb,
-      description,
+      summary,
       categoryKey: categoryRaw,
       userId: user.id,
       endAt,
@@ -270,8 +265,7 @@ export async function approveSubmissionAction(formData: FormData) {
 
   const submissionId = sanitizeText(formData.get("submissionId"));
   const title = sanitizeText(formData.get("title"));
-  const description = sanitizeText(formData.get("description"));
-  const blurb = deriveBlurb(description, title);
+  const summary = sanitizeText(formData.get("summary")) || sanitizeText(formData.get("description"));
   const categoryRaw = sanitizeText(formData.get("category"));
   const options = parseOptions(formData.getAll("options"));
   const reviewNotes = sanitizeText(formData.get("reviewNotes"));
@@ -279,7 +273,7 @@ export async function approveSubmissionAction(formData: FormData) {
   const originalEndAt = clampFutureDate(sanitizeText(formData.get("originalEndAt")) || null);
   const endAt = requestedEndAt ?? originalEndAt ?? null;
 
-  if (!submissionId || !title || !description || !isCategory(categoryRaw)) {
+  if (!submissionId || !title || !summary || !isCategory(categoryRaw)) {
     redirect("/admin/submissions?type=error&message=Invalid+approval+payload");
   }
 
@@ -294,8 +288,7 @@ export async function approveSubmissionAction(formData: FormData) {
     await createPublishedPollWithOptions({
       slug,
       title,
-      blurb,
-      description,
+      summary,
       categoryKey: categoryRaw,
       userId: user.id,
       endAt,
@@ -311,8 +304,8 @@ export async function approveSubmissionAction(formData: FormData) {
     .update({
       status: "approved",
       title,
-      blurb,
-      description,
+      blurb: summary,
+      description: summary,
       category_key: categoryRaw,
       options,
       review_notes: reviewNotes || "Approved",

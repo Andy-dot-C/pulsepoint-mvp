@@ -50,10 +50,3 @@ export function defaultEndDate(days = 30): string {
 export function sanitizeText(value: FormDataEntryValue | null): string {
   return String(value ?? "").trim().replace(/\s+/g, " ");
 }
-
-export function deriveBlurb(description: string, fallbackTitle: string): string {
-  const source = description.trim() || fallbackTitle.trim();
-  if (!source) return "Community opinion poll.";
-  if (source.length <= 120) return source;
-  return `${source.slice(0, 117).trimEnd()}...`;
-}

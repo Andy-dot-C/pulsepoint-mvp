@@ -7,8 +7,7 @@ export type OptionChange = {
 
 export type PollAssistResult = {
   title: string;
-  blurb: string;
-  description: string;
+  summary: string;
   options: string[];
   optionChanges: OptionChange[];
 };
@@ -144,10 +143,8 @@ function heuristicAssist(input: {
 
   return {
     title,
-    blurb: `A neutral community poll about ${topic.toLowerCase()}.`,
-    description:
-      `This poll gathers opinion on ${topic.toLowerCase()} across PulsePoint users. ` +
-      `Votes are anonymous and results update in real time as participation grows.`,
+    summary:
+      `This poll gathers opinion on ${topic.toLowerCase()} across PulsePoint users, with anonymous votes and real-time results.`,
     options,
     optionChanges: corrected.optionChanges
   };
@@ -177,7 +174,7 @@ export async function assistPollDraft(input: {
           {
             role: "system",
             content:
-              "You rewrite polls to neutral wording and generate concise blurb/description. Keep politically and socially neutral framing, avoid persuasive language, and preserve intended names/entities and user meaning. Fix obvious spelling mistakes in options without changing intent. Return strict JSON with keys: title, blurb, description, options. No extra text."
+              "You rewrite polls to neutral wording and generate a concise summary. Keep politically and socially neutral framing, avoid persuasive language, and preserve intended names/entities and user meaning. Fix obvious spelling mistakes in options without changing intent. Return strict JSON with keys: title, summary, options. No extra text."
           },
           {
             role: "user",
@@ -193,8 +190,7 @@ export async function assistPollDraft(input: {
               additionalProperties: false,
               properties: {
                 title: { type: "string" },
-                blurb: { type: "string" },
-                description: { type: "string" },
+                summary: { type: "string" },
                 options: {
                   type: "array",
                   items: { type: "string" },
@@ -202,7 +198,7 @@ export async function assistPollDraft(input: {
                   maxItems: 10
                 }
               },
-              required: ["title", "blurb", "description", "options"]
+              required: ["title", "summary", "options"]
             }
           }
         }
@@ -225,8 +221,7 @@ export async function assistPollDraft(input: {
 
     return {
       title: ensureQuestion(String(parsed.title ?? input.title)),
-      blurb: String(parsed.blurb ?? "").trim(),
-      description: String(parsed.description ?? "").trim(),
+      summary: String(parsed.summary ?? parsed.description ?? parsed.blurb ?? "").trim(),
       options: cleanOptions(corrected.options),
       optionChanges: appendOptionChanges([], corrected.optionChanges)
     };

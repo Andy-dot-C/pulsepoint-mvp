@@ -10,7 +10,7 @@ import { categories } from "@/lib/mock-data";
 type Submission = {
   id: string;
   title: string;
-  description: string;
+  summary: string;
   category_key: string;
   options: string[];
   created_at: string;
@@ -22,7 +22,7 @@ type DuplicatePollPreview = {
   id: string;
   slug: string;
   title: string;
-  blurb: string;
+  summary: string;
   category_key: string;
   options: string[];
 };
@@ -34,7 +34,7 @@ type Props = {
 
 export function AdminSubmissionEditor({ submission, duplicatePolls }: Props) {
   const [title, setTitle] = useState(submission.title);
-  const [description, setDescription] = useState(submission.description);
+  const [summary, setSummary] = useState(submission.summary);
   const [category, setCategory] = useState(submission.category_key);
   const [options, setOptions] = useState<string[]>(submission.options);
   const [isImproving, setIsImproving] = useState(false);
@@ -63,7 +63,7 @@ export function AdminSubmissionEditor({ submission, duplicatePolls }: Props) {
       }
 
       setTitle(String(payload.title ?? title));
-      setDescription(String(payload.description ?? description));
+      setSummary(String(payload.summary ?? payload.description ?? summary));
 
       if (Array.isArray(payload.options) && payload.options.length >= 2) {
         setOptions(payload.options.map((value: unknown) => String(value)));
@@ -119,12 +119,12 @@ export function AdminSubmissionEditor({ submission, duplicatePolls }: Props) {
           </label>
 
           <label>
-            Description
+            Summary
             <textarea
-              name="description"
+              name="summary"
               rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
               required
             />
           </label>
@@ -219,7 +219,7 @@ export function AdminSubmissionEditor({ submission, duplicatePolls }: Props) {
                     {poll.title}
                   </a>
                 </p>
-                <p className="poll-blurb">{poll.blurb}</p>
+                <p className="poll-blurb">{poll.summary}</p>
                 {poll.options.length > 0 ? (
                   <div className="submit-options-change" style={{ marginTop: 8 }}>
                     <p>Options preview:</p>

@@ -1,11 +1,9 @@
 import { PollCard } from "@/components/poll-card";
-import { SiteHeader } from "@/components/site-header";
 import { FlashBanner } from "@/components/flash-banner";
 import { FeedRail } from "@/components/feed-rail";
 import { FeedFeaturedPollCard } from "@/components/feed-featured-poll-card";
 import { buildFeedHref } from "@/lib/feed-query";
 import { fetchFeed } from "@/lib/data/polls";
-import { getAuthView } from "@/lib/auth";
 import { CategoryKey, FeedFilterKey, FeedTabKey } from "@/lib/types";
 
 type HomePageProps = {
@@ -102,17 +100,9 @@ export default async function Home({ searchParams }: HomePageProps) {
   });
   const featuredPoll = feed[0] ?? null;
   const gridPolls = featuredPoll ? feed.slice(1) : [];
-  const authView = await getAuthView();
 
   return (
     <main className="page-shell">
-      <SiteHeader
-        activeFilter={normalizedFilter}
-        searchQuery={searchQuery}
-        signedIn={authView.signedIn}
-        username={authView.username}
-        role={authView.role}
-      />
       {bookmarkError ? (
         <article className="side-card" style={{ marginTop: 12 }}>
           <p className="auth-error">{bookmarkError}</p>

@@ -19,12 +19,11 @@ export function hasLoadedWording(value: string): boolean {
 export function shouldRequireModeration(input: {
   category: CategoryKey;
   title: string;
-  blurb: string;
-  description: string;
+  summary: string;
 }): boolean {
   if (SENSITIVE_CATEGORIES.includes(input.category)) {
     return true;
   }
 
-  return [input.title, input.blurb, input.description].some(hasLoadedWording);
+  return [input.title, input.summary].some(hasLoadedWording);
 }

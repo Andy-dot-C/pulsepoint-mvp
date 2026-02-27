@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isReportReason } from "@/lib/report-reasons";
-import { deriveBlurb, isCategory, parseOptions } from "@/lib/submissions";
+import { isCategory, parseOptions } from "@/lib/submissions";
 import { trackPollEvent } from "@/lib/analytics/events";
 
 function safePath(value: string | null | undefined, fallback = "/"): string {
@@ -137,12 +137,12 @@ export async function updatePollFromAdminAction(formData: FormData) {
 
   const pollId = readText(formData.get("pollId"));
   const title = readText(formData.get("title"));
-  const description = readText(formData.get("description"));
+  const summary = readText(formData.get("summary")) || readText(formData.get("description"));
   const category = readText(formData.get("category"));
   const options = parseOptions(formData.getAll("options"));
   const endAtRaw = readText(formData.get("endAt"));
 
-  if (!pollId || !title || !description || !isCategory(category)) {
+  if (!pollId || !title || !summary || !isCategory(category)) {
     redirect(`${returnTo}?type=error&message=Invalid+poll+update+payload`);
   }
 
@@ -151,7 +151,6 @@ export async function updatePollFromAdminAction(formData: FormData) {
   }
 
   const admin = createAdminClient();
-  const blurb = deriveBlurb(description, title);
   const endAt = endAtRaw ? new Date(endAtRaw).toISOString() : null;
 
   const { data: existingOptions, error: existingOptionsError } = await admin
@@ -172,8 +171,8 @@ export async function updatePollFromAdminAction(formData: FormData) {
     .from("polls")
     .update({
       title,
-      blurb,
-      description,
+      blurb: summary,
+      description: summary,
       category_key: category,
       end_at: endAt,
       updated_at: new Date().toISOString()

@@ -20,12 +20,25 @@ export type PollTrendPoint = {
   shares: Record<string, number>;
 };
 
+export type PollDailyTrendPoint = {
+  date: string;
+  label: string;
+  totalVotes: number;
+  shares: Record<string, number>;
+};
+
+export type PollHourlyTrendPoint = {
+  iso: string;
+  label: string;
+  totalVotes: number;
+  shares: Record<string, number>;
+};
+
 export type Poll = {
   id: string;
   slug: string;
   title: string;
-  blurb: string;
-  description: string;
+  summary: string;
   category: CategoryKey;
   createdAt: string;
   endsAt?: string;
@@ -35,6 +48,8 @@ export type Poll = {
   viewerVoteOptionId?: string;
   options: PollOption[];
   trend: PollTrendPoint[];
+  dailyTrend?: PollDailyTrendPoint[];
+  hourlyTrend?: PollHourlyTrendPoint[];
 };
 
 export type Category = {

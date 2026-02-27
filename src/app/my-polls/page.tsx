@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { PollCard } from "@/components/poll-card";
-import { SiteHeader } from "@/components/site-header";
 import { getAuthView } from "@/lib/auth";
 import { fetchMyPolls } from "@/lib/data/polls";
 import { createClient } from "@/lib/supabase/server";
@@ -11,13 +10,6 @@ export default async function MyPollsPage() {
   if (!authView.signedIn) {
     return (
       <main className="page-shell">
-        <SiteHeader
-          activeFilter="trending"
-          searchQuery=""
-          signedIn={authView.signedIn}
-          username={authView.username}
-          role={authView.role}
-        />
         <article className="detail-card" style={{ marginTop: 16 }}>
           <h1>My polls</h1>
           <p className="poll-blurb">Sign in to view polls you have created.</p>
@@ -39,14 +31,6 @@ export default async function MyPollsPage() {
 
   return (
     <main className="page-shell">
-      <SiteHeader
-        activeFilter="trending"
-        searchQuery=""
-        signedIn={authView.signedIn}
-        username={authView.username}
-        role={authView.role}
-      />
-
       <article className="detail-card" style={{ marginTop: 16 }}>
         <h1>My polls</h1>
         <p className="poll-blurb">{feed.length} poll(s) created by you</p>

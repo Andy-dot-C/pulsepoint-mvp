@@ -11,6 +11,8 @@ type PollCommentsProps = {
   pollSlug: string;
   comments: PollComment[];
   sort: CommentSortKey;
+  graph?: string;
+  timeframe?: string;
   commentStatusType?: string;
   commentStatusMessage?: string;
   signedIn: boolean;
@@ -22,12 +24,16 @@ export function PollComments({
   pollSlug,
   comments,
   sort,
+  graph,
+  timeframe,
   commentStatusType,
   commentStatusMessage,
   signedIn,
   isAdmin
 }: PollCommentsProps) {
-  const returnTo = `/polls/${pollSlug}?comments=${sort}#comments`;
+  const graphQuery = graph ? `&graph=${encodeURIComponent(graph)}` : "";
+  const timeframeQuery = timeframe ? `&time=${encodeURIComponent(timeframe)}` : "";
+  const returnTo = `/polls/${pollSlug}?comments=${sort}${graphQuery}${timeframeQuery}#comments`;
   const signInHref = `/auth?next=${encodeURIComponent(returnTo)}`;
 
   return (
@@ -36,14 +42,14 @@ export function PollComments({
         <h2>Discussion</h2>
         <div className="comments-sort-row">
           <Link
-            href={`/polls/${pollSlug}?comments=newest#comments`}
+            href={`/polls/${pollSlug}?comments=newest${graphQuery}${timeframeQuery}#comments`}
             scroll={false}
             className={`comments-sort-btn ${sort === "newest" ? "comments-sort-btn-active" : ""}`}
           >
             Newest
           </Link>
           <Link
-            href={`/polls/${pollSlug}?comments=top#comments`}
+            href={`/polls/${pollSlug}?comments=top${graphQuery}${timeframeQuery}#comments`}
             scroll={false}
             className={`comments-sort-btn ${sort === "top" ? "comments-sort-btn-active" : ""}`}
           >

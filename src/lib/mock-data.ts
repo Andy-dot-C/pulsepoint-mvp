@@ -19,9 +19,8 @@ export const polls: Poll[] = [
     id: "poll-1",
     slug: "should-uk-lower-voting-age-to-16",
     title: "Should the UK lower the voting age to 16?",
-    blurb: "A recurring Westminster topic with broad impact on turnout and civic education.",
-    description:
-      "Parliament periodically revisits voting age reform. This poll tracks how sentiment shifts as party leaders and MPs debate democratic participation for younger voters.",
+    summary:
+      "Parliament periodically revisits voting age reform, and this poll tracks how sentiment shifts as party leaders and MPs debate democratic participation for younger voters.",
     category: "politics",
     createdAt: "2026-02-15T08:10:00Z",
     endsAt: "2026-03-01T00:00:00Z",
@@ -42,8 +41,7 @@ export const polls: Poll[] = [
     id: "poll-2",
     slug: "who-should-win-best-actor-oscar",
     title: "Who should win Best Actor at the Oscars?",
-    blurb: "Public sentiment before awards night can diverge sharply from critics and betting odds.",
-    description:
+    summary:
       "This poll captures fan preference for this season's frontrunners and reveals whether general audiences align with academy narratives.",
     category: "entertainment",
     createdAt: "2026-02-16T09:00:00Z",
@@ -77,9 +75,8 @@ export const polls: Poll[] = [
     id: "poll-3",
     slug: "greatest-premier-league-midfielder-ever",
     title: "Greatest Premier League midfielder of all time?",
-    blurb: "Legacy debates drive high engagement and shares across football communities.",
-    description:
-      "A fan-driven ranking poll designed to benchmark generational sentiment. Ideal for repeat participation as new clips and debates trend.",
+    summary:
+      "A fan-driven ranking poll designed to benchmark generational sentiment and repeat participation as new clips and debates trend.",
     category: "sport",
     createdAt: "2026-02-14T13:45:00Z",
     isTrending: false,

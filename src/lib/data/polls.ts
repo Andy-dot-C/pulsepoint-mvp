@@ -1,6 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { polls as mockPolls, totalVotes } from "@/lib/mock-data";
-import { CategoryKey, FeedTabKey, Poll, PollOption, PollTrendPoint } from "@/lib/types";
+import {
+  CategoryKey,
+  FeedTabKey,
+  Poll,
+  PollDailyTrendPoint,
+  PollHourlyTrendPoint,
+  PollOption,
+  PollTrendPoint
+} from "@/lib/types";
 import { selectTrendingPollIds } from "@/lib/trending";
 
 type FeedInput = {
@@ -24,6 +32,7 @@ type PollMetaRow = {
   slug: string;
   title: string;
   blurb: string;
+  description: string;
   category_key: CategoryKey;
 };
 
@@ -111,7 +120,7 @@ function applyLocalFilters({ tab, category, q }: FeedInput, source: Poll[]): Pol
 
   const byQuery = q
     ? byCategory.filter((poll) => {
-        const haystack = `${poll.title} ${poll.blurb} ${poll.description}`.toLowerCase();
+        const haystack = `${poll.title} ${poll.summary}`.toLowerCase();
         return haystack.includes(q.toLowerCase());
       })
     : byCategory;
@@ -170,6 +179,161 @@ function buildTrendPoints(
   });
 }
 
+function formatUtcDateLabel(date: Date): string {
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+}
+
+function buildDailyTrendPoints(
+  options: PollOption[],
+  events: VoteEventRow[],
+  fallbackTotals: PollOptionTotalRow[],
+  days = 30
+): PollDailyTrendPoint[] {
+  const dayMs = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const todayUtc = Date.UTC(
+    new Date(now).getUTCFullYear(),
+    new Date(now).getUTCMonth(),
+    new Date(now).getUTCDate()
+  );
+  const startUtc = todayUtc - (days - 1) * dayMs;
+  const eventsByDay = new Map<number, VoteEventRow[]>();
+  const scopedEvents = events.filter((event) => {
+    const timestamp = Date.parse(event.changed_at);
+    return Number.isFinite(timestamp) && timestamp >= startUtc;
+  });
+
+  scopedEvents.forEach((event) => {
+    const timestamp = Date.parse(event.changed_at);
+    const dayStart = Date.UTC(
+      new Date(timestamp).getUTCFullYear(),
+      new Date(timestamp).getUTCMonth(),
+      new Date(timestamp).getUTCDate()
+    );
+    const bucket = eventsByDay.get(dayStart) ?? [];
+    bucket.push(event);
+    eventsByDay.set(dayStart, bucket);
+  });
+
+  const fallbackTotal = fallbackTotals.reduce((sum, entry) => sum + Number(entry.votes ?? 0), 0);
+  const fallbackShares = Object.fromEntries(
+    options.map((option) => {
+      const votes = Number(fallbackTotals.find((entry) => entry.option_id === option.id)?.votes ?? 0);
+      return [option.id, fallbackTotal === 0 ? 0 : votes / fallbackTotal];
+    })
+  );
+
+  const runningCounts = new Map<string, number>();
+  options.forEach((option) => runningCounts.set(option.id, 0));
+  const points: PollDailyTrendPoint[] = [];
+
+  for (let index = 0; index < days; index += 1) {
+    const dayStart = startUtc + index * dayMs;
+    const dayEvents = eventsByDay.get(dayStart) ?? [];
+    dayEvents.forEach((event) => {
+      runningCounts.set(event.new_option_id, (runningCounts.get(event.new_option_id) ?? 0) + 1);
+    });
+
+    const runningTotal = Array.from(runningCounts.values()).reduce((sum, count) => sum + count, 0);
+    const dateLabel = formatUtcDateLabel(new Date(dayStart));
+
+    if (runningTotal === 0) {
+      points.push({
+        date: new Date(dayStart).toISOString().slice(0, 10),
+        label: dateLabel,
+        totalVotes: fallbackTotal,
+        shares: fallbackShares
+      });
+      continue;
+    }
+
+    points.push({
+      date: new Date(dayStart).toISOString().slice(0, 10),
+      label: dateLabel,
+      totalVotes: runningTotal,
+      shares: Object.fromEntries(
+        options.map((option) => [option.id, (runningCounts.get(option.id) ?? 0) / runningTotal])
+      )
+    });
+  }
+
+  return points;
+}
+
+function formatUtcHourLabel(date: Date): string {
+  return date.toLocaleTimeString(undefined, { hour: "numeric", hour12: false, timeZone: "UTC" });
+}
+
+function buildHourlyTrendPoints(
+  options: PollOption[],
+  events: VoteEventRow[],
+  fallbackTotals: PollOptionTotalRow[],
+  hours = 24
+): PollHourlyTrendPoint[] {
+  const hourMs = 60 * 60 * 1000;
+  const now = Date.now();
+  const currentHourUtc = Math.floor(now / hourMs) * hourMs;
+  const startUtc = currentHourUtc - (hours - 1) * hourMs;
+  const eventsByHour = new Map<number, VoteEventRow[]>();
+
+  const scopedEvents = events.filter((event) => {
+    const timestamp = Date.parse(event.changed_at);
+    return Number.isFinite(timestamp) && timestamp >= startUtc;
+  });
+
+  scopedEvents.forEach((event) => {
+    const timestamp = Date.parse(event.changed_at);
+    const hourStart = Math.floor(timestamp / hourMs) * hourMs;
+    const bucket = eventsByHour.get(hourStart) ?? [];
+    bucket.push(event);
+    eventsByHour.set(hourStart, bucket);
+  });
+
+  const fallbackTotal = fallbackTotals.reduce((sum, entry) => sum + Number(entry.votes ?? 0), 0);
+  const fallbackShares = Object.fromEntries(
+    options.map((option) => {
+      const votes = Number(fallbackTotals.find((entry) => entry.option_id === option.id)?.votes ?? 0);
+      return [option.id, fallbackTotal === 0 ? 0 : votes / fallbackTotal];
+    })
+  );
+
+  const runningCounts = new Map<string, number>();
+  options.forEach((option) => runningCounts.set(option.id, 0));
+  const points: PollHourlyTrendPoint[] = [];
+
+  for (let index = 0; index < hours; index += 1) {
+    const hourStart = startUtc + index * hourMs;
+    const hourEvents = eventsByHour.get(hourStart) ?? [];
+    hourEvents.forEach((event) => {
+      runningCounts.set(event.new_option_id, (runningCounts.get(event.new_option_id) ?? 0) + 1);
+    });
+
+    const runningTotal = Array.from(runningCounts.values()).reduce((sum, count) => sum + count, 0);
+    const label = formatUtcHourLabel(new Date(hourStart));
+
+    if (runningTotal === 0) {
+      points.push({
+        iso: new Date(hourStart).toISOString(),
+        label,
+        totalVotes: fallbackTotal,
+        shares: fallbackShares
+      });
+      continue;
+    }
+
+    points.push({
+      iso: new Date(hourStart).toISOString(),
+      label,
+      totalVotes: runningTotal,
+      shares: Object.fromEntries(
+        options.map((option) => [option.id, (runningCounts.get(option.id) ?? 0) / runningTotal])
+      )
+    });
+  }
+
+  return points;
+}
+
 function hydratePolls(
   rows: PollRow[],
   optionRows: PollOptionRow[],
@@ -199,8 +363,7 @@ function hydratePolls(
       id: row.id,
       slug: row.slug,
       title: row.title,
-      blurb: row.blurb,
-      description: row.description,
+      summary: row.blurb || row.description,
       category: row.category_key,
       createdAt: row.created_at,
       endsAt: row.end_at ?? undefined,
@@ -466,6 +629,16 @@ export async function fetchPollBySlug(slug: string): Promise<Poll | null> {
     events,
     totals
   );
+  hydrated.dailyTrend = buildDailyTrendPoints(
+    hydrated.options,
+    events,
+    totals
+  );
+  hydrated.hourlyTrend = buildHourlyTrendPoints(
+    hydrated.options,
+    events,
+    totals
+  );
 
   return hydrated;
 }
@@ -545,14 +718,14 @@ export async function fetchMyPolls(userId: string): Promise<Poll[]> {
 
 export async function fetchPollMetaBySlug(
   slug: string
-): Promise<{ slug: string; title: string; blurb: string; category: CategoryKey } | null> {
+): Promise<{ slug: string; title: string; summary: string; category: CategoryKey } | null> {
   if (!hasSupabaseConfig()) {
     const mock = mockPolls.find((poll) => poll.slug === slug);
     if (!mock) return null;
     return {
       slug: mock.slug,
       title: mock.title,
-      blurb: mock.blurb,
+      summary: mock.summary,
       category: mock.category
     };
   }
@@ -560,7 +733,7 @@ export async function fetchPollMetaBySlug(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("polls")
-    .select("slug,title,blurb,category_key")
+    .select("slug,title,blurb,description,category_key")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
@@ -573,7 +746,7 @@ export async function fetchPollMetaBySlug(
   return {
     slug: row.slug,
     title: row.title,
-    blurb: row.blurb,
+    summary: row.blurb || row.description,
     category: row.category_key
   };
 }

@@ -36,7 +36,7 @@ export function SubmitPollForm({
   const possibleDuplicateIdsRef = useRef<string[]>([]);
   const [possibleDuplicates, setPossibleDuplicates] = useState<DuplicateMatch[]>([]);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [summary, setSummary] = useState("");
   const [category, setCategory] = useState(defaultCategory);
   const [options, setOptions] = useState<string[]>(["", ""]);
   const [durationPreset, setDurationPreset] = useState("30d");
@@ -164,7 +164,7 @@ export function SubmitPollForm({
       }
 
       setTitle(String(payload.title ?? title));
-      setDescription(String(payload.description ?? description));
+      setSummary(String(payload.summary ?? payload.description ?? summary));
 
       if (Array.isArray(payload.options) && payload.options.length >= 2) {
         setOptions(payload.options.map((value: unknown) => String(value)));
@@ -278,14 +278,14 @@ export function SubmitPollForm({
       </div>
 
       <label>
-        Description
+        Summary
         <textarea
-          name="description"
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
+          name="summary"
+          value={summary}
+          onChange={(event) => setSummary(event.target.value)}
           required
           rows={4}
-          placeholder="Context users need before voting."
+          placeholder="Brief context users need before voting."
         />
       </label>
 
@@ -319,9 +319,9 @@ export function SubmitPollForm({
       )}
 
       <div className="submit-actions-row">
-        <button type="button" className="ghost-btn" onClick={improveDraft} disabled={isImproving || !title}>
-          {isImproving ? "Improving..." : "AI improve wording + descriptions"}
-        </button>
+          <button type="button" className="ghost-btn" onClick={improveDraft} disabled={isImproving || !title}>
+            {isImproving ? "Improving..." : "AI improve wording + summary"}
+          </button>
         <button type="button" className="create-btn" onClick={handleSubmitClick} disabled={isCheckingDuplicates}>
           {isCheckingDuplicates ? "Checking for duplicates..." : "Submit poll"}
         </button>

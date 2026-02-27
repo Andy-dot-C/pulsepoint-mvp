@@ -104,7 +104,7 @@ export default async function PollEditorPage({ params, searchParams }: PollEdito
 
   const { data: poll } = await supabase
     .from("polls")
-    .select("id,title,description,category_key,end_at,status")
+    .select("id,title,blurb,description,category_key,end_at,status")
     .eq("id", pollId)
     .maybeSingle();
 
@@ -275,8 +275,8 @@ export default async function PollEditorPage({ params, searchParams }: PollEdito
             </label>
 
             <label>
-              Description
-              <textarea name="description" rows={4} defaultValue={poll.description} required />
+              Summary
+              <textarea name="summary" rows={4} defaultValue={poll.blurb || poll.description} required />
             </label>
 
             <div className="submit-options">

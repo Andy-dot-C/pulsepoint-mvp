@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { PollCard } from "@/components/poll-card";
-import { SiteHeader } from "@/components/site-header";
 import { getAuthView } from "@/lib/auth";
 import { fetchFeed } from "@/lib/data/polls";
 
@@ -10,13 +9,6 @@ export default async function SavedPollsPage() {
   if (!authView.signedIn) {
     return (
       <main className="page-shell">
-        <SiteHeader
-          activeFilter="trending"
-          searchQuery=""
-          signedIn={authView.signedIn}
-          username={authView.username}
-          role={authView.role}
-        />
         <article className="detail-card" style={{ marginTop: 16 }}>
           <h1>Saved polls</h1>
           <p className="poll-blurb">Sign in to save polls and revisit them later.</p>
@@ -34,14 +26,6 @@ export default async function SavedPollsPage() {
 
   return (
     <main className="page-shell">
-      <SiteHeader
-        activeFilter="trending"
-        searchQuery=""
-        signedIn={authView.signedIn}
-        username={authView.username}
-        role={authView.role}
-      />
-
       <article className="detail-card" style={{ marginTop: 16 }}>
         <h1>Saved polls</h1>
         <p className="poll-blurb">{feed.length} saved poll(s)</p>

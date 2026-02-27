@@ -126,7 +126,7 @@ export function SiteHeader({
       <div className="site-header-inner">
         <div className="brand-row">
           <Link className="brand-lockup" href="/" aria-label="Go to homepage">
-            <h1>Polld</h1>
+            <h1>Po11 MVP</h1>
           </Link>
 
           <div className="search-shell" ref={searchRef}>
