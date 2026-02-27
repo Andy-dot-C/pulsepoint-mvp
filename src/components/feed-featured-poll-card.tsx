@@ -1,18 +1,18 @@
 import Link from "next/link";
-import { buildFeedHref } from "@/lib/feed-query";
 import { formatVoteLabel } from "@/lib/format-votes";
 import { Poll } from "@/lib/types";
 import { totalVotes } from "@/lib/mock-data";
 import { VoteOptionForm } from "@/components/vote-option-form";
-import { TrendBars } from "@/components/trend-bars";
 import { SharePollButton } from "@/components/share-poll-button";
 import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
 import { PollCardShell } from "@/components/poll-card-shell";
-import { getPollOptionFillColor } from "@/lib/poll-colors";
+import { buildPollChartData } from "@/lib/poll-chart-data";
+import { FeaturedPollGraph } from "@/components/featured-poll-graph";
 
 type FeedFeaturedPollCardProps = {
   poll: Poll;
   returnTo: string;
+  chartVariant?: "donut" | "dot-grid" | "bars" | "line";
 };
 
 function percent(votes: number, total: number): string {
@@ -33,27 +33,27 @@ function formatCompactCount(value: number): string {
   return `${rounded}`;
 }
 
-export function FeedFeaturedPollCard({ poll, returnTo }: FeedFeaturedPollCardProps) {
+export function FeedFeaturedPollCard({ poll, returnTo, chartVariant = "donut" }: FeedFeaturedPollCardProps) {
   const total = totalVotes(poll);
   const pollHref = `/polls/${poll.slug}`;
   const ranked = [...poll.options].sort((left, right) => right.votes - left.votes || left.label.localeCompare(right.label));
-  const featuredOptions = ranked.slice(0, 3);
+  const featuredOptions = ranked;
+  const chartData = buildPollChartData(poll);
+  const optionColorMap = new Map(chartData.options.map((option) => [option.id, option.color]));
 
   return (
     <PollCardShell href={pollHref} ariaLabel={`Open featured poll: ${poll.title}`} className="featured-poll-card">
-      <h2 className="featured-poll-title">
-        <Link href={pollHref}>{poll.title}</Link>
-      </h2>
-      <div className="poll-top-row">
-        <Link className="poll-category" href={buildFeedHref({ filter: poll.category })}>
-          {poll.category}
-        </Link>
+      <div className="featured-poll-head">
+        <h2 className="featured-poll-title">
+          <Link href={pollHref}>{poll.title}</Link>
+        </h2>
       </div>
+      <p className="featured-poll-summary">{poll.summary}</p>
 
       <div className="featured-poll-main">
         <div className="featured-poll-left">
           <div className="option-list">
-            {featuredOptions.map((option, optionIndex) => (
+            {featuredOptions.map((option) => (
               <VoteOptionForm
                 key={option.id}
                 pollId={poll.id}
@@ -62,16 +62,16 @@ export function FeedFeaturedPollCard({ poll, returnTo }: FeedFeaturedPollCardPro
                 label={option.label}
                 rightText={percent(option.votes, total)}
                 percent={(option.votes / Math.max(total, 1)) * 100}
-                fillColor={getPollOptionFillColor(poll.id, optionIndex)}
+                variant="line"
+                fillColor={optionColorMap.get(option.id)}
+                accentColor={optionColorMap.get(option.id)}
               />
             ))}
           </div>
           <p className="featured-poll-meta">{formatVoteLabel(total)}</p>
         </div>
 
-        <div className="featured-poll-chart">
-          <TrendBars poll={poll} />
-        </div>
+        <FeaturedPollGraph data={chartData} variant={chartVariant} />
       </div>
 
       <div className="poll-footer">

@@ -2,6 +2,7 @@ import { PollCard } from "@/components/poll-card";
 import { FlashBanner } from "@/components/flash-banner";
 import { FeedRail } from "@/components/feed-rail";
 import { FeedFeaturedPollCard } from "@/components/feed-featured-poll-card";
+import { FeaturedPollCarousel } from "@/components/featured-poll-carousel";
 import { buildFeedHref } from "@/lib/feed-query";
 import { fetchFeed } from "@/lib/data/polls";
 import { CategoryKey, FeedFilterKey, FeedTabKey } from "@/lib/types";
@@ -98,8 +99,9 @@ export default async function Home({ searchParams }: HomePageProps) {
     category: feedInput.category,
     q: searchQuery
   });
-  const featuredPoll = feed[0] ?? null;
-  const gridPolls = featuredPoll ? feed.slice(1) : [];
+  const featuredPolls = feed.slice(0, 6);
+  const gridPolls = feed.slice(featuredPolls.length);
+  const featuredChartVariants: Array<"donut" | "dot-grid" | "bars" | "line"> = ["line", "donut", "dot-grid", "bars"];
 
   return (
     <main className="page-shell">
@@ -112,7 +114,18 @@ export default async function Home({ searchParams }: HomePageProps) {
 
       <section className="feed-grid feed-grid-cards-3">
         <div className="feed-column">
-          {featuredPoll ? <FeedFeaturedPollCard poll={featuredPoll} returnTo={returnTo} /> : null}
+          {featuredPolls.length > 0 ? (
+            <FeaturedPollCarousel>
+              {featuredPolls.map((poll, index) => (
+                <FeedFeaturedPollCard
+                  key={poll.id}
+                  poll={poll}
+                  returnTo={returnTo}
+                  chartVariant={featuredChartVariants[index % featuredChartVariants.length]}
+                />
+              ))}
+            </FeaturedPollCarousel>
+          ) : null}
           <div className="feed-cards-grid feed-cards-grid-3">
             {gridPolls.map((poll) => (
               <PollCard key={poll.id} poll={poll} returnTo={returnTo} />
