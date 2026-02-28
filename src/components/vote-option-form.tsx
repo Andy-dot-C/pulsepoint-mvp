@@ -39,6 +39,7 @@ export function VoteOptionForm({
 }: VoteOptionFormProps) {
   const safePercent = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
   const selectedColor = accentColor ?? fillColor;
+  const votedIconColor = selectedColor ?? "#2563eb";
   const style: CSSProperties & Record<string, string> = {};
   if (accentColor) {
     style["--binary-percent-color" as string] = accentColor;
@@ -78,7 +79,24 @@ export function VoteOptionForm({
           <span className="option-btn-line-content">
             <span className="option-btn-line-header">
               <span className="option-btn-line-label">{label}</span>
-              <strong className="option-btn-line-percent">{rightText}</strong>
+              <span className="option-btn-line-right">
+                <strong className="option-btn-line-percent">{rightText}</strong>
+                {selected ? (
+                  <span className="option-btn-voted-icon" aria-hidden="true" style={{ color: votedIconColor }}>
+                    <svg viewBox="0 0 16 16" focusable="false">
+                      <circle cx="8" cy="8" r="8" fill="currentColor" />
+                      <path
+                        d="M4.3 8.2 6.6 10.5 11.7 5.4"
+                        fill="none"
+                        stroke="#ffffff"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                ) : null}
+              </span>
             </span>
             <span className="option-btn-line-track" aria-hidden="true">
               <span
@@ -90,7 +108,24 @@ export function VoteOptionForm({
         ) : (
           <span className="option-btn-content">
             <span>{label}</span>
-            <strong>{rightText}</strong>
+            <span className="option-btn-right">
+              <strong>{rightText}</strong>
+              {selected && variant === "default" ? (
+                <span className="option-btn-voted-icon" aria-hidden="true" style={{ color: votedIconColor }}>
+                  <svg viewBox="0 0 16 16" focusable="false">
+                    <circle cx="8" cy="8" r="8" fill="currentColor" />
+                    <path
+                      d="M4.3 8.2 6.6 10.5 11.7 5.4"
+                      fill="none"
+                      stroke="#ffffff"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              ) : null}
+            </span>
           </span>
         )}
       </button>
