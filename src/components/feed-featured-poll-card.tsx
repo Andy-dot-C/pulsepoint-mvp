@@ -13,6 +13,7 @@ type FeedFeaturedPollCardProps = {
   poll: Poll;
   returnTo: string;
   chartVariant?: "donut" | "dot-grid" | "bars" | "line";
+  className?: string;
 };
 
 function percent(votes: number, total: number): string {
@@ -33,7 +34,7 @@ function formatCompactCount(value: number): string {
   return `${rounded}`;
 }
 
-export function FeedFeaturedPollCard({ poll, returnTo, chartVariant = "donut" }: FeedFeaturedPollCardProps) {
+export function FeedFeaturedPollCard({ poll, returnTo, chartVariant = "donut", className }: FeedFeaturedPollCardProps) {
   const total = totalVotes(poll);
   const pollHref = `/polls/${poll.slug}`;
   const ranked = [...poll.options].sort((left, right) => right.votes - left.votes || left.label.localeCompare(right.label));
@@ -42,7 +43,11 @@ export function FeedFeaturedPollCard({ poll, returnTo, chartVariant = "donut" }:
   const optionColorMap = new Map(chartData.options.map((option) => [option.id, option.color]));
 
   return (
-    <PollCardShell href={pollHref} ariaLabel={`Open featured poll: ${poll.title}`} className="featured-poll-card">
+    <PollCardShell
+      href={pollHref}
+      ariaLabel={`Open featured poll: ${poll.title}`}
+      className={`featured-poll-card${className ? ` ${className}` : ""}`}
+    >
       <div className="featured-poll-head">
         <h2 className="featured-poll-title">
           <Link href={pollHref}>{poll.title}</Link>

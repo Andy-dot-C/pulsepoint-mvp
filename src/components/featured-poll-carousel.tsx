@@ -43,6 +43,9 @@ export function FeaturedPollCarousel({ children, intervalMs = 9000 }: FeaturedPo
             <button type="button" className="featured-carousel-arrow" onClick={goPrev} aria-label="Previous featured poll">
               &#8249;
             </button>
+            <span className="featured-carousel-counter" aria-live="polite">
+              {index + 1} of {slides.length}
+            </span>
             <button type="button" className="featured-carousel-arrow" onClick={goNext} aria-label="Next featured poll">
               &#8250;
             </button>

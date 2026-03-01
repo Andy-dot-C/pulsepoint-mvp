@@ -2,10 +2,12 @@ import { PollCard } from "@/components/poll-card";
 import { FlashBanner } from "@/components/flash-banner";
 import { FeedRail } from "@/components/feed-rail";
 import { FeedFeaturedPollCard } from "@/components/feed-featured-poll-card";
+import { FigmaHeroPreviewCard } from "@/components/figma-hero-preview-card";
 import { FeaturedPollCarousel } from "@/components/featured-poll-carousel";
 import { buildFeedHref } from "@/lib/feed-query";
 import { fetchFeed } from "@/lib/data/polls";
 import { CategoryKey, FeedFilterKey, FeedTabKey } from "@/lib/types";
+import type { CSSProperties } from "react";
 
 type HomePageProps = {
   searchParams?:
@@ -102,6 +104,41 @@ export default async function Home({ searchParams }: HomePageProps) {
   const featuredPolls = feed.slice(0, 6);
   const gridPolls = feed.slice(featuredPolls.length);
   const featuredChartVariants: Array<"donut" | "dot-grid" | "bars" | "line"> = ["line", "donut", "dot-grid", "bars"];
+  const figmaHeroPresetStyle = {
+    "--dev-topbar-x": "0px",
+    "--dev-topbar-y": "0px",
+    "--dev-topbar-scale": "1",
+    "--dev-badge-x": "0px",
+    "--dev-badge-y": "0px",
+    "--dev-badge-scale": "1",
+    "--dev-arrows-x": "0px",
+    "--dev-arrows-y": "0px",
+    "--dev-arrows-scale": "1",
+    "--dev-title-x": "0px",
+    "--dev-title-y": "0px",
+    "--dev-title-scale": "1",
+    "--dev-left-x": "0px",
+    "--dev-left-y": "0px",
+    "--dev-left-scale": "1",
+    "--dev-option1-x": "0px",
+    "--dev-option1-y": "32px",
+    "--dev-option1-scale": "0.95",
+    "--dev-option2-x": "0px",
+    "--dev-option2-y": "29px",
+    "--dev-option2-scale": "0.95",
+    "--dev-chartWrap-x": "0px",
+    "--dev-chartWrap-y": "0px",
+    "--dev-chartWrap-scale": "0.96",
+    "--dev-logo-x": "0px",
+    "--dev-logo-y": "-19px",
+    "--dev-logo-scale": "0.86",
+    "--dev-graph-x": "0px",
+    "--dev-graph-y": "12px",
+    "--dev-graph-scale": "1",
+    "--dev-footer-x": "0px",
+    "--dev-footer-y": "0px",
+    "--dev-footer-scale": "1"
+  } as CSSProperties;
 
   return (
     <main className="page-shell">
@@ -116,14 +153,20 @@ export default async function Home({ searchParams }: HomePageProps) {
         <div className="feed-column">
           {featuredPolls.length > 0 ? (
             <FeaturedPollCarousel>
-              {featuredPolls.map((poll, index) => (
-                <FeedFeaturedPollCard
-                  key={poll.id}
-                  poll={poll}
-                  returnTo={returnTo}
-                  chartVariant={featuredChartVariants[index % featuredChartVariants.length]}
-                />
-              ))}
+              {featuredPolls.map((poll, index) =>
+                index === 0 ? (
+                  <div key={poll.id} className="hero-figma-live" style={figmaHeroPresetStyle}>
+                    <FigmaHeroPreviewCard poll={poll} returnTo={returnTo} showStaticCarouselControls={false} />
+                  </div>
+                ) : (
+                  <FeedFeaturedPollCard
+                    key={poll.id}
+                    poll={poll}
+                    returnTo={returnTo}
+                    chartVariant={featuredChartVariants[index % featuredChartVariants.length]}
+                  />
+                )
+              )}
             </FeaturedPollCarousel>
           ) : null}
           <div className="feed-cards-grid feed-cards-grid-3">
