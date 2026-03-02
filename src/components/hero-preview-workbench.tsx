@@ -39,13 +39,13 @@ function buildInitialState(): Record<string, TargetState> {
     topbar: { x: 0, y: 0, scale: 100 },
     badge: { x: 0, y: 0, scale: 100 },
     arrows: { x: 0, y: 0, scale: 100 },
-    title: { x: 0, y: 9, scale: 80 },
+    title: { x: 0, y: 0, scale: 100 },
     left: { x: 0, y: 0, scale: 100 },
-    option1: { x: 0, y: 32, scale: 95 },
-    option2: { x: 0, y: 29, scale: 95 },
-    chartWrap: { x: 0, y: 0, scale: 96 },
-    logo: { x: 0, y: -19, scale: 86 },
-    graph: { x: 0, y: 12, scale: 100 },
+    option1: { x: 0, y: 0, scale: 100 },
+    option2: { x: 0, y: 0, scale: 100 },
+    chartWrap: { x: 0, y: 0, scale: 100 },
+    logo: { x: 0, y: 0, scale: 100 },
+    graph: { x: -3, y: -13, scale: 100 },
     footer: { x: 0, y: 0, scale: 100 }
   };
 }
@@ -173,7 +173,13 @@ export function HeroPreviewWorkbench({ poll, returnTo }: HeroPreviewWorkbenchPro
       </aside>
 
       <div className="hero-preview-dev-canvas" style={cssVars} onClick={handleCanvasClick}>
-        <FigmaHeroPreviewCard poll={poll} returnTo={returnTo} />
+        <FigmaHeroPreviewCard
+          poll={poll}
+          returnTo={returnTo}
+          showStaticCarouselControls={false}
+          className="figma-hero-native-card"
+          style={{ "--hero-native-graph-scale": "1" } as CSSProperties}
+        />
       </div>
     </div>
   );

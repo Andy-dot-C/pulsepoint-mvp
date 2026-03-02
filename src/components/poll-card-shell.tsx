@@ -1,12 +1,14 @@
 "use client";
 
 import { type KeyboardEvent, type MouseEvent, type ReactNode, useState } from "react";
+import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 
 type PollCardShellProps = {
   href: string;
   ariaLabel: string;
   className?: string;
+  style?: CSSProperties;
   children: ReactNode;
 };
 
@@ -17,7 +19,7 @@ function hasModifierKey(event: MouseEvent<HTMLElement>) {
   return event.metaKey || event.ctrlKey || event.altKey || event.shiftKey;
 }
 
-export function PollCardShell({ href, ariaLabel, className, children }: PollCardShellProps) {
+export function PollCardShell({ href, ariaLabel, className, style, children }: PollCardShellProps) {
   const router = useRouter();
   const [isOpening, setIsOpening] = useState(false);
 
@@ -66,6 +68,7 @@ export function PollCardShell({ href, ariaLabel, className, children }: PollCard
   return (
     <article
       className={`poll-card poll-card-clickable${className ? ` ${className}` : ""}${isOpening ? " poll-card-opening" : ""}`}
+      style={style}
       role="link"
       aria-label={ariaLabel}
       tabIndex={0}

@@ -792,9 +792,9 @@ h3 {
 }
 
 .figma-hero-preview-card {
-  height: 430px;
-  min-height: 430px;
-  max-height: 430px;
+  height: 300px;
+  min-height: 300px;
+  max-height: 300px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -815,7 +815,7 @@ h3 {
   border: 1px solid #e5e7eb;
   border-radius: 999px;
   background: #f8fafc;
-  color: #475569;
+  color: #6d28d9;
   font-size: 12px;
   line-height: 1;
   font-weight: 600;
@@ -866,8 +866,8 @@ h3 {
 .figma-hero-preview-main {
   margin-top: 14px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(500px, 1fr);
-  gap: 26px;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  gap: 22px;
   align-items: stretch;
   flex: 1;
   min-height: 0;
@@ -882,6 +882,31 @@ h3 {
 
 .figma-hero-preview-option-form {
   width: 100%;
+}
+
+.figma-hero-preview-card .figma-hero-preview-left .option-btn-line {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+
+.figma-hero-preview-card .figma-hero-preview-left .option-btn-line:hover {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+}
+
+.figma-hero-preview-card .figma-hero-preview-left .option-btn-line:focus-visible {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.figma-hero-preview-card .figma-hero-preview-left .option-btn-line:active {
+  background: transparent;
 }
 
 .figma-hero-preview-option {
@@ -1315,9 +1340,9 @@ h3 {
 
 .featured-carousel-slide .featured-poll-card {
   width: 100%;
-  height: 430px;
-  min-height: 430px;
-  max-height: 430px;
+  height: 300px;
+  min-height: 300px;
+  max-height: 300px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -3426,4 +3451,161 @@ h3 {
   .analytics-split {
     grid-template-columns: 1fr;
   }
+}
+
+.figma-hero-native-card .figma-hero-preview-title {
+  margin-top: 13px;
+  font-size: 1.176rem;
+  letter-spacing: -0.0049em;
+  max-width: min(50.96%, 529px);
+}
+
+.figma-hero-native-card .figma-hero-preview-left {
+  position: relative;
+  margin-top: -14px;
+  gap: 0;
+  min-height: 130px;
+}
+
+.figma-hero-native-card .figma-hero-preview-option-form {
+  position: absolute;
+  left: 0;
+  margin: 0;
+  width: 95%;
+}
+
+.figma-hero-native-card .figma-hero-preview-option-form:nth-child(1) {
+  top: 32px;
+}
+
+.figma-hero-native-card .figma-hero-preview-option-form:nth-child(2) {
+  top: 77px;
+}
+
+.figma-hero-native-card.figma-hero-preview-has-3-options .figma-hero-preview-left {
+  min-height: 175px;
+}
+
+.figma-hero-native-card.figma-hero-preview-has-3-options .figma-hero-preview-option-form:nth-child(1) {
+  top: 34px;
+}
+
+.figma-hero-native-card.figma-hero-preview-has-3-options .figma-hero-preview-option-form:nth-child(2) {
+  top: 82px;
+}
+
+.figma-hero-native-card.figma-hero-preview-has-3-options .figma-hero-preview-option-form:nth-child(3) {
+  top: 130px;
+}
+
+.figma-hero-native-card .figma-hero-preview-left .option-btn-line-content {
+  gap: 5.7px;
+}
+
+.figma-hero-native-card .figma-hero-preview-left .option-btn-line-header {
+  gap: 9.5px;
+}
+
+.figma-hero-native-card .figma-hero-preview-left .option-btn-line-right {
+  gap: 7.6px;
+}
+
+.figma-hero-native-card .figma-hero-preview-left .option-btn-line-label,
+.figma-hero-native-card .figma-hero-preview-left .option-btn-line-percent {
+  font-size: 12.35px;
+}
+
+.figma-hero-native-card .figma-hero-preview-left .option-btn-line-track {
+  height: 3.8px;
+}
+
+.figma-hero-native-card .figma-hero-preview-chart {
+  width: 96%;
+  margin-left: auto;
+  transform: none;
+  overflow: visible;
+}
+
+.figma-hero-native-card .figma-hero-preview-brand {
+  top: -53px;
+  font-size: 20.6px;
+}
+
+.figma-hero-native-card .figma-hero-preview-chart-svg {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 620 / 336;
+  margin-top: 0;
+  margin-left: 0;
+  display: block;
+  overflow: visible;
+  transform: none;
+}
+
+.figma-hero-native-card .figma-hero-preview-chart-svg .figma-hero-chart-content {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: translate(var(--hero-native-graph-x, -27px), var(--hero-native-graph-y, -28px))
+    scale(var(--hero-native-graph-scale, 1));
+}
+
+.figma-hero-native-card {
+  --hero-native-graph-x: -27px;
+  --hero-native-graph-y: -28px;
+}
+
+/* Production baseline for live homepage hero (no dev-target transform presets). */
+.figma-hero-live-fixed {
+  --hero-native-graph-scale: 1;
+  --hero-native-graph-x: 0px;
+  --hero-native-graph-y: 0px;
+}
+
+.figma-hero-live-fixed .figma-hero-preview-chart-svg .figma-hero-chart-content {
+  transform: none;
+}
+
+/* Ensure hero workbench controls always win over native-card baseline styles */
+.hero-preview-dev-canvas [data-dev-target="topbar"] {
+  transform: translate(var(--dev-topbar-x, 0px), var(--dev-topbar-y, 0px)) scale(var(--dev-topbar-scale, 1)) !important;
+}
+
+.hero-preview-dev-canvas [data-dev-target="badge"] {
+  transform: translate(var(--dev-badge-x, 0px), var(--dev-badge-y, 0px)) scale(var(--dev-badge-scale, 1)) !important;
+}
+
+.hero-preview-dev-canvas [data-dev-target="arrows"] {
+  transform: translate(var(--dev-arrows-x, 0px), var(--dev-arrows-y, 0px)) scale(var(--dev-arrows-scale, 1)) !important;
+}
+
+.hero-preview-dev-canvas [data-dev-target="title"] {
+  transform: translate(var(--dev-title-x, 0px), var(--dev-title-y, 0px)) scale(var(--dev-title-scale, 1)) !important;
+}
+
+.hero-preview-dev-canvas [data-dev-target="left"] {
+  transform: translate(var(--dev-left-x, 0px), var(--dev-left-y, 0px)) scale(var(--dev-left-scale, 1)) !important;
+}
+
+.hero-preview-dev-canvas [data-dev-target="option1"] {
+  transform: translate(var(--dev-option1-x, 0px), var(--dev-option1-y, 0px)) scale(var(--dev-option1-scale, 1)) !important;
+}
+
+.hero-preview-dev-canvas [data-dev-target="option2"] {
+  transform: translate(var(--dev-option2-x, 0px), var(--dev-option2-y, 0px)) scale(var(--dev-option2-scale, 1)) !important;
+}
+
+.hero-preview-dev-canvas [data-dev-target="chartWrap"] {
+  transform: translate(var(--dev-chartWrap-x, 0px), var(--dev-chartWrap-y, 0px)) scale(var(--dev-chartWrap-scale, 1)) !important;
+}
+
+.hero-preview-dev-canvas [data-dev-target="logo"] {
+  transform: translate(var(--dev-logo-x, 0px), var(--dev-logo-y, 0px)) scale(var(--dev-logo-scale, 1)) !important;
+}
+
+.hero-preview-dev-canvas [data-dev-target="graph"] {
+  transform: translate(var(--dev-graph-x, 0px), var(--dev-graph-y, 0px)) scale(var(--dev-graph-scale, 1)) !important;
+}
+
+.hero-preview-dev-canvas [data-dev-target="footer"] {
+  transform: translate(var(--dev-footer-x, 0px), var(--dev-footer-y, 0px)) scale(var(--dev-footer-scale, 1)) !important;
 }

@@ -3,15 +3,22 @@ import { submitVoteAction } from "@/app/actions/votes";
 import { SharePollButton } from "@/components/share-poll-button";
 import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
 import { PollCardShell } from "@/components/poll-card-shell";
+import { VoteOptionForm } from "@/components/vote-option-form";
 import { totalVotes } from "@/lib/mock-data";
 import { getPollStatus } from "@/lib/poll-status";
+import { buildPollChartData } from "@/lib/poll-chart-data";
 import { Poll } from "@/lib/types";
+import type { CSSProperties } from "react";
 
 type FigmaHeroPreviewCardProps = {
   poll: Poll;
   returnTo: string;
   showStaticCarouselControls?: boolean;
   maxOptions?: number;
+  className?: string;
+  style?: CSSProperties;
+  chartOffsetX?: number;
+  chartOffsetY?: number;
 };
 
 function percent(votes: number, total: number): string {
@@ -36,7 +43,11 @@ export function FigmaHeroPreviewCard({
   poll,
   returnTo,
   showStaticCarouselControls = true,
-  maxOptions = 2
+  maxOptions = 2,
+  className,
+  style,
+  chartOffsetX = 0,
+  chartOffsetY = 0
 }: FigmaHeroPreviewCardProps) {
   const total = totalVotes(poll);
   const ranked = [...poll.options]
@@ -44,33 +55,45 @@ export function FigmaHeroPreviewCard({
     .slice(0, Math.max(1, maxOptions));
   const pollHref = `/polls/${poll.slug}`;
   const status = getPollStatus(poll.endsAt);
-  const chartPalette = ["#3b82f6", "#22c55e"];
-  const leftOption = ranked[0];
-  const rightOption = ranked[1];
-  const leftPercent = leftOption ? Math.round((leftOption.votes / Math.max(total, 1)) * 100) : 0;
-  const rightPercent = rightOption ? Math.round((rightOption.votes / Math.max(total, 1)) * 100) : 0;
-  const maxPercent = Math.max(leftPercent, rightPercent);
+  const chartPalette = ["#3b82f6", "#22c55e", "#f59e0b"];
+  const chartOptions = ranked.slice(0, Math.max(1, Math.min(3, maxOptions)));
+  const leftOption = chartOptions[0];
+  const rightOption = chartOptions[1];
+  const thirdOption = chartOptions[2];
+  const chartData = buildPollChartData(poll);
+  const optionColorMap = new Map(chartData.options.map((option) => [option.id, option.color]));
+  const chartPercents = chartOptions.map((option) => Math.round((option.votes / Math.max(total, 1)) * 100));
+  const leftPercent = chartPercents[0] ?? 0;
+  const rightPercent = chartPercents[1] ?? 0;
+  const thirdPercent = chartPercents[2] ?? 0;
+  const maxPercent = Math.max(...chartPercents, 0);
   const yMax = Math.max(80, Math.ceil(maxPercent / 20) * 20);
   const yTicks = [0, 20, 40, 60, 80].filter((tick) => tick <= yMax);
   const axisBottomY = 256;
   const axisTopY = -26;
   const axisSpan = axisBottomY - axisTopY;
   const topValueY = (value: number) => axisBottomY - (Math.max(0, Math.min(value, yMax)) / Math.max(yMax, 1)) * axisSpan;
+  const barLayout =
+    chartOptions.length >= 3
+      ? [
+          { x: 115, width: 82, percent: leftPercent, option: leftOption, color: optionColorMap.get(leftOption?.id ?? "") ?? chartPalette[0] },
+          { x: 282, width: 82, percent: rightPercent, option: rightOption, color: optionColorMap.get(rightOption?.id ?? "") ?? chartPalette[1] },
+          { x: 449, width: 82, percent: thirdPercent, option: thirdOption, color: optionColorMap.get(thirdOption?.id ?? "") ?? chartPalette[2] }
+        ]
+      : [
+          { x: 175, width: 100, percent: leftPercent, option: leftOption, color: optionColorMap.get(leftOption?.id ?? "") ?? chartPalette[0] },
+          { x: 425, width: 100, percent: rightPercent, option: rightOption, color: optionColorMap.get(rightOption?.id ?? "") ?? chartPalette[1] }
+        ];
 
   return (
-    <PollCardShell href={pollHref} ariaLabel={`Open featured poll: ${poll.title}`} className="featured-poll-card figma-hero-preview-card">
+    <PollCardShell
+      href={pollHref}
+      ariaLabel={`Open featured poll: ${poll.title}`}
+      className={`featured-poll-card figma-hero-preview-card${ranked.length >= 3 ? " figma-hero-preview-has-3-options" : ""}${className ? ` ${className}` : ""}`}
+      style={style}
+    >
       <div className="figma-hero-preview-topbar" data-dev-target="topbar">
         <span className="figma-hero-preview-badge" data-dev-target="badge">
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <path
-              d="M2.5 11.5V9.2c0-.7.5-1.2 1.2-1.2h2.4M6.1 8l2.3-2.3c.5-.5 1.2-.5 1.7 0l1.4 1.4m0 0V4.5m0 2.6h-2.6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
           Trending
         </span>
         {showStaticCarouselControls ? (
@@ -92,38 +115,23 @@ export function FigmaHeroPreviewCard({
             const optionVotes = option.votes;
             const optionPercent = (optionVotes / Math.max(total, 1)) * 100;
             const selected = poll.viewerVoteOptionId === option.id;
-            const color = chartPalette[optionIndex % chartPalette.length];
+            const color = optionColorMap.get(option.id) ?? chartPalette[optionIndex % chartPalette.length];
             return (
-              <form
-                key={option.id}
-                action={submitVoteAction}
-                className="figma-hero-preview-option-form"
-                data-dev-target={optionIndex === 0 ? "option1" : "option2"}
-              >
-                <input type="hidden" name="pollId" value={poll.id} />
-                <input type="hidden" name="optionId" value={option.id} />
-                <input type="hidden" name="returnTo" value={returnTo} />
-                <button
-                  type="submit"
-                  className={`figma-hero-preview-option${selected ? " figma-hero-preview-option-selected" : ""}`}
+              <div key={option.id} className="figma-hero-preview-option-form" data-dev-target={optionIndex === 0 ? "option1" : "option2"}>
+                <VoteOptionForm
+                  pollId={poll.id}
+                  optionId={option.id}
+                  returnTo={returnTo}
+                  label={option.label}
+                  rightText={percent(optionVotes, total)}
+                  percent={optionPercent}
+                  variant="line"
+                  selected={selected}
                   disabled={status.isClosed}
-                >
-                  <span className="figma-hero-preview-option-head">
-                    <span className="figma-hero-preview-option-copy">
-                      <span className="figma-hero-preview-option-label">{option.label}</span>
-                      <span className="figma-hero-preview-option-votes">{formatCompactCount(optionVotes)} votes</span>
-                    </span>
-                    <span className="figma-hero-preview-option-percent-wrap">
-                      <strong className="figma-hero-preview-option-percent" style={{ color }}>
-                        {percent(optionVotes, total)}
-                      </strong>
-                    </span>
-                  </span>
-                  <span className="figma-hero-preview-option-track" aria-hidden="true">
-                    <span className="figma-hero-preview-option-fill" style={{ width: `${Math.max(0, Math.min(100, optionPercent))}%`, backgroundColor: color }} />
-                  </span>
-                </button>
-              </form>
+                  fillColor={color}
+                  accentColor={color}
+                />
+              </div>
             );
           })}
 
@@ -134,49 +142,78 @@ export function FigmaHeroPreviewCard({
             Pollzone
           </p>
           <svg className="figma-hero-preview-chart-svg" viewBox="0 -36 620 336" role="img" aria-label="Hero bar chart" data-dev-target="graph">
-            {yTicks.map((tick) => {
-              const y = axisBottomY - (tick / Math.max(yMax, 1)) * axisSpan;
-              return <line key={tick} x1="58" y1={y} x2="590" y2={y} className="figma-hero-preview-grid-line" />;
-            })}
+            <g className="figma-hero-chart-content">
+              {yTicks.map((tick) => {
+                const y = axisBottomY - (tick / Math.max(yMax, 1)) * axisSpan;
+                return (
+                  <line
+                    key={tick}
+                    x1={58 + chartOffsetX}
+                    y1={y + chartOffsetY}
+                    x2={590 + chartOffsetX}
+                    y2={y + chartOffsetY}
+                    className="figma-hero-preview-grid-line"
+                  />
+                );
+              })}
 
-            <line x1="58" y1={axisTopY} x2="58" y2={axisBottomY} className="figma-hero-preview-axis-line" />
-            <line x1="58" y1={axisBottomY} x2="590" y2={axisBottomY} className="figma-hero-preview-axis-line" />
+              {barLayout.map((bar) =>
+                bar.option ? (
+                  <g key={bar.option.id}>
+                    <rect
+                      x={bar.x + chartOffsetX}
+                      y={topValueY(bar.percent) + chartOffsetY}
+                      width={bar.width}
+                      height={256 - topValueY(bar.percent)}
+                      rx="12"
+                      fill={bar.color}
+                    />
+                    <text
+                      x={bar.x + bar.width / 2 + chartOffsetX}
+                      y={topValueY(bar.percent) - 8 + chartOffsetY}
+                      textAnchor="middle"
+                      className="figma-hero-preview-bar-label"
+                    >
+                      {bar.percent}%
+                    </text>
+                  </g>
+                ) : null
+              )}
 
-            {yTicks.map((tick) => {
-              const y = axisBottomY - (tick / Math.max(yMax, 1)) * axisSpan;
-              return (
-                <g key={`label-${tick}`}>
-                  <line x1="52" y1={y} x2="58" y2={y} className="figma-hero-preview-axis-line" />
-                  <text x="47" y={y + 6} textAnchor="end" className="figma-hero-preview-axis-text">
-                    {tick}
-                  </text>
-                </g>
-              );
-            })}
+              <line
+                x1={58 + chartOffsetX}
+                y1={axisTopY + chartOffsetY}
+                x2={58 + chartOffsetX}
+                y2={axisBottomY + chartOffsetY}
+                className="figma-hero-preview-axis-line"
+                data-axis="y"
+              />
+              <line
+                x1={58 + chartOffsetX}
+                y1={axisBottomY + chartOffsetY}
+                x2={590 + chartOffsetX}
+                y2={axisBottomY + chartOffsetY}
+                className="figma-hero-preview-axis-line"
+              />
 
-            {leftOption ? (
-              <>
-                <rect x="175" y={topValueY(leftPercent)} width="100" height={256 - topValueY(leftPercent)} rx="12" fill="#3b82f6" />
-                <text x="225" y={topValueY(leftPercent) - 8} textAnchor="middle" className="figma-hero-preview-bar-label">
-                  {leftPercent}%
-                </text>
-                <text x="225" y="288" textAnchor="middle" className="figma-hero-preview-x-text">
-                  {leftOption.label}
-                </text>
-              </>
-            ) : null}
-
-            {rightOption ? (
-              <>
-                <rect x="425" y={topValueY(rightPercent)} width="100" height={256 - topValueY(rightPercent)} rx="12" fill="#22c55e" />
-                <text x="475" y={topValueY(rightPercent) - 8} textAnchor="middle" className="figma-hero-preview-bar-label">
-                  {rightPercent}%
-                </text>
-                <text x="475" y="288" textAnchor="middle" className="figma-hero-preview-x-text">
-                  {rightOption.label}
-                </text>
-              </>
-            ) : null}
+              {yTicks.map((tick) => {
+                const y = axisBottomY - (tick / Math.max(yMax, 1)) * axisSpan;
+                return (
+                  <g key={`label-${tick}`}>
+                    <line
+                      x1={52 + chartOffsetX}
+                      y1={y + chartOffsetY}
+                      x2={58 + chartOffsetX}
+                      y2={y + chartOffsetY}
+                      className="figma-hero-preview-axis-line"
+                    />
+                    <text x={47 + chartOffsetX} y={y + 6 + chartOffsetY} textAnchor="end" className="figma-hero-preview-axis-text">
+                      {tick}
+                    </text>
+                  </g>
+                );
+              })}
+            </g>
           </svg>
         </div>
       </div>

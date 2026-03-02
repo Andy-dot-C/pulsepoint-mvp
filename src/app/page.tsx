@@ -7,7 +7,6 @@ import { FeaturedPollCarousel } from "@/components/featured-poll-carousel";
 import { buildFeedHref } from "@/lib/feed-query";
 import { fetchFeed } from "@/lib/data/polls";
 import { CategoryKey, FeedFilterKey, FeedTabKey } from "@/lib/types";
-import type { CSSProperties } from "react";
 
 type HomePageProps = {
   searchParams?:
@@ -102,43 +101,9 @@ export default async function Home({ searchParams }: HomePageProps) {
     q: searchQuery
   });
   const featuredPolls = feed.slice(0, 6);
+  const threeOptionFeaturedPoll = feed.find((poll) => poll.options.length >= 3) ?? featuredPolls[0] ?? null;
   const gridPolls = feed.slice(featuredPolls.length);
   const featuredChartVariants: Array<"donut" | "dot-grid" | "bars" | "line"> = ["line", "donut", "dot-grid", "bars"];
-  const figmaHeroPresetStyle = {
-    "--dev-topbar-x": "0px",
-    "--dev-topbar-y": "0px",
-    "--dev-topbar-scale": "1",
-    "--dev-badge-x": "0px",
-    "--dev-badge-y": "0px",
-    "--dev-badge-scale": "1",
-    "--dev-arrows-x": "0px",
-    "--dev-arrows-y": "0px",
-    "--dev-arrows-scale": "1",
-    "--dev-title-x": "0px",
-    "--dev-title-y": "0px",
-    "--dev-title-scale": "1",
-    "--dev-left-x": "0px",
-    "--dev-left-y": "0px",
-    "--dev-left-scale": "1",
-    "--dev-option1-x": "0px",
-    "--dev-option1-y": "32px",
-    "--dev-option1-scale": "0.95",
-    "--dev-option2-x": "0px",
-    "--dev-option2-y": "29px",
-    "--dev-option2-scale": "0.95",
-    "--dev-chartWrap-x": "0px",
-    "--dev-chartWrap-y": "0px",
-    "--dev-chartWrap-scale": "0.96",
-    "--dev-logo-x": "0px",
-    "--dev-logo-y": "-19px",
-    "--dev-logo-scale": "0.86",
-    "--dev-graph-x": "0px",
-    "--dev-graph-y": "12px",
-    "--dev-graph-scale": "1",
-    "--dev-footer-x": "0px",
-    "--dev-footer-y": "0px",
-    "--dev-footer-scale": "1"
-  } as CSSProperties;
 
   return (
     <main className="page-shell">
@@ -155,9 +120,26 @@ export default async function Home({ searchParams }: HomePageProps) {
             <FeaturedPollCarousel>
               {featuredPolls.map((poll, index) =>
                 index === 0 ? (
-                  <div key={poll.id} className="hero-figma-live" style={figmaHeroPresetStyle}>
-                    <FigmaHeroPreviewCard poll={poll} returnTo={returnTo} showStaticCarouselControls={false} />
-                  </div>
+                  <FigmaHeroPreviewCard
+                    key={poll.id}
+                    poll={poll}
+                    returnTo={returnTo}
+                    showStaticCarouselControls={false}
+                    className="figma-hero-native-card figma-hero-live-fixed"
+                    chartOffsetX={-34}
+                    chartOffsetY={-50}
+                  />
+                ) : index === 3 ? (
+                  <FigmaHeroPreviewCard
+                    key={`${poll.id}-three-option-preview`}
+                    poll={threeOptionFeaturedPoll ?? poll}
+                    returnTo={returnTo}
+                    showStaticCarouselControls={false}
+                    maxOptions={3}
+                    className="figma-hero-native-card figma-hero-live-fixed"
+                    chartOffsetX={-34}
+                    chartOffsetY={-50}
+                  />
                 ) : (
                   <FeedFeaturedPollCard
                     key={poll.id}
