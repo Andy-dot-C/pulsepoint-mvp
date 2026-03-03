@@ -1,8 +1,8 @@
 import { PollCard } from "@/components/poll-card";
-import { FlashBanner } from "@/components/flash-banner";
 import { FeedRail } from "@/components/feed-rail";
-import { FigmaHeroPreviewCard } from "@/components/figma-hero-preview-card";
+import { FlashBanner } from "@/components/flash-banner";
 import { FeaturedPollCarousel } from "@/components/featured-poll-carousel";
+import { FigmaHeroPreviewCard } from "@/components/figma-hero-preview-card";
 import { buildFeedHref } from "@/lib/feed-query";
 import { fetchFeed } from "@/lib/data/polls";
 import { CategoryKey, FeedFilterKey, FeedTabKey } from "@/lib/types";
@@ -19,9 +19,7 @@ function asSingleValue(input: string | string[] | undefined): string | undefined
 }
 
 function resolveTab(value?: string): FeedTabKey {
-  if (value === "new" || value === "most-voted" || value === "trending") {
-    return value;
-  }
+  if (value === "new" || value === "most-voted" || value === "trending") return value;
   return "trending";
 }
 
@@ -55,16 +53,8 @@ function resolveFilter(value?: string): FeedFilterKey {
 }
 
 function mapFilterToFeedInput(filter: FeedFilterKey): { tab: FeedTabKey; category: CategoryKey | "all" } {
-  if (filter === "new" || filter === "most-voted" || filter === "trending") {
-    return { tab: filter, category: "all" };
-  }
-  if (
-    filter === "politics" ||
-    filter === "sport" ||
-    filter === "entertainment" ||
-    filter === "culture" ||
-    filter === "hot-takes"
-  ) {
+  if (filter === "new" || filter === "most-voted" || filter === "trending") return { tab: filter, category: "all" };
+  if (filter === "politics" || filter === "sport" || filter === "entertainment" || filter === "culture" || filter === "hot-takes") {
     return { tab: "trending", category: filter };
   }
   return { tab: "trending", category: "all" };
@@ -77,7 +67,9 @@ function resolveSubmissionMessage(value?: string): string | null {
   return null;
 }
 
-export default async function Home({ searchParams }: HomePageProps) {
+const sectionTitles = ["Trending Now", "Top Movers", "New This Hour"] as const;
+
+export default async function HomeSectionsPreview({ searchParams }: HomePageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const activeFilter = resolveFilter(asSingleValue(resolvedSearchParams.filter));
   const legacyTab = resolveTab(asSingleValue(resolvedSearchParams.tab));
@@ -90,21 +82,15 @@ export default async function Home({ searchParams }: HomePageProps) {
   const searchQuery = asSingleValue(resolvedSearchParams.q)?.trim() ?? "";
   const bookmarkError = asSingleValue(resolvedSearchParams.bookmarkError);
   const submissionMessage = resolveSubmissionMessage(asSingleValue(resolvedSearchParams.submission));
-  const returnTo = buildFeedHref({
-    filter: normalizedFilter,
-    q: searchQuery
-  });
-  const feed = await fetchFeed({
-    tab: feedInput.tab,
-    category: feedInput.category,
-    q: searchQuery
-  });
+  const returnTo = buildFeedHref({ filter: normalizedFilter, q: searchQuery });
+  const feed = await fetchFeed({ tab: feedInput.tab, category: feedInput.category, q: searchQuery });
+
   const featuredPolls = feed.slice(0, 6);
   const twoOptionFeaturedPoll = feed.find((poll) => poll.options.length === 2) ?? featuredPolls[0] ?? null;
   const multiOptionFeaturedPoll = feed.find((poll) => poll.options.length > 2) ?? twoOptionFeaturedPoll ?? featuredPolls[0] ?? null;
   const gridPolls = feed.slice(featuredPolls.length);
-  const sectionTitles = ["Trending Now", "Top Movers", "New"] as const;
-  const cardsPerSection = 6; // 3 across x 2 down
+
+  const cardsPerSection = 6; // 3 across x 2 rows
   const maxSections = 3;
   const sectionData = Array.from({ length: Math.min(maxSections, Math.ceil(gridPolls.length / cardsPerSection)) }, (_, index) => ({
     title: sectionTitles[index % sectionTitles.length],
@@ -185,7 +171,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                     chartOffsetX={-34}
                     chartOffsetY={-50}
                   />
-                ) : index === 5 ? (
+                ) : (
                   <FigmaHeroPreviewCard
                     key={`${poll.id}-dot-grid-three-option-preview`}
                     poll={threeOptionPoll}
@@ -193,17 +179,6 @@ export default async function Home({ searchParams }: HomePageProps) {
                     showStaticCarouselControls={false}
                     maxOptions={3}
                     chartVariant="dot-grid"
-                    className="figma-hero-native-card figma-hero-live-fixed"
-                    chartOffsetX={-34}
-                    chartOffsetY={-50}
-                  />
-                ) : (
-                  <FigmaHeroPreviewCard
-                    key={poll.id}
-                    poll={twoOptionPoll}
-                    returnTo={returnTo}
-                    showStaticCarouselControls={false}
-                    maxOptions={2}
                     className="figma-hero-native-card figma-hero-live-fixed"
                     chartOffsetX={-34}
                     chartOffsetY={-50}

@@ -78,6 +78,10 @@ a {
   line-height: 1;
 }
 
+.brand-lockup h1 {
+  color: #10b981;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -475,6 +479,38 @@ h3 {
 
 .feed-cards-grid-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.home-sections-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.home-sections-preview-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-sections-preview-title {
+  font-size: 13px;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #111827;
+}
+
+.home-sections-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.home-sections-preview .feed-cards-grid {
+  gap: 18px;
 }
 
 .feed-cards-grid .poll-card {
