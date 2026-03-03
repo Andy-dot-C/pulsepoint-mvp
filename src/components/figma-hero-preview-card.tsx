@@ -15,6 +15,7 @@ type FigmaHeroPreviewCardProps = {
   returnTo: string;
   showStaticCarouselControls?: boolean;
   maxOptions?: number;
+  chartVariant?: "bars" | "donut" | "dot-grid";
   className?: string;
   style?: CSSProperties;
   chartOffsetX?: number;
@@ -43,20 +44,22 @@ export function FigmaHeroPreviewCard({
   poll,
   returnTo,
   showStaticCarouselControls = true,
-  maxOptions = 2,
+  maxOptions,
+  chartVariant = "bars",
   className,
   style,
   chartOffsetX = 0,
   chartOffsetY = 0
 }: FigmaHeroPreviewCardProps) {
+  const resolvedMaxOptions = maxOptions ?? (poll.options.length >= 3 ? 3 : 2);
   const total = totalVotes(poll);
   const ranked = [...poll.options]
     .sort((left, right) => right.votes - left.votes || left.label.localeCompare(right.label))
-    .slice(0, Math.max(1, maxOptions));
+    .slice(0, Math.max(1, resolvedMaxOptions));
   const pollHref = `/polls/${poll.slug}`;
   const status = getPollStatus(poll.endsAt);
   const chartPalette = ["#3b82f6", "#22c55e", "#f59e0b"];
-  const chartOptions = ranked.slice(0, Math.max(1, Math.min(3, maxOptions)));
+  const chartOptions = ranked.slice(0, Math.max(1, Math.min(3, resolvedMaxOptions)));
   const leftOption = chartOptions[0];
   const rightOption = chartOptions[1];
   const thirdOption = chartOptions[2];
@@ -84,6 +87,52 @@ export function FigmaHeroPreviewCard({
           { x: 175, width: 100, percent: leftPercent, option: leftOption, color: optionColorMap.get(leftOption?.id ?? "") ?? chartPalette[0] },
           { x: 425, width: 100, percent: rightPercent, option: rightOption, color: optionColorMap.get(rightOption?.id ?? "") ?? chartPalette[1] }
         ];
+  const donutStops = chartOptions
+    .reduce(
+      (acc, option, optionIndex) => {
+        const optionPercent = Math.max(0, Math.round((option.votes / Math.max(total, 1)) * 100));
+        const color = optionColorMap.get(option.id) ?? chartPalette[optionIndex % chartPalette.length];
+        const next = acc.current + optionPercent;
+        acc.parts.push(`${color} ${acc.current.toFixed(2)}% ${next.toFixed(2)}%`);
+        acc.current = next;
+        return acc;
+      },
+      { current: 0, parts: [] as string[] }
+    )
+    .parts.join(", ");
+  const dotCells = (() => {
+    const dotColumns = 20;
+    const dotRows = 5;
+    const weighted = chartOptions.map((option) => {
+      const exact = Math.max(0, (option.votes / Math.max(total, 1)) * 100);
+      const base = Math.floor(exact);
+      return { option, base, fraction: exact - base };
+    });
+    let remaining = Math.max(0, 100 - weighted.reduce((sum, item) => sum + item.base, 0));
+    weighted
+      .sort((left, right) => right.fraction - left.fraction)
+      .forEach((item) => {
+        if (remaining <= 0) return;
+        item.base += 1;
+        remaining -= 1;
+      });
+
+    const cells = Array.from({ length: 100 }, () => null as (typeof chartOptions)[number] | null);
+    const columnMajorSlots: number[] = [];
+    for (let column = 0; column < dotColumns; column += 1) {
+      for (let row = 0; row < dotRows; row += 1) {
+        columnMajorSlots.push(row * dotColumns + column);
+      }
+    }
+    let cursor = 0;
+    weighted.forEach((item) => {
+      for (let count = 0; count < item.base && cursor < columnMajorSlots.length; count += 1) {
+        cells[columnMajorSlots[cursor]] = item.option;
+        cursor += 1;
+      }
+    });
+    return cells;
+  })();
 
   return (
     <PollCardShell
@@ -141,80 +190,107 @@ export function FigmaHeroPreviewCard({
           <p className="figma-hero-preview-brand" data-dev-target="logo">
             Pollzone
           </p>
-          <svg className="figma-hero-preview-chart-svg" viewBox="0 -36 620 336" role="img" aria-label="Hero bar chart" data-dev-target="graph">
-            <g className="figma-hero-chart-content">
-              {yTicks.map((tick) => {
-                const y = axisBottomY - (tick / Math.max(yMax, 1)) * axisSpan;
-                return (
-                  <line
-                    key={tick}
-                    x1={58 + chartOffsetX}
-                    y1={y + chartOffsetY}
-                    x2={590 + chartOffsetX}
-                    y2={y + chartOffsetY}
-                    className="figma-hero-preview-grid-line"
-                  />
-                );
-              })}
-
-              {barLayout.map((bar) =>
-                bar.option ? (
-                  <g key={bar.option.id}>
-                    <rect
-                      x={bar.x + chartOffsetX}
-                      y={topValueY(bar.percent) + chartOffsetY}
-                      width={bar.width}
-                      height={256 - topValueY(bar.percent)}
-                      rx="12"
-                      fill={bar.color}
+          {chartVariant === "donut" ? (
+            <div className="figma-hero-preview-donut-wrap">
+              <div className="figma-hero-preview-donut" data-dev-target="graph" style={donutStops ? { background: `conic-gradient(${donutStops})` } : undefined}>
+                <div className="figma-hero-preview-donut-core">
+                  <span>{formatCompactCount(total)}</span>
+                  <small>votes</small>
+                </div>
+              </div>
+            </div>
+          ) : chartVariant === "dot-grid" ? (
+            <div className="figma-hero-preview-dot-wrap">
+              <div className="figma-hero-preview-dot-grid" data-dev-target="graph" aria-label="100-dot percentage grid">
+                {dotCells.map((option, index) =>
+                  option ? (
+                    <span
+                      key={`${option.id}-${index}`}
+                      className="figma-hero-preview-dot"
+                      style={{ backgroundColor: optionColorMap.get(option.id) ?? chartPalette[index % chartPalette.length] }}
                     />
-                    <text
-                      x={bar.x + bar.width / 2 + chartOffsetX}
-                      y={topValueY(bar.percent) - 8 + chartOffsetY}
-                      textAnchor="middle"
-                      className="figma-hero-preview-bar-label"
-                    >
-                      {bar.percent}%
-                    </text>
-                  </g>
-                ) : null
-              )}
-
-              <line
-                x1={58 + chartOffsetX}
-                y1={axisTopY + chartOffsetY}
-                x2={58 + chartOffsetX}
-                y2={axisBottomY + chartOffsetY}
-                className="figma-hero-preview-axis-line"
-                data-axis="y"
-              />
-              <line
-                x1={58 + chartOffsetX}
-                y1={axisBottomY + chartOffsetY}
-                x2={590 + chartOffsetX}
-                y2={axisBottomY + chartOffsetY}
-                className="figma-hero-preview-axis-line"
-              />
-
-              {yTicks.map((tick) => {
-                const y = axisBottomY - (tick / Math.max(yMax, 1)) * axisSpan;
-                return (
-                  <g key={`label-${tick}`}>
+                  ) : (
+                    <span key={`empty-${index}`} className="figma-hero-preview-dot figma-hero-preview-dot-empty" />
+                  )
+                )}
+              </div>
+            </div>
+          ) : (
+            <svg className="figma-hero-preview-chart-svg" viewBox="0 -36 620 336" role="img" aria-label="Hero bar chart" data-dev-target="graph">
+              <g className="figma-hero-chart-content">
+                {yTicks.map((tick) => {
+                  const y = axisBottomY - (tick / Math.max(yMax, 1)) * axisSpan;
+                  return (
                     <line
-                      x1={52 + chartOffsetX}
+                      key={tick}
+                      x1={58 + chartOffsetX}
                       y1={y + chartOffsetY}
-                      x2={58 + chartOffsetX}
+                      x2={590 + chartOffsetX}
                       y2={y + chartOffsetY}
-                      className="figma-hero-preview-axis-line"
+                      className="figma-hero-preview-grid-line"
                     />
-                    <text x={47 + chartOffsetX} y={y + 6 + chartOffsetY} textAnchor="end" className="figma-hero-preview-axis-text">
-                      {tick}
-                    </text>
-                  </g>
-                );
-              })}
-            </g>
-          </svg>
+                  );
+                })}
+
+                {barLayout.map((bar) =>
+                  bar.option ? (
+                    <g key={bar.option.id}>
+                      <rect
+                        x={bar.x + chartOffsetX}
+                        y={topValueY(bar.percent) + chartOffsetY}
+                        width={bar.width}
+                        height={256 - topValueY(bar.percent)}
+                        rx="12"
+                        fill={bar.color}
+                      />
+                      <text
+                        x={bar.x + bar.width / 2 + chartOffsetX}
+                        y={topValueY(bar.percent) - 8 + chartOffsetY}
+                        textAnchor="middle"
+                        className="figma-hero-preview-bar-label"
+                      >
+                        {bar.percent}%
+                      </text>
+                    </g>
+                  ) : null
+                )}
+
+                <line
+                  x1={58 + chartOffsetX}
+                  y1={axisTopY + chartOffsetY}
+                  x2={58 + chartOffsetX}
+                  y2={axisBottomY + chartOffsetY}
+                  className="figma-hero-preview-axis-line"
+                  data-axis="y"
+                />
+                <line
+                  x1={58 + chartOffsetX}
+                  y1={axisBottomY + chartOffsetY}
+                  x2={590 + chartOffsetX}
+                  y2={axisBottomY + chartOffsetY}
+                  className="figma-hero-preview-axis-line"
+                />
+
+                {yTicks.map((tick) => {
+                  const y = axisBottomY - (tick / Math.max(yMax, 1)) * axisSpan;
+                  return (
+                    <g key={`label-${tick}`}>
+                      <line
+                        x1={52 + chartOffsetX}
+                        y1={y + chartOffsetY}
+                        x2={58 + chartOffsetX}
+                        y2={y + chartOffsetY}
+                        className="figma-hero-preview-axis-line"
+                      />
+                      <text x={47 + chartOffsetX} y={y + 6 + chartOffsetY} textAnchor="end" className="figma-hero-preview-axis-text">
+                        {tick}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            </svg>
+          )}
         </div>
       </div>
 

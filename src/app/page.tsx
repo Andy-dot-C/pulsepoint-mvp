@@ -1,7 +1,6 @@
 import { PollCard } from "@/components/poll-card";
 import { FlashBanner } from "@/components/flash-banner";
 import { FeedRail } from "@/components/feed-rail";
-import { FeedFeaturedPollCard } from "@/components/feed-featured-poll-card";
 import { FigmaHeroPreviewCard } from "@/components/figma-hero-preview-card";
 import { FeaturedPollCarousel } from "@/components/featured-poll-carousel";
 import { buildFeedHref } from "@/lib/feed-query";
@@ -101,9 +100,9 @@ export default async function Home({ searchParams }: HomePageProps) {
     q: searchQuery
   });
   const featuredPolls = feed.slice(0, 6);
-  const threeOptionFeaturedPoll = feed.find((poll) => poll.options.length >= 3) ?? featuredPolls[0] ?? null;
+  const twoOptionFeaturedPoll = feed.find((poll) => poll.options.length === 2) ?? featuredPolls[0] ?? null;
+  const multiOptionFeaturedPoll = feed.find((poll) => poll.options.length > 2) ?? twoOptionFeaturedPoll ?? featuredPolls[0] ?? null;
   const gridPolls = feed.slice(featuredPolls.length);
-  const featuredChartVariants: Array<"donut" | "dot-grid" | "bars" | "line"> = ["line", "donut", "dot-grid", "bars"];
 
   return (
     <main className="page-shell">
@@ -118,13 +117,40 @@ export default async function Home({ searchParams }: HomePageProps) {
         <div className="feed-column">
           {featuredPolls.length > 0 ? (
             <FeaturedPollCarousel>
-              {featuredPolls.map((poll, index) =>
-                index === 0 ? (
+              {featuredPolls.map((poll, index) => {
+                const twoOptionPoll = twoOptionFeaturedPoll ?? poll;
+                const threeOptionPoll = multiOptionFeaturedPoll ?? poll;
+                return index === 0 ? (
                   <FigmaHeroPreviewCard
                     key={poll.id}
-                    poll={poll}
+                    poll={twoOptionPoll}
                     returnTo={returnTo}
                     showStaticCarouselControls={false}
+                    maxOptions={2}
+                    className="figma-hero-native-card figma-hero-live-fixed"
+                    chartOffsetX={-34}
+                    chartOffsetY={-50}
+                  />
+                ) : index === 1 ? (
+                  <FigmaHeroPreviewCard
+                    key={`${poll.id}-donut-preview`}
+                    poll={twoOptionPoll}
+                    returnTo={returnTo}
+                    showStaticCarouselControls={false}
+                    maxOptions={2}
+                    chartVariant="donut"
+                    className="figma-hero-native-card figma-hero-live-fixed"
+                    chartOffsetX={-34}
+                    chartOffsetY={-50}
+                  />
+                ) : index === 2 ? (
+                  <FigmaHeroPreviewCard
+                    key={`${poll.id}-dot-grid-preview`}
+                    poll={twoOptionPoll}
+                    returnTo={returnTo}
+                    showStaticCarouselControls={false}
+                    maxOptions={2}
+                    chartVariant="dot-grid"
                     className="figma-hero-native-card figma-hero-live-fixed"
                     chartOffsetX={-34}
                     chartOffsetY={-50}
@@ -132,7 +158,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                 ) : index === 3 ? (
                   <FigmaHeroPreviewCard
                     key={`${poll.id}-three-option-preview`}
-                    poll={threeOptionFeaturedPoll ?? poll}
+                    poll={threeOptionPoll}
                     returnTo={returnTo}
                     showStaticCarouselControls={false}
                     maxOptions={3}
@@ -140,15 +166,43 @@ export default async function Home({ searchParams }: HomePageProps) {
                     chartOffsetX={-34}
                     chartOffsetY={-50}
                   />
-                ) : (
-                  <FeedFeaturedPollCard
-                    key={poll.id}
-                    poll={poll}
+                ) : index === 4 ? (
+                  <FigmaHeroPreviewCard
+                    key={`${poll.id}-donut-three-option-preview`}
+                    poll={threeOptionPoll}
                     returnTo={returnTo}
-                    chartVariant={featuredChartVariants[index % featuredChartVariants.length]}
+                    showStaticCarouselControls={false}
+                    maxOptions={3}
+                    chartVariant="donut"
+                    className="figma-hero-native-card figma-hero-live-fixed"
+                    chartOffsetX={-34}
+                    chartOffsetY={-50}
                   />
-                )
-              )}
+                ) : index === 5 ? (
+                  <FigmaHeroPreviewCard
+                    key={`${poll.id}-dot-grid-three-option-preview`}
+                    poll={threeOptionPoll}
+                    returnTo={returnTo}
+                    showStaticCarouselControls={false}
+                    maxOptions={3}
+                    chartVariant="dot-grid"
+                    className="figma-hero-native-card figma-hero-live-fixed"
+                    chartOffsetX={-34}
+                    chartOffsetY={-50}
+                  />
+                ) : (
+                  <FigmaHeroPreviewCard
+                    key={poll.id}
+                    poll={twoOptionPoll}
+                    returnTo={returnTo}
+                    showStaticCarouselControls={false}
+                    maxOptions={2}
+                    className="figma-hero-native-card figma-hero-live-fixed"
+                    chartOffsetX={-34}
+                    chartOffsetY={-50}
+                  />
+                );
+              })}
             </FeaturedPollCarousel>
           ) : null}
           <div className="feed-cards-grid feed-cards-grid-3">
