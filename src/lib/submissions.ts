@@ -1,5 +1,11 @@
 import { CategoryKey } from "@/lib/types";
 
+export const TITLE_MAX_LENGTH = 200;
+export const SUMMARY_MAX_LENGTH = 500;
+export const OPTION_MAX_LENGTH = 120;
+export const OPTION_MIN_COUNT = 2;
+export const OPTION_MAX_COUNT = 10;
+
 export const VALID_CATEGORIES: CategoryKey[] = [
   "politics",
   "sport",
@@ -23,6 +29,10 @@ export function parseOptions(values: FormDataEntryValue[]): string[] {
   return Array.from(unique);
 }
 
+export function optionsExceedLength(options: string[]): boolean {
+  return options.some((option) => option.length > OPTION_MAX_LENGTH);
+}
+
 export function isCategory(value: string): value is CategoryKey {
   return VALID_CATEGORIES.includes(value as CategoryKey);
 }
@@ -40,6 +50,7 @@ export function clampFutureDate(date: string | null): string | null {
   if (!date) return null;
   const parsed = Date.parse(date);
   if (Number.isNaN(parsed)) return null;
+  if (parsed <= Date.now()) return null;
   return new Date(parsed).toISOString();
 }
 

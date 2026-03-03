@@ -31,7 +31,7 @@ function readValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function formatDetailDate(value: string | null): string {
+function formatDetailDate(value: string | null | undefined): string {
   if (!value) return "No end date";
   return new Date(value).toLocaleDateString(undefined, {
     month: "short",

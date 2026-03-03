@@ -6,6 +6,7 @@ import { FigmaHeroPreviewCard } from "@/components/figma-hero-preview-card";
 import { buildFeedHref } from "@/lib/feed-query";
 import { fetchFeed } from "@/lib/data/polls";
 import { CategoryKey, FeedFilterKey, FeedTabKey } from "@/lib/types";
+import { notFound } from "next/navigation";
 
 type HomePageProps = {
   searchParams?:
@@ -70,6 +71,10 @@ function resolveSubmissionMessage(value?: string): string | null {
 const sectionTitles = ["Trending Now", "Top Movers", "New This Hour"] as const;
 
 export default async function HomeSectionsPreview({ searchParams }: HomePageProps) {
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
+
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const activeFilter = resolveFilter(asSingleValue(resolvedSearchParams.filter));
   const legacyTab = resolveTab(asSingleValue(resolvedSearchParams.tab));

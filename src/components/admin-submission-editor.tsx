@@ -6,6 +6,7 @@ import {
   rejectSubmissionAction
 } from "@/app/actions/submissions";
 import { categories } from "@/lib/mock-data";
+import { OPTION_MAX_LENGTH, SUMMARY_MAX_LENGTH, TITLE_MAX_LENGTH } from "@/lib/submissions";
 
 type Submission = {
   id: string;
@@ -104,7 +105,13 @@ export function AdminSubmissionEditor({ submission, duplicatePolls }: Props) {
 
           <label>
             Title
-            <input name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+            <input
+              name="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={TITLE_MAX_LENGTH}
+              required
+            />
           </label>
 
           <label>
@@ -125,6 +132,7 @@ export function AdminSubmissionEditor({ submission, duplicatePolls }: Props) {
               rows={4}
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
+              maxLength={SUMMARY_MAX_LENGTH}
               required
             />
           </label>
@@ -141,6 +149,7 @@ export function AdminSubmissionEditor({ submission, duplicatePolls }: Props) {
                     current.map((item, itemIndex) => (itemIndex === index ? e.target.value : item))
                   )
                 }
+                maxLength={OPTION_MAX_LENGTH}
                 required
               />
             ))}

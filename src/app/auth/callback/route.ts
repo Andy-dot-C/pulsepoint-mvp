@@ -1,19 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-
-function safeNext(nextPath: string | null): string {
-  if (!nextPath || !nextPath.startsWith("/")) {
-    return "/";
-  }
-  return nextPath;
-}
+import { sanitizeInternalPath } from "@/lib/safe-path";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const tokenHash = requestUrl.searchParams.get("token_hash");
   const type = requestUrl.searchParams.get("type");
-  const next = safeNext(requestUrl.searchParams.get("next"));
+  const next = sanitizeInternalPath(requestUrl.searchParams.get("next"));
   const supabase = await createClient();
 
   if (code) {

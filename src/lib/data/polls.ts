@@ -69,6 +69,10 @@ function hasSupabaseConfig(): boolean {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
 
+function shouldUseMockFallback(): boolean {
+  return process.env.NODE_ENV !== "production";
+}
+
 function normalizeQuery(query: string): string {
   return query.trim().replace(/[%_]/g, "").replace(/,/g, " ");
 }
@@ -410,7 +414,7 @@ function hydratePolls(
 
 export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
   if (!hasSupabaseConfig()) {
-    return applyLocalFilters(input, mockPolls);
+    return shouldUseMockFallback() ? applyLocalFilters(input, mockPolls) : [];
   }
 
   const supabase = await createClient();
@@ -465,7 +469,7 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
 
   const { data: rows, error } = await query;
   if (error || !rows) {
-    return applyLocalFilters(input, mockPolls);
+    return shouldUseMockFallback() ? applyLocalFilters(input, mockPolls) : [];
   }
 
   const openRows = (rows as PollRow[]).filter((row) => isPollOpenByEndAt(row.end_at));
@@ -501,7 +505,7 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
   ]);
 
   if (optionsResult.error || totalsResult.error || velocityResult.error) {
-    return applyLocalFilters(input, mockPolls);
+    return shouldUseMockFallback() ? applyLocalFilters(input, mockPolls) : [];
   }
 
   if (!bookmarksResult.error) {
@@ -542,7 +546,7 @@ export async function fetchFeed(input: FeedInput): Promise<Poll[]> {
 
 export async function fetchPollBySlug(slug: string): Promise<Poll | null> {
   if (!hasSupabaseConfig()) {
-    return mockPolls.find((poll) => poll.slug === slug) ?? null;
+    return shouldUseMockFallback() ? mockPolls.find((poll) => poll.slug === slug) ?? null : null;
   }
 
   const supabase = await createClient();
@@ -720,6 +724,9 @@ export async function fetchPollMetaBySlug(
   slug: string
 ): Promise<{ slug: string; title: string; summary: string; category: CategoryKey } | null> {
   if (!hasSupabaseConfig()) {
+    if (!shouldUseMockFallback()) {
+      return null;
+    }
     const mock = mockPolls.find((poll) => poll.slug === slug);
     if (!mock) return null;
     return {

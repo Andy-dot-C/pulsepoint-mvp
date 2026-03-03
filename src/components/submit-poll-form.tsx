@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { submitPollAction } from "@/app/actions/submissions";
 import { categories } from "@/lib/mock-data";
+import { OPTION_MAX_LENGTH, SUMMARY_MAX_LENGTH, TITLE_MAX_LENGTH } from "@/lib/submissions";
 
 type SubmitPollFormProps = {
   defaultCategory?: string;
@@ -220,6 +221,7 @@ export function SubmitPollForm({
           name="title"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
+          maxLength={TITLE_MAX_LENGTH}
           required
           placeholder="Should the UK lower the voting age to 16?"
         />
@@ -248,6 +250,7 @@ export function SubmitPollForm({
                   current.map((item, itemIndex) => (itemIndex === index ? event.target.value : item))
                 );
               }}
+              maxLength={OPTION_MAX_LENGTH}
               placeholder={`Option ${index + 1}`}
               required={index < 2}
             />
@@ -283,6 +286,7 @@ export function SubmitPollForm({
           name="summary"
           value={summary}
           onChange={(event) => setSummary(event.target.value)}
+          maxLength={SUMMARY_MAX_LENGTH}
           required
           rows={4}
           placeholder="Brief context users need before voting."

@@ -1,4 +1,5 @@
 import { AuthButtons } from "@/components/auth-buttons";
+import { sanitizeInternalPath } from "@/lib/safe-path";
 
 type AuthPageProps = {
   searchParams?:
@@ -11,13 +12,9 @@ function asSingleValue(input: string | string[] | undefined): string {
   return Array.isArray(input) ? input[0] ?? "/" : input;
 }
 
-function safeNext(nextPath: string): string {
-  return nextPath.startsWith("/") ? nextPath : "/";
-}
-
 export default async function AuthPage({ searchParams }: AuthPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
-  const nextPath = safeNext(asSingleValue(resolvedSearchParams.next));
+  const nextPath = sanitizeInternalPath(asSingleValue(resolvedSearchParams.next));
 
   return (
     <main className="page-shell auth-shell">

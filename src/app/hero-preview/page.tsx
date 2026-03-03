@@ -1,7 +1,12 @@
 import { HeroPreviewWorkbench } from "@/components/hero-preview-workbench";
 import { fetchFeed } from "@/lib/data/polls";
+import { notFound } from "next/navigation";
 
 export default async function HeroPreviewPage() {
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
+
   const feed = await fetchFeed({
     tab: "trending",
     category: "all",

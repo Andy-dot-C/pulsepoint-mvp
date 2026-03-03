@@ -6,11 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { moderateComment } from "@/lib/moderation/comments";
 import { trackPollEvent } from "@/lib/analytics/events";
+import { sanitizeInternalPath } from "@/lib/safe-path";
+import { isEntityId } from "@/lib/id-validation";
 
-function safePath(value: string | null | undefined, fallback = "/"): string {
-  if (!value || !value.startsWith("/")) return fallback;
-  return value;
-}
+const COMMENT_POST_ERROR_MESSAGE = "Could not post comment. Please try again.";
+const COMMENT_VOTE_ERROR_MESSAGE = "Could not update comment vote. Please try again.";
+const COMMENT_DELETE_ERROR_MESSAGE = "Could not delete comment right now.";
 
 function readText(value: FormDataEntryValue | null): string {
   return String(value ?? "").trim();
@@ -49,9 +50,13 @@ async function requireSignedIn(returnTo: string) {
 export async function submitCommentAction(formData: FormData) {
   const pollId = readText(formData.get("pollId"));
   const body = readText(formData.get("body"));
-  const returnTo = safePath(readText(formData.get("returnTo")), "/");
+  const returnTo = sanitizeInternalPath(readText(formData.get("returnTo")), "/");
 
-  if (!pollId || !body) {
+  if (!isEntityId(pollId)) {
+    redirect(withCommentStatus(returnTo, "error", "Invalid poll id"));
+  }
+
+  if (!body) {
     redirect(withCommentStatus(returnTo, "error", "Comment cannot be empty"));
   }
 
@@ -78,7 +83,7 @@ export async function submitCommentAction(formData: FormData) {
   });
 
   if (error) {
-    redirect(withCommentStatus(returnTo, "error", error.message));
+    redirect(withCommentStatus(returnTo, "error", COMMENT_POST_ERROR_MESSAGE));
   }
 
   await trackPollEvent({
@@ -96,9 +101,9 @@ export async function toggleCommentUpvoteAction(formData: FormData) {
   const commentId = readText(formData.get("commentId"));
   const pollId = readText(formData.get("pollId"));
   const intent = readText(formData.get("intent"));
-  const returnTo = safePath(readText(formData.get("returnTo")), "/");
+  const returnTo = sanitizeInternalPath(readText(formData.get("returnTo")), "/");
 
-  if (!commentId || !pollId || (intent !== "upvote" && intent !== "remove")) {
+  if (!isEntityId(commentId) || !isEntityId(pollId) || (intent !== "upvote" && intent !== "remove")) {
     redirect(returnTo);
   }
 
@@ -110,7 +115,7 @@ export async function toggleCommentUpvoteAction(formData: FormData) {
       .eq("comment_id", commentId)
       .eq("user_id", user.id);
     if (error) {
-      redirect(withCommentStatus(returnTo, "error", error.message));
+      redirect(withCommentStatus(returnTo, "error", COMMENT_VOTE_ERROR_MESSAGE));
     }
   } else {
     const { error } = await supabase.from("poll_comment_votes").upsert(
@@ -122,7 +127,7 @@ export async function toggleCommentUpvoteAction(formData: FormData) {
       { onConflict: "comment_id,user_id" }
     );
     if (error) {
-      redirect(withCommentStatus(returnTo, "error", error.message));
+      redirect(withCommentStatus(returnTo, "error", COMMENT_VOTE_ERROR_MESSAGE));
     }
     await trackPollEvent({
       pollId,
@@ -138,8 +143,8 @@ export async function toggleCommentUpvoteAction(formData: FormData) {
 
 export async function deleteCommentByAdminAction(formData: FormData) {
   const commentId = readText(formData.get("commentId"));
-  const returnTo = safePath(readText(formData.get("returnTo")), "/");
-  if (!commentId) {
+  const returnTo = sanitizeInternalPath(readText(formData.get("returnTo")), "/");
+  if (!isEntityId(commentId)) {
     redirect(withCommentStatus(returnTo, "error", "Missing comment id"));
   }
 
@@ -152,7 +157,7 @@ export async function deleteCommentByAdminAction(formData: FormData) {
   const admin = createAdminClient();
   const { error } = await admin.from("poll_comments").delete().eq("id", commentId);
   if (error) {
-    redirect(withCommentStatus(returnTo, "error", error.message));
+    redirect(withCommentStatus(returnTo, "error", COMMENT_DELETE_ERROR_MESSAGE));
   }
 
   revalidatePath(revalidateTarget(returnTo));
