@@ -15,6 +15,15 @@ function getOriginHost(origin: string | null): string | null {
   }
 }
 
+function getRefererHost(referer: string | null): string | null {
+  if (!referer) return null;
+  try {
+    return new URL(referer).host.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
 export function isTrustedWriteRequest(request: NextRequest): boolean {
   const secFetchSite = request.headers.get("sec-fetch-site")?.toLowerCase();
   if (secFetchSite === "cross-site") {
@@ -33,5 +42,16 @@ export function isTrustedWriteRequest(request: NextRequest): boolean {
     return false;
   }
 
-  return originHost === requestHost;
+  if (originHost) {
+    return originHost === requestHost;
+  }
+
+  // Some same-origin browser requests may omit Origin. Fall back to Referer.
+  const refererHost = getRefererHost(request.headers.get("referer"));
+  if (refererHost) {
+    return refererHost === requestHost;
+  }
+
+  // No origin context present: treat as untrusted for write endpoints.
+  return false;
 }

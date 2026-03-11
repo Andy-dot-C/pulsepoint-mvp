@@ -24,6 +24,7 @@ type CheckRateLimitResult =
 
 const buckets = new Map<string, Bucket>();
 let lastCleanupAt = 0;
+let warnedWeakProductionFallback = false;
 
 function cleanupExpiredBuckets(now: number): void {
   if (now - lastCleanupAt < 60_000) return;
@@ -74,6 +75,10 @@ function getUpstashConfig(): { url: string; token: string } | null {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
   if (!url || !token) return null;
   return { url, token };
+}
+
+export function isPersistentRateLimitConfigured(): boolean {
+  return Boolean(getUpstashConfig());
 }
 
 function asNumber(value: unknown): number | null {
@@ -153,5 +158,13 @@ async function checkRateLimitInUpstash(input: CheckRateLimitInput): Promise<Chec
 export async function checkRateLimit(input: CheckRateLimitInput): Promise<CheckRateLimitResult> {
   const persistent = await checkRateLimitInUpstash(input);
   if (persistent) return persistent;
+
+  if (process.env.NODE_ENV === "production" && !warnedWeakProductionFallback) {
+    warnedWeakProductionFallback = true;
+    console.warn(
+      "[rate-limit] Using in-memory fallback in production. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for durable rate limiting."
+    );
+  }
+
   return checkRateLimitInMemory(input);
 }
