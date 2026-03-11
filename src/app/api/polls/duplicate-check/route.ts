@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseOptions } from "@/lib/submissions";
 import { findPossibleDuplicates } from "@/lib/duplicate-check";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { exceedsRequestSize } from "@/lib/request-size";
+import { isTrustedWriteRequest } from "@/lib/trusted-request";
 
 type RequestPayload = {
   title?: string;
@@ -19,7 +22,38 @@ type PollOptionRow = {
   label: string;
 };
 
-export async function POST(request: Request) {
+function readClientIp(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0]?.trim() ?? "unknown";
+  }
+
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) {
+    return realIp.trim();
+  }
+
+  return "unknown";
+}
+
+export async function POST(request: NextRequest) {
+  if (!isTrustedWriteRequest(request)) {
+    return NextResponse.json({ ok: false, matches: [] }, { status: 403 });
+  }
+
+  if (exceedsRequestSize(request, 8_000)) {
+    return NextResponse.json({ ok: false, matches: [] }, { status: 413 });
+  }
+
+  const limiter = await checkRateLimit({
+    key: `duplicate-check:${readClientIp(request)}`,
+    limit: 80,
+    windowMs: 10 * 60 * 1000
+  });
+  if (!limiter.allowed) {
+    return NextResponse.json({ ok: false, matches: [] }, { status: 429 });
+  }
+
   let payload: RequestPayload | null = null;
   try {
     payload = (await request.json()) as RequestPayload;
@@ -27,8 +61,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, matches: [] }, { status: 400 });
   }
 
-  const title = String(payload?.title ?? "").trim();
-  const options = parseOptions((payload?.options ?? []).map((item) => String(item)));
+  const title = String(payload?.title ?? "")
+    .trim()
+    .slice(0, 200);
+  const options = parseOptions(
+    (payload?.options ?? [])
+      .slice(0, 10)
+      .map((item) => String(item).trim().slice(0, 120))
+  );
 
   if (!title || options.length < 2) {
     return NextResponse.json({ ok: true, matches: [] });

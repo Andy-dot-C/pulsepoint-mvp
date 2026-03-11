@@ -8,12 +8,23 @@ import {
   clampFutureDate,
   defaultEndDate,
   isCategory,
+  OPTION_MAX_COUNT,
+  OPTION_MIN_COUNT,
+  OPTION_MAX_LENGTH,
+  optionsExceedLength,
   parseOptions,
+  SUMMARY_MAX_LENGTH,
+  TITLE_MAX_LENGTH,
   sanitizeText,
   slugify
 } from "@/lib/submissions";
 import { shouldRequireModeration } from "@/lib/moderation/rules";
 import { findPossibleDuplicates } from "@/lib/duplicate-check";
+import { isEntityId } from "@/lib/id-validation";
+
+const SUBMISSION_SAVE_ERROR_MESSAGE = "Could not save submission right now.";
+const SUBMISSION_PUBLISH_ERROR_MESSAGE = "Could not publish poll right now.";
+const SUBMISSION_REVIEW_ERROR_MESSAGE = "Could not update submission status.";
 
 function toStatusMessage(type: "error" | "success", message: string): never {
   redirect(`/submit?type=${type}&message=${encodeURIComponent(message)}`);
@@ -172,12 +183,27 @@ export async function submitPollAction(formData: FormData) {
     toStatusMessage("error", "Title and summary are required.");
   }
 
+  if (title.length > TITLE_MAX_LENGTH) {
+    toStatusMessage("error", `Title must be ${TITLE_MAX_LENGTH} characters or fewer.`);
+  }
+
+  if (summary.length > SUMMARY_MAX_LENGTH) {
+    toStatusMessage("error", `Summary must be ${SUMMARY_MAX_LENGTH} characters or fewer.`);
+  }
+
   if (!isCategory(categoryRaw)) {
     toStatusMessage("error", "Please choose a valid category.");
   }
 
-  if (options.length < 2 || options.length > 10) {
-    toStatusMessage("error", "Polls must have between 2 and 10 unique options.");
+  if (options.length < OPTION_MIN_COUNT || options.length > OPTION_MAX_COUNT) {
+    toStatusMessage(
+      "error",
+      `Polls must have between ${OPTION_MIN_COUNT} and ${OPTION_MAX_COUNT} unique options.`
+    );
+  }
+
+  if (optionsExceedLength(options)) {
+    toStatusMessage("error", `Each option must be ${OPTION_MAX_LENGTH} characters or fewer.`);
   }
 
   const requiresModeration = shouldRequireModeration({
@@ -214,7 +240,7 @@ export async function submitPollAction(formData: FormData) {
     .single();
 
   if (submissionError || !submission) {
-    toStatusMessage("error", submissionError?.message ?? "Could not save submission.");
+    toStatusMessage("error", SUBMISSION_SAVE_ERROR_MESSAGE);
   }
 
   if (willRequireModeration) {
@@ -237,18 +263,17 @@ export async function submitPollAction(formData: FormData) {
       endAt,
       options
     });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not publish poll.";
+  } catch {
     await admin
       .from("poll_submissions")
       .update({
         status: "pending",
-        review_notes: `Auto-publish failed: ${message}`,
+        review_notes: "Auto-publish failed",
         reviewed_by: null,
         reviewed_at: null
       })
       .eq("id", submission.id);
-    toStatusMessage("error", message);
+    toStatusMessage("error", SUBMISSION_PUBLISH_ERROR_MESSAGE);
   }
 
   revalidatePath("/");
@@ -273,12 +298,40 @@ export async function approveSubmissionAction(formData: FormData) {
   const originalEndAt = clampFutureDate(sanitizeText(formData.get("originalEndAt")) || null);
   const endAt = requestedEndAt ?? originalEndAt ?? null;
 
-  if (!submissionId || !title || !summary || !isCategory(categoryRaw)) {
+  if (!isEntityId(submissionId) || !title || !summary || !isCategory(categoryRaw)) {
     redirect("/admin/submissions?type=error&message=Invalid+approval+payload");
   }
 
-  if (options.length < 2 || options.length > 10) {
-    redirect("/admin/submissions?type=error&message=Poll+must+have+2-10+options");
+  if (title.length > TITLE_MAX_LENGTH) {
+    redirect(
+      `/admin/submissions?type=error&message=${encodeURIComponent(
+        `Title must be ${TITLE_MAX_LENGTH} characters or fewer`
+      )}`
+    );
+  }
+
+  if (summary.length > SUMMARY_MAX_LENGTH) {
+    redirect(
+      `/admin/submissions?type=error&message=${encodeURIComponent(
+        `Summary must be ${SUMMARY_MAX_LENGTH} characters or fewer`
+      )}`
+    );
+  }
+
+  if (options.length < OPTION_MIN_COUNT || options.length > OPTION_MAX_COUNT) {
+    redirect(
+      `/admin/submissions?type=error&message=${encodeURIComponent(
+        `Poll must have ${OPTION_MIN_COUNT}-${OPTION_MAX_COUNT} options`
+      )}`
+    );
+  }
+
+  if (optionsExceedLength(options)) {
+    redirect(
+      `/admin/submissions?type=error&message=${encodeURIComponent(
+        `Each option must be ${OPTION_MAX_LENGTH} characters or fewer`
+      )}`
+    );
   }
 
   const admin = createAdminClient();
@@ -294,9 +347,8 @@ export async function approveSubmissionAction(formData: FormData) {
       endAt,
       options
     });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not publish";
-    redirect(`/admin/submissions?type=error&message=${encodeURIComponent(message)}`);
+  } catch {
+    redirect(`/admin/submissions?type=error&message=${encodeURIComponent(SUBMISSION_PUBLISH_ERROR_MESSAGE)}`);
   }
 
   const { error: updateError } = await admin
@@ -315,7 +367,7 @@ export async function approveSubmissionAction(formData: FormData) {
     .eq("id", submissionId);
 
   if (updateError) {
-    redirect(`/admin/submissions?type=error&message=${encodeURIComponent(updateError.message)}`);
+    redirect(`/admin/submissions?type=error&message=${encodeURIComponent(SUBMISSION_REVIEW_ERROR_MESSAGE)}`);
   }
 
   revalidatePath("/");
@@ -332,7 +384,7 @@ export async function rejectSubmissionAction(formData: FormData) {
   const submissionId = sanitizeText(formData.get("submissionId"));
   const reviewNotes = sanitizeText(formData.get("reviewNotes"));
 
-  if (!submissionId) {
+  if (!isEntityId(submissionId)) {
     redirect("/admin/submissions?type=error&message=Missing+submissionId");
   }
 
@@ -348,7 +400,7 @@ export async function rejectSubmissionAction(formData: FormData) {
     .eq("id", submissionId);
 
   if (error) {
-    redirect(`/admin/submissions?type=error&message=${encodeURIComponent(error.message)}`);
+    redirect(`/admin/submissions?type=error&message=${encodeURIComponent(SUBMISSION_REVIEW_ERROR_MESSAGE)}`);
   }
 
   revalidatePath("/admin/submissions");
@@ -365,7 +417,7 @@ export async function mergeSubmissionAction(formData: FormData) {
   const duplicateOf = sanitizeText(formData.get("duplicateOfSubmissionId"));
   const reviewNotes = sanitizeText(formData.get("reviewNotes"));
 
-  if (!submissionId || !duplicateOf) {
+  if (!isEntityId(submissionId) || !isEntityId(duplicateOf)) {
     redirect("/admin/submissions?type=error&message=Missing+merge+ids");
   }
 
@@ -382,7 +434,7 @@ export async function mergeSubmissionAction(formData: FormData) {
     .eq("id", submissionId);
 
   if (error) {
-    redirect(`/admin/submissions?type=error&message=${encodeURIComponent(error.message)}`);
+    redirect(`/admin/submissions?type=error&message=${encodeURIComponent(SUBMISSION_REVIEW_ERROR_MESSAGE)}`);
   }
 
   revalidatePath("/admin/submissions");

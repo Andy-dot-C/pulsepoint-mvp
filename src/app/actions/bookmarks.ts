@@ -4,18 +4,17 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { trackPollEvent } from "@/lib/analytics/events";
+import { sanitizeInternalPath } from "@/lib/safe-path";
+import { isEntityId } from "@/lib/id-validation";
 
-function safeReturnPath(input: string | null): string {
-  if (!input || !input.startsWith("/")) return "/";
-  return input;
-}
+const BOOKMARK_ERROR_MESSAGE = "Could not update bookmark right now. Please try again.";
 
 export async function toggleBookmarkAction(formData: FormData) {
   const pollId = String(formData.get("pollId") ?? "");
   const intent = String(formData.get("intent") ?? "");
-  const returnTo = safeReturnPath(formData.get("returnTo") as string | null);
+  const returnTo = sanitizeInternalPath(formData.get("returnTo") as string | null);
 
-  if (!pollId || (intent !== "save" && intent !== "remove")) {
+  if (!isEntityId(pollId) || (intent !== "save" && intent !== "remove")) {
     redirect(returnTo);
   }
 
@@ -34,7 +33,7 @@ export async function toggleBookmarkAction(formData: FormData) {
       const message =
         error.message.includes("poll_bookmarks") || error.message.includes("relation")
           ? "Bookmarks are not set up yet. Please run the bookmark SQL migration."
-          : error.message;
+          : BOOKMARK_ERROR_MESSAGE;
       redirect(`${returnTo}?bookmarkError=${encodeURIComponent(message)}`);
     }
     await trackPollEvent({
@@ -56,7 +55,7 @@ export async function toggleBookmarkAction(formData: FormData) {
       const message =
         error.message.includes("poll_bookmarks") || error.message.includes("relation")
           ? "Bookmarks are not set up yet. Please run the bookmark SQL migration."
-          : error.message;
+          : BOOKMARK_ERROR_MESSAGE;
       redirect(`${returnTo}?bookmarkError=${encodeURIComponent(message)}`);
     }
     await trackPollEvent({

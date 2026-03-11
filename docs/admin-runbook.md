@@ -15,6 +15,8 @@ Use this after every deploy to confirm production auth, admin access, and critic
 - `NEXT_PUBLIC_SUPABASE_URL`: your `https://<project-ref>.supabase.co` URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase publishable/anon key
 - `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key (server-only)
+- `UPSTASH_REDIS_REST_URL`: Upstash REST URL for durable rate limits in production
+- `UPSTASH_REDIS_REST_TOKEN`: Upstash REST token for durable rate limits in production
 
 ## Post-Deploy Smoke Test (5-10 minutes)
 Run this on production after every `main` deploy.
@@ -113,6 +115,12 @@ with check (auth.uid() = user_id);
 - Recheck Vercel env vars and redeploy.
 - Confirm user is signed in and session is valid.
 - Check Vercel function logs for API/server action errors.
+
+### 6) Rate limits seem ineffective in production
+- Confirm both Upstash env vars are set in Vercel:
+  - `UPSTASH_REDIS_REST_URL`
+  - `UPSTASH_REDIS_REST_TOKEN`
+- Without these, the app falls back to per-instance in-memory buckets, which are weaker across serverless instances.
 
 ## Rollback
 If a production deploy breaks a critical flow:

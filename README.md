@@ -3,9 +3,10 @@
 Opinion poll platform MVP with moderation-first user submissions.
 
 ## Current status
-- Project scaffolded with Next.js App Router.
-- Mock-data-driven UI for feed and poll detail pages.
-- MVP product docs and Supabase schema prepared.
+- Production-ready Next.js App Router web app with Supabase-backed data flows.
+- Live feed, poll detail, voting, comments, bookmarks, sharing, reporting, moderation, and admin analytics.
+- Hero carousel + sectioned homepage layouts with design iteration routes for local/dev.
+- Security hardening in place for write APIs (origin checks, request size guards, rate limits).
 
 ## Run locally
 1. Install dependencies:

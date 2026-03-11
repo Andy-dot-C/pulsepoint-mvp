@@ -2,20 +2,17 @@
 
 import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { sanitizeInternalPath } from "@/lib/safe-path";
 
 type AuthButtonsProps = {
   nextPath: string;
 };
 
-function safeNext(nextPath: string): string {
-  return nextPath.startsWith("/") ? nextPath : "/";
-}
-
 export function AuthButtons({ nextPath }: AuthButtonsProps) {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const next = safeNext(nextPath);
+  const next = sanitizeInternalPath(nextPath);
 
   async function signInWithMagicLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

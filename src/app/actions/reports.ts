@@ -5,13 +5,24 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isReportReason } from "@/lib/report-reasons";
-import { isCategory, parseOptions } from "@/lib/submissions";
+import {
+  isCategory,
+  OPTION_MAX_COUNT,
+  OPTION_MAX_LENGTH,
+  OPTION_MIN_COUNT,
+  optionsExceedLength,
+  parseOptions,
+  SUMMARY_MAX_LENGTH,
+  TITLE_MAX_LENGTH
+} from "@/lib/submissions";
 import { trackPollEvent } from "@/lib/analytics/events";
+import { sanitizeInternalPath } from "@/lib/safe-path";
+import { isEntityId } from "@/lib/id-validation";
 
-function safePath(value: string | null | undefined, fallback = "/"): string {
-  if (!value || !value.startsWith("/")) return fallback;
-  return value;
-}
+const REPORT_SUBMIT_ERROR_MESSAGE = "Could not submit report right now.";
+const REPORT_REVIEW_ERROR_MESSAGE = "Could not update report status.";
+const POLL_UPDATE_ERROR_MESSAGE = "Could not save poll updates.";
+const POLL_ARCHIVE_ERROR_MESSAGE = "Could not archive poll right now.";
 
 function readText(value: FormDataEntryValue | null): string {
   return String(value ?? "").trim();
@@ -21,10 +32,14 @@ export async function submitPollReportAction(formData: FormData) {
   const pollId = readText(formData.get("pollId"));
   const reason = readText(formData.get("reason"));
   const details = readText(formData.get("details"));
-  const returnTo = safePath(readText(formData.get("returnTo")));
+  const returnTo = sanitizeInternalPath(readText(formData.get("returnTo")));
 
-  if (!pollId || !isReportReason(reason)) {
+  if (!isEntityId(pollId) || !isReportReason(reason)) {
     redirect(`${returnTo}?report=error&message=${encodeURIComponent("Invalid report payload")}`);
+  }
+
+  if (details.length > 1000) {
+    redirect(`${returnTo}?report=error&message=${encodeURIComponent("Report details are too long")}`);
   }
 
   const supabase = await createClient();
@@ -46,7 +61,7 @@ export async function submitPollReportAction(formData: FormData) {
   });
 
   if (error) {
-    redirect(`${returnTo}?report=error&message=${encodeURIComponent(error.message)}`);
+    redirect(`${returnTo}?report=error&message=${encodeURIComponent(REPORT_SUBMIT_ERROR_MESSAGE)}`);
   }
 
   await trackPollEvent({
@@ -83,9 +98,9 @@ export async function markReportReviewedAction(formData: FormData) {
   const user = await requireAdminUser();
   const reportId = readText(formData.get("reportId"));
   const pollId = readText(formData.get("pollId"));
-  const returnTo = safePath(readText(formData.get("returnTo")), "/admin/reports");
+  const returnTo = sanitizeInternalPath(readText(formData.get("returnTo")), "/admin/reports");
 
-  if (!reportId && !pollId) {
+  if ((!reportId && !pollId) || (reportId && !isEntityId(reportId)) || (pollId && !isEntityId(pollId))) {
     redirect(`${returnTo}?type=error&message=Missing+report+or+poll+id`);
   }
 
@@ -98,7 +113,7 @@ export async function markReportReviewedAction(formData: FormData) {
   const { error } = pollId ? await updateQuery.eq("poll_id", pollId) : await updateQuery.eq("id", reportId);
 
   if (error) {
-    redirect(`${returnTo}?type=error&message=${encodeURIComponent(error.message)}`);
+    redirect(`${returnTo}?type=error&message=${encodeURIComponent(REPORT_REVIEW_ERROR_MESSAGE)}`);
   }
 
   revalidatePath("/admin/reports");
@@ -109,9 +124,9 @@ export async function resolveReportAction(formData: FormData) {
   const user = await requireAdminUser();
   const reportId = readText(formData.get("reportId"));
   const pollId = readText(formData.get("pollId"));
-  const returnTo = safePath(readText(formData.get("returnTo")), "/admin/reports");
+  const returnTo = sanitizeInternalPath(readText(formData.get("returnTo")), "/admin/reports");
 
-  if (!reportId && !pollId) {
+  if ((!reportId && !pollId) || (reportId && !isEntityId(reportId)) || (pollId && !isEntityId(pollId))) {
     redirect(`${returnTo}?type=error&message=Missing+report+or+poll+id`);
   }
 
@@ -124,7 +139,7 @@ export async function resolveReportAction(formData: FormData) {
   const { error } = pollId ? await updateQuery.eq("poll_id", pollId) : await updateQuery.eq("id", reportId);
 
   if (error) {
-    redirect(`${returnTo}?type=error&message=${encodeURIComponent(error.message)}`);
+    redirect(`${returnTo}?type=error&message=${encodeURIComponent(REPORT_REVIEW_ERROR_MESSAGE)}`);
   }
 
   revalidatePath("/admin/reports");
@@ -133,7 +148,7 @@ export async function resolveReportAction(formData: FormData) {
 
 export async function updatePollFromAdminAction(formData: FormData) {
   await requireAdminUser();
-  const returnTo = safePath(readText(formData.get("returnTo")), "/admin/reports");
+  const returnTo = sanitizeInternalPath(readText(formData.get("returnTo")), "/admin/reports");
 
   const pollId = readText(formData.get("pollId"));
   const title = readText(formData.get("title"));
@@ -142,16 +157,51 @@ export async function updatePollFromAdminAction(formData: FormData) {
   const options = parseOptions(formData.getAll("options"));
   const endAtRaw = readText(formData.get("endAt"));
 
-  if (!pollId || !title || !summary || !isCategory(category)) {
+  if (!isEntityId(pollId) || !title || !summary || !isCategory(category)) {
     redirect(`${returnTo}?type=error&message=Invalid+poll+update+payload`);
   }
 
-  if (options.length < 2 || options.length > 10) {
-    redirect(`${returnTo}?type=error&message=Poll+must+have+2-10+options`);
+  if (title.length > TITLE_MAX_LENGTH) {
+    redirect(
+      `${returnTo}?type=error&message=${encodeURIComponent(
+        `Title must be ${TITLE_MAX_LENGTH} characters or fewer`
+      )}`
+    );
+  }
+
+  if (summary.length > SUMMARY_MAX_LENGTH) {
+    redirect(
+      `${returnTo}?type=error&message=${encodeURIComponent(
+        `Summary must be ${SUMMARY_MAX_LENGTH} characters or fewer`
+      )}`
+    );
+  }
+
+  if (options.length < OPTION_MIN_COUNT || options.length > OPTION_MAX_COUNT) {
+    redirect(
+      `${returnTo}?type=error&message=${encodeURIComponent(
+        `Poll must have ${OPTION_MIN_COUNT}-${OPTION_MAX_COUNT} options`
+      )}`
+    );
+  }
+
+  if (optionsExceedLength(options)) {
+    redirect(
+      `${returnTo}?type=error&message=${encodeURIComponent(
+        `Each option must be ${OPTION_MAX_LENGTH} characters or fewer`
+      )}`
+    );
   }
 
   const admin = createAdminClient();
-  const endAt = endAtRaw ? new Date(endAtRaw).toISOString() : null;
+  let endAt: string | null = null;
+  if (endAtRaw) {
+    const parsed = Date.parse(endAtRaw);
+    if (Number.isNaN(parsed)) {
+      redirect(`${returnTo}?type=error&message=Invalid+end+date`);
+    }
+    endAt = new Date(parsed).toISOString();
+  }
 
   const { data: existingOptions, error: existingOptionsError } = await admin
     .from("poll_options")
@@ -180,7 +230,7 @@ export async function updatePollFromAdminAction(formData: FormData) {
     .eq("id", pollId);
 
   if (pollError) {
-    redirect(`${returnTo}?type=error&message=${encodeURIComponent(pollError.message)}`);
+    redirect(`${returnTo}?type=error&message=${encodeURIComponent(POLL_UPDATE_ERROR_MESSAGE)}`);
   }
 
   for (let index = 0; index < existingOptions.length; index += 1) {
@@ -192,7 +242,7 @@ export async function updatePollFromAdminAction(formData: FormData) {
       .eq("id", existing.id);
 
     if (optionUpdateError) {
-      redirect(`${returnTo}?type=error&message=${encodeURIComponent(optionUpdateError.message)}`);
+      redirect(`${returnTo}?type=error&message=${encodeURIComponent(POLL_UPDATE_ERROR_MESSAGE)}`);
     }
   }
 
@@ -203,10 +253,10 @@ export async function updatePollFromAdminAction(formData: FormData) {
 
 export async function archivePollFromAdminAction(formData: FormData) {
   const user = await requireAdminUser();
-  const returnTo = safePath(readText(formData.get("returnTo")), "/admin/reports");
+  const returnTo = sanitizeInternalPath(readText(formData.get("returnTo")), "/admin/reports");
 
   const pollId = readText(formData.get("pollId"));
-  if (!pollId) {
+  if (!isEntityId(pollId)) {
     redirect(`${returnTo}?type=error&message=Missing+poll+id`);
   }
 
@@ -217,7 +267,7 @@ export async function archivePollFromAdminAction(formData: FormData) {
     .eq("id", pollId);
 
   if (error) {
-    redirect(`${returnTo}?type=error&message=${encodeURIComponent(error.message)}`);
+    redirect(`${returnTo}?type=error&message=${encodeURIComponent(POLL_ARCHIVE_ERROR_MESSAGE)}`);
   }
 
   const { error: reportError } = await admin
@@ -227,7 +277,7 @@ export async function archivePollFromAdminAction(formData: FormData) {
     .eq("status", "open");
 
   if (reportError) {
-    redirect(`${returnTo}?type=error&message=${encodeURIComponent(reportError.message)}`);
+    redirect(`${returnTo}?type=error&message=${encodeURIComponent(REPORT_REVIEW_ERROR_MESSAGE)}`);
   }
 
   revalidatePath("/");

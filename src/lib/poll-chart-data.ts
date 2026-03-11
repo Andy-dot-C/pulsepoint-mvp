@@ -188,12 +188,19 @@ export function buildPollChartData(poll: Poll): PollChartData {
     (frame) => timeframeMap.get(frame)!
   );
 
-  const lineTimeframes: PollChartLineTimeframeData[] = [
+  const lineTimeframes: PollChartLineTimeframeData[] = [];
+  const lineFrameCandidates: PollChartLineTimeframeData[] = [
     { id: "24h", label: "24h", points: line24hPoints },
     { id: "7d", label: "7d", points: lineAllPoints.slice(Math.max(lineAllPoints.length - 7, 0)) },
     { id: "30d", label: "30d", points: lineAllPoints.slice(Math.max(lineAllPoints.length - 30, 0)) },
     { id: "all", label: "All time", points: lineAllPoints }
-  ].filter((frame) => frame.points.length > 0);
+  ];
+
+  lineFrameCandidates.forEach((frame) => {
+    if (frame.points.length > 0) {
+      lineTimeframes.push(frame);
+    }
+  });
 
   return { totalVotes: total, options, trend, lineTimeframes, timeframes };
 }

@@ -4,18 +4,17 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { trackPollEvent } from "@/lib/analytics/events";
+import { sanitizeInternalPath } from "@/lib/safe-path";
+import { isEntityId } from "@/lib/id-validation";
 
-function safeReturnPath(input: string | null): string {
-  if (!input || !input.startsWith("/")) return "/";
-  return input;
-}
+const VOTE_ERROR_MESSAGE = "Could not update your vote. Please try again.";
 
 export async function submitVoteAction(formData: FormData) {
   const pollId = String(formData.get("pollId") ?? "");
   const optionId = String(formData.get("optionId") ?? "");
-  const returnTo = safeReturnPath(formData.get("returnTo") as string | null);
+  const returnTo = sanitizeInternalPath(formData.get("returnTo") as string | null);
 
-  if (!pollId || !optionId) {
+  if (!isEntityId(pollId) || !isEntityId(optionId)) {
     redirect(returnTo);
   }
 
@@ -36,7 +35,7 @@ export async function submitVoteAction(formData: FormData) {
     .maybeSingle();
 
   if (existingVoteError) {
-    redirect(`${returnTo}?voteError=${encodeURIComponent(existingVoteError.message)}`);
+    redirect(`${returnTo}?voteError=${encodeURIComponent(VOTE_ERROR_MESSAGE)}`);
   }
 
   const isRemovingVote = existingVote?.option_id === optionId;
@@ -61,7 +60,7 @@ export async function submitVoteAction(formData: FormData) {
       );
 
   if (error) {
-    redirect(`${returnTo}?voteError=${encodeURIComponent(error.message)}`);
+    redirect(`${returnTo}?voteError=${encodeURIComponent(VOTE_ERROR_MESSAGE)}`);
   }
 
   if (!isRemovingVote) {

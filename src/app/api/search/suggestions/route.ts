@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { polls as mockPolls } from "@/lib/mock-data";
 import { selectTrendingPollIds } from "@/lib/trending";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { exceedsRequestSize } from "@/lib/request-size";
+import { isTrustedWriteRequest } from "@/lib/trusted-request";
 
 type RequestPayload = {
   q?: string;
@@ -27,6 +30,24 @@ type PollOptionTotalRow = {
 type VoteEventRow = {
   poll_id: string;
 };
+
+function shouldUseMockFallback(): boolean {
+  return process.env.NODE_ENV !== "production";
+}
+
+function readClientIp(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0]?.trim() ?? "unknown";
+  }
+
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) {
+    return realIp.trim();
+  }
+
+  return "unknown";
+}
 
 function nowMinusDays(days: number): string {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
@@ -89,7 +110,24 @@ function buildFallbackSuggestions(query: string) {
   }));
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (!isTrustedWriteRequest(request)) {
+    return NextResponse.json({ ok: false, polls: [] }, { status: 403 });
+  }
+
+  if (exceedsRequestSize(request, 4_000)) {
+    return NextResponse.json({ ok: false, polls: [] }, { status: 413 });
+  }
+
+  const limiter = await checkRateLimit({
+    key: `search-suggestions:${readClientIp(request)}`,
+    limit: 120,
+    windowMs: 10 * 60 * 1000
+  });
+  if (!limiter.allowed) {
+    return NextResponse.json({ ok: false, polls: [] }, { status: 429 });
+  }
+
   let payload: RequestPayload | null = null;
   try {
     payload = (await request.json()) as RequestPayload;
@@ -97,7 +135,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, polls: [] }, { status: 400 });
   }
 
-  const q = String(payload?.q ?? "").trim();
+  const q = String(payload?.q ?? "")
+    .trim()
+    .slice(0, 120);
 
   const supabase = await createClient();
   const { data: pollRowsData, error: pollError } = await supabase
@@ -108,12 +148,12 @@ export async function POST(request: Request) {
     .limit(300);
 
   if (pollError) {
-    return NextResponse.json({ ok: true, polls: buildFallbackSuggestions(q) });
+    return NextResponse.json({ ok: true, polls: shouldUseMockFallback() ? buildFallbackSuggestions(q) : [] });
   }
 
   const pollRows = (pollRowsData ?? []) as PollRow[];
   if (pollRows.length === 0) {
-    return NextResponse.json({ ok: true, polls: buildFallbackSuggestions(q) });
+    return NextResponse.json({ ok: true, polls: shouldUseMockFallback() ? buildFallbackSuggestions(q) : [] });
   }
 
   const pollIds = pollRows.map((item) => item.id);
@@ -127,7 +167,7 @@ export async function POST(request: Request) {
       .gte("changed_at", nowMinusDays(1))
   ]);
   if (optionRowsResult.error || totalsResult.error || velocityResult.error) {
-    return NextResponse.json({ ok: true, polls: buildFallbackSuggestions(q) });
+    return NextResponse.json({ ok: true, polls: shouldUseMockFallback() ? buildFallbackSuggestions(q) : [] });
   }
 
   const optionRows = ((optionRowsResult.data ?? []) as PollOptionRow[]).filter((item) => item.poll_id && item.label);

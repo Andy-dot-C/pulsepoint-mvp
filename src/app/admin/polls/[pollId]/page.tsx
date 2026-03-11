@@ -8,6 +8,7 @@ import {
 } from "@/app/actions/reports";
 import { categories } from "@/lib/mock-data";
 import { REPORT_REASONS } from "@/lib/report-reasons";
+import { OPTION_MAX_LENGTH, SUMMARY_MAX_LENGTH, TITLE_MAX_LENGTH } from "@/lib/submissions";
 import { createClient } from "@/lib/supabase/server";
 
 type PollEditorPageProps = {
@@ -260,7 +261,7 @@ export default async function PollEditorPage({ params, searchParams }: PollEdito
 
             <label>
               Title
-              <input name="title" defaultValue={poll.title} required />
+              <input name="title" defaultValue={poll.title} maxLength={TITLE_MAX_LENGTH} required />
             </label>
 
             <label>
@@ -276,13 +277,25 @@ export default async function PollEditorPage({ params, searchParams }: PollEdito
 
             <label>
               Summary
-              <textarea name="summary" rows={4} defaultValue={poll.blurb || poll.description} required />
+              <textarea
+                name="summary"
+                rows={4}
+                defaultValue={poll.blurb || poll.description}
+                maxLength={SUMMARY_MAX_LENGTH}
+                required
+              />
             </label>
 
             <div className="submit-options">
               <p>Options (2-10)</p>
               {optionLabels.map((label, idx) => (
-                <input key={`${poll.id}-option-${idx}`} name="options" defaultValue={label} required />
+                <input
+                  key={`${poll.id}-option-${idx}`}
+                  name="options"
+                  defaultValue={label}
+                  maxLength={OPTION_MAX_LENGTH}
+                  required
+                />
               ))}
             </div>
 

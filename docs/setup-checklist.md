@@ -27,6 +27,8 @@
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
   - `SUPABASE_SERVICE_ROLE_KEY` (server use only)
+  - `UPSTASH_REDIS_REST_URL` (recommended for production rate limiting)
+  - `UPSTASH_REDIS_REST_TOKEN` (recommended for production rate limiting)
 - Never expose service role key to client components.
 
 ## 4) Local run
@@ -44,6 +46,7 @@
 - Import project in Vercel.
 - Add env vars in Vercel project settings.
 - Deploy and verify auth redirects and API routes.
+- For production, set Upstash Redis env vars to avoid weak in-memory rate-limit fallback.
 
 ## 6) Pre-launch QA
 - Test vote change before and after poll close.
