@@ -13,6 +13,7 @@ import {
   getPollOptionFillColor,
   getPollOptionLineColor
 } from "@/lib/poll-colors";
+import { pollIconImageUrl } from "@/lib/poll-image";
 
 type PollCardProps = {
   poll: Poll;
@@ -22,10 +23,6 @@ type PollCardProps = {
 function percent(votes: number, total: number): string {
   if (total === 0) return "0%";
   return `${Math.round((votes / total) * 100)}%`;
-}
-
-function pollIconImageUrl(seed: string): string {
-  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/96/96`;
 }
 
 function normalizeBinaryLabel(value: string): string {
@@ -105,7 +102,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
       <PollImpressionTracker pollId={poll.id} />
       <div className="poll-title-row">
         <span className="poll-icon-badge" aria-hidden="true">
-          <img src={pollIconImageUrl(poll.id)} alt="" loading="lazy" decoding="async" />
+          <img src={pollIconImageUrl(poll)} alt="" loading="lazy" decoding="async" />
         </span>
         <h2>
           <Link href={pollHref}>{poll.title}</Link>

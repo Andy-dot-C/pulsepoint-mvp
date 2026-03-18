@@ -8,6 +8,7 @@ type PollResultsGraphProps = {
   activeVariant: PollGraphVariant;
   activeTimeframe: PollGraphTimeframe;
   data: PollChartData;
+  suppressOptionBreakdown?: boolean;
 };
 
 const DOT_GRID_ROWS = 5;
@@ -27,7 +28,14 @@ function buildGraphHref(
   return `/polls/${pollSlug}?comments=${commentSort}&graph=${variant}&time=${timeframe}`;
 }
 
-export function PollResultsGraph({ pollSlug, commentSort, activeVariant, activeTimeframe, data }: PollResultsGraphProps) {
+export function PollResultsGraph({
+  pollSlug,
+  commentSort,
+  activeVariant,
+  activeTimeframe,
+  data,
+  suppressOptionBreakdown = false
+}: PollResultsGraphProps) {
   const selectedTimeframe = data.timeframes.find((timeframe) => timeframe.id === activeTimeframe) ?? data.timeframes.at(-1);
   const selectedTimeframeOptions = selectedTimeframe?.options ?? data.options;
   const selectedTimeframeVotes = selectedTimeframe?.totalVotes ?? data.totalVotes;
@@ -143,15 +151,17 @@ export function PollResultsGraph({ pollSlug, commentSort, activeVariant, activeT
               <p>{formatVoteLabel(selectedTimeframeVotes)}</p>
             </div>
           </div>
-          <div className="results-graph-legend">
-            {selectedTimeframeOptions.map((option) => (
-              <p key={option.id} className="results-graph-legend-item">
-                <span className="results-graph-legend-dot" style={{ backgroundColor: option.color }} aria-hidden="true" />
-                <span>{option.label}</span>
-                <strong>{formatPercent(option.percent)}</strong>
-              </p>
-            ))}
-          </div>
+          {!suppressOptionBreakdown ? (
+            <div className="results-graph-legend">
+              {selectedTimeframeOptions.map((option) => (
+                <p key={option.id} className="results-graph-legend-item">
+                  <span className="results-graph-legend-dot" style={{ backgroundColor: option.color }} aria-hidden="true" />
+                  <span>{option.label}</span>
+                  <strong>{formatPercent(option.percent)}</strong>
+                </p>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : activeVariant === "dot-grid" ? (
         <div className="results-graph-dot-wrap">
@@ -170,15 +180,17 @@ export function PollResultsGraph({ pollSlug, commentSort, activeVariant, activeT
               )
             )}
           </div>
-          <div className="results-graph-legend">
-            {selectedTimeframeOptions.map((option) => (
-              <p key={option.id} className="results-graph-legend-item">
-                <span className="results-graph-legend-dot" style={{ backgroundColor: option.color }} aria-hidden="true" />
-                <span>{option.label}</span>
-                <strong>{formatPercent(option.percent)}</strong>
-              </p>
-            ))}
-          </div>
+          {!suppressOptionBreakdown ? (
+            <div className="results-graph-legend">
+              {selectedTimeframeOptions.map((option) => (
+                <p key={option.id} className="results-graph-legend-item">
+                  <span className="results-graph-legend-dot" style={{ backgroundColor: option.color }} aria-hidden="true" />
+                  <span>{option.label}</span>
+                  <strong>{formatPercent(option.percent)}</strong>
+                </p>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : activeVariant === "trend-line" ? (
         <div className="results-graph-line-wrap">
@@ -239,14 +251,16 @@ export function PollResultsGraph({ pollSlug, commentSort, activeVariant, activeT
                 );
               })}
           </svg>
-          <div className="results-graph-trend-legend">
-            {data.options.map((option) => (
-              <p key={option.id} className="results-graph-trend-legend-item">
-                <span className="results-graph-legend-dot" style={{ backgroundColor: option.color }} aria-hidden="true" />
-                <span>{option.label}</span>
-              </p>
-            ))}
-          </div>
+          {!suppressOptionBreakdown ? (
+            <div className="results-graph-trend-legend">
+              {data.options.map((option) => (
+                <p key={option.id} className="results-graph-trend-legend-item">
+                  <span className="results-graph-legend-dot" style={{ backgroundColor: option.color }} aria-hidden="true" />
+                  <span>{option.label}</span>
+                </p>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : activeVariant === "trend-stack" ? (
         <div className="results-graph-trend">
@@ -268,37 +282,60 @@ export function PollResultsGraph({ pollSlug, commentSort, activeVariant, activeT
               </div>
             </div>
           ))}
-          <div className="results-graph-trend-legend">
-            {data.options.map((option) => (
-              <p key={option.id} className="results-graph-trend-legend-item">
-                <span className="results-graph-legend-dot" style={{ backgroundColor: option.color }} aria-hidden="true" />
-                <span>{option.label}</span>
-              </p>
-            ))}
-          </div>
+          {!suppressOptionBreakdown ? (
+            <div className="results-graph-trend-legend">
+              {data.options.map((option) => (
+                <p key={option.id} className="results-graph-trend-legend-item">
+                  <span className="results-graph-legend-dot" style={{ backgroundColor: option.color }} aria-hidden="true" />
+                  <span>{option.label}</span>
+                </p>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : (
-        <div className="results-graph-bars">
-          {selectedTimeframeOptions.map((option) => (
-            <div key={option.id} className="results-graph-bar-row">
-              <div className="results-graph-bar-top">
-                <p>{option.label}</p>
-                <p>
-                  <strong>{formatPercent(option.percent)}</strong> · {option.votes.toLocaleString()} votes
-                </p>
+        suppressOptionBreakdown ? (
+          <div className="results-graph-bars">
+            {selectedTimeframeOptions.map((option) => (
+              <div key={option.id} className="results-graph-bar-row">
+                <div className="results-graph-bar-top">
+                  <p>{formatPercent(option.percent)}</p>
+                </div>
+                <div className="results-graph-bar-track" aria-hidden="true">
+                  <span
+                    className="results-graph-bar-fill"
+                    style={{
+                      width: `${Math.max(option.percent, 2)}%`,
+                      backgroundColor: option.color
+                    }}
+                  />
+                </div>
               </div>
-              <div className="results-graph-bar-track" aria-hidden="true">
-                <span
-                  className="results-graph-bar-fill"
-                  style={{
-                    width: `${Math.max(option.percent, 2)}%`,
-                    backgroundColor: option.color
-                  }}
-                />
+            ))}
+          </div>
+        ) : (
+          <div className="results-graph-bars">
+            {selectedTimeframeOptions.map((option) => (
+              <div key={option.id} className="results-graph-bar-row">
+                <div className="results-graph-bar-top">
+                  <p>{option.label}</p>
+                  <p>
+                    <strong>{formatPercent(option.percent)}</strong> · {option.votes.toLocaleString()} votes
+                  </p>
+                </div>
+                <div className="results-graph-bar-track" aria-hidden="true">
+                  <span
+                    className="results-graph-bar-fill"
+                    style={{
+                      width: `${Math.max(option.percent, 2)}%`,
+                      backgroundColor: option.color
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )
       )}
       {activeVariant === "donut" || activeVariant === "horizontal-bars" || activeVariant === "dot-grid" || activeVariant === "trend-line" ? (
         <div className="results-graph-time-switch" aria-label="Results timeframe">

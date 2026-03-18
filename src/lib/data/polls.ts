@@ -628,6 +628,9 @@ export async function fetchPollBySlug(slug: string): Promise<Poll | null> {
     return null;
   }
 
+  // Detail pages should prefer richer context text when available.
+  hydrated.summary = (row as PollRow).description || (row as PollRow).blurb || hydrated.summary;
+
   hydrated.trend = buildTrendPoints(
     hydrated.options,
     events,

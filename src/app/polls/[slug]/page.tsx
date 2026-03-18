@@ -12,7 +12,6 @@ import { fetchPollBySlug } from "@/lib/data/polls";
 import { fetchPollMetaBySlug } from "@/lib/data/polls";
 import { fetchPollComments, resolveCommentSort } from "@/lib/data/comments";
 import { buildFeedHref } from "@/lib/feed-query";
-import { formatTotalVoteLabel } from "@/lib/format-votes";
 import { getPollStatus } from "@/lib/poll-status";
 import { getPollOptionFillColor } from "@/lib/poll-colors";
 import { buildPollChartData, parsePollGraphTimeframe, parsePollGraphVariant } from "@/lib/poll-chart-data";
@@ -102,7 +101,6 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
   const comments = await fetchPollComments(poll.id, commentSort, user?.id ?? null);
 
   const chartData = buildPollChartData(poll);
-  const total = chartData.totalVotes;
   const status = getPollStatus(poll.endsAt);
   const rankedOptions = chartData.options;
   const createdLabel = formatDetailDate(poll.createdAt);
@@ -144,46 +142,40 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
           <h1>{poll.title}</h1>
           <p className="detail-description">{poll.summary}</p>
           {bookmarkError ? <p className="auth-error">{bookmarkError}</p> : null}
-          <div className="detail-stat-row" aria-label="Poll quick stats">
-            <p className="detail-stat-pill">{formatTotalVoteLabel(total)}</p>
-            <Link className="detail-stat-pill detail-stat-link" href="#comments">
-              {poll.commentCount} comments
-            </Link>
-            <p className="detail-stat-pill">Created {createdLabel}</p>
-            <p className="detail-stat-pill">Ends {endsLabel}</p>
-            <p className="detail-stat-pill">Status: {statusLabel}</p>
-          </div>
         </section>
 
         <section className="detail-results-vote-section">
-          <PollResultsGraph
-            pollSlug={poll.slug}
-            commentSort={commentSort}
-            activeVariant={graphVariant}
-            activeTimeframe={graphTimeframe}
-            data={chartData}
-          />
-
-          <div className="detail-vote-section">
-            <h2>Vote</h2>
-            <div className="option-list">
-              {rankedOptions.map((option, optionIndex) => (
-                <VoteOptionForm
-                  key={option.id}
-                  pollId={poll.id}
-                  optionId={option.id}
-                  returnTo={returnTo}
-                  label={option.label}
-                  rightText={`${Math.round(option.percent)}%`}
-                  percent={option.percent}
-                  fillColor={getPollOptionFillColor(poll.id, optionIndex)}
-                  selected={poll.viewerVoteOptionId === option.id}
-                  disabled={status.isClosed}
-                />
-              ))}
+          <div className="detail-results-main">
+            <div className="detail-results-left">
+              <div className="option-list">
+                {rankedOptions.map((option, optionIndex) => (
+                  <VoteOptionForm
+                    key={option.id}
+                    pollId={poll.id}
+                    optionId={option.id}
+                    returnTo={returnTo}
+                    label={option.label}
+                    rightText={`${Math.round(option.percent)}%`}
+                    percent={option.percent}
+                    fillColor={getPollOptionFillColor(poll.id, optionIndex)}
+                    selected={poll.viewerVoteOptionId === option.id}
+                    disabled={status.isClosed}
+                  />
+                ))}
+              </div>
             </div>
-            {status.isClosed ? <p className="poll-blurb">This poll is closed. Voting is disabled.</p> : null}
+            <div className="detail-results-right">
+              <PollResultsGraph
+                pollSlug={poll.slug}
+                commentSort={commentSort}
+                activeVariant={graphVariant}
+                activeTimeframe={graphTimeframe}
+                data={chartData}
+                suppressOptionBreakdown
+              />
+            </div>
           </div>
+          {status.isClosed ? <p className="poll-blurb">This poll is closed. Voting is disabled.</p> : null}
         </section>
 
         <PollComments
@@ -207,6 +199,10 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
           <div>
             <h3>Ends</h3>
             <p>{endsLabel}</p>
+          </div>
+          <div>
+            <h3>Status</h3>
+            <p>{statusLabel}</p>
           </div>
         </section>
 

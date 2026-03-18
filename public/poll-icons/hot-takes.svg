@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Hot Takes">
+  <rect width="96" height="96" rx="14" fill="#eef2f7"/>
+  <path d="M32 72c0-12 8-18 8-25 0-5-3-8-3-13 10 5 18 13 18 25 0 8-5 13-5 13h6c5-3 8-8 8-16 0-12-8-20-8-29 7 3 16 11 19 23 3 14-4 25-13 30H32Z" fill="#f97316"/>
+  <path d="M45 72c0-8 6-11 6-17 0-4-2-7-2-10 7 4 11 9 11 17 0 5-3 8-3 10H45Z" fill="#fed7aa"/>
+</svg>

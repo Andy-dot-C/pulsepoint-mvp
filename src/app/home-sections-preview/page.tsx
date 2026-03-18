@@ -91,8 +91,6 @@ export default async function HomeSectionsPreview({ searchParams }: HomePageProp
   const feed = await fetchFeed({ tab: feedInput.tab, category: feedInput.category, q: searchQuery });
 
   const featuredPolls = feed.slice(0, 6);
-  const twoOptionFeaturedPoll = feed.find((poll) => poll.options.length === 2) ?? featuredPolls[0] ?? null;
-  const multiOptionFeaturedPoll = feed.find((poll) => poll.options.length > 2) ?? twoOptionFeaturedPoll ?? featuredPolls[0] ?? null;
   const gridPolls = feed.slice(featuredPolls.length);
 
   const cardsPerSection = 6; // 3 across x 2 rows
@@ -116,12 +114,10 @@ export default async function HomeSectionsPreview({ searchParams }: HomePageProp
           {featuredPolls.length > 0 ? (
             <FeaturedPollCarousel>
               {featuredPolls.map((poll, index) => {
-                const twoOptionPoll = twoOptionFeaturedPoll ?? poll;
-                const threeOptionPoll = multiOptionFeaturedPoll ?? poll;
                 return index === 0 ? (
                   <FigmaHeroPreviewCard
                     key={poll.id}
-                    poll={twoOptionPoll}
+                    poll={poll}
                     returnTo={returnTo}
                     showStaticCarouselControls={false}
                     maxOptions={2}
@@ -132,7 +128,7 @@ export default async function HomeSectionsPreview({ searchParams }: HomePageProp
                 ) : index === 1 ? (
                   <FigmaHeroPreviewCard
                     key={`${poll.id}-donut-preview`}
-                    poll={twoOptionPoll}
+                    poll={poll}
                     returnTo={returnTo}
                     showStaticCarouselControls={false}
                     maxOptions={2}
@@ -144,7 +140,7 @@ export default async function HomeSectionsPreview({ searchParams }: HomePageProp
                 ) : index === 2 ? (
                   <FigmaHeroPreviewCard
                     key={`${poll.id}-dot-grid-preview`}
-                    poll={twoOptionPoll}
+                    poll={poll}
                     returnTo={returnTo}
                     showStaticCarouselControls={false}
                     maxOptions={2}
@@ -156,7 +152,7 @@ export default async function HomeSectionsPreview({ searchParams }: HomePageProp
                 ) : index === 3 ? (
                   <FigmaHeroPreviewCard
                     key={`${poll.id}-three-option-preview`}
-                    poll={threeOptionPoll}
+                    poll={poll}
                     returnTo={returnTo}
                     showStaticCarouselControls={false}
                     maxOptions={3}
@@ -167,7 +163,7 @@ export default async function HomeSectionsPreview({ searchParams }: HomePageProp
                 ) : index === 4 ? (
                   <FigmaHeroPreviewCard
                     key={`${poll.id}-donut-three-option-preview`}
-                    poll={threeOptionPoll}
+                    poll={poll}
                     returnTo={returnTo}
                     showStaticCarouselControls={false}
                     maxOptions={3}
@@ -179,7 +175,7 @@ export default async function HomeSectionsPreview({ searchParams }: HomePageProp
                 ) : (
                   <FigmaHeroPreviewCard
                     key={`${poll.id}-dot-grid-three-option-preview`}
-                    poll={threeOptionPoll}
+                    poll={poll}
                     returnTo={returnTo}
                     showStaticCarouselControls={false}
                     maxOptions={3}

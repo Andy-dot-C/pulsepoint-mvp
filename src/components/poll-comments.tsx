@@ -36,6 +36,30 @@ export function PollComments({
   const returnTo = `/polls/${pollSlug}?comments=${sort}${graphQuery}${timeframeQuery}#comments`;
   const signInHref = `/auth?next=${encodeURIComponent(returnTo)}`;
 
+  function avatarText(username: string): string {
+    const clean = username.trim();
+    if (!clean) return "?";
+    const parts = clean.split(/[\s._-]+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
+    }
+    return (clean[0] ?? "?").toUpperCase();
+  }
+
+  function avatarStyle(username: string): { backgroundColor: string; borderColor: string; color: string } {
+    const seed = username.trim().toLowerCase();
+    let hash = 0;
+    for (let index = 0; index < seed.length; index += 1) {
+      hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+    }
+    const hue = hash % 360;
+    return {
+      backgroundColor: `hsl(${hue} 78% 88%)`,
+      borderColor: `hsl(${hue} 48% 72%)`,
+      color: `hsl(${hue} 42% 24%)`
+    };
+  }
+
   return (
     <section className="comments-panel" id="comments">
       <div className="comments-head">
@@ -89,7 +113,12 @@ export function PollComments({
           comments.map((comment) => (
             <article key={comment.id} className="comment-card">
               <div className="comment-meta">
-                <p className="eyebrow">{comment.username}</p>
+                <div className="comment-author">
+                  <span className="comment-avatar" style={avatarStyle(comment.username)} aria-hidden="true">
+                    {avatarText(comment.username)}
+                  </span>
+                  <p className="comment-username">{comment.username}</p>
+                </div>
                 <p className="poll-blurb">{new Date(comment.createdAt).toLocaleString()}</p>
               </div>
               <p className="detail-description">{comment.body}</p>
@@ -99,15 +128,30 @@ export function PollComments({
                   <input type="hidden" name="commentId" value={comment.id} />
                   <input type="hidden" name="intent" value={comment.viewerHasUpvoted ? "remove" : "upvote"} />
                   <input type="hidden" name="returnTo" value={returnTo} />
-                  <button className={`comment-vote-btn ${comment.viewerHasUpvoted ? "comment-vote-btn-active" : ""}`} type="submit">
-                    ▲ {comment.upvotes}
+                  <button
+                    className={`comment-vote-btn ${comment.viewerHasUpvoted ? "comment-vote-btn-active" : ""}`}
+                    type="submit"
+                    aria-label={comment.viewerHasUpvoted ? "Remove upvote" : "Upvote comment"}
+                  >
+                    <span className="comment-vote-arrow" aria-hidden="true">
+                      {comment.viewerHasUpvoted ? (
+                        <svg className="comment-vote-icon comment-vote-icon-filled" viewBox="0 0 24 24" focusable="false">
+                          <path d="M12 5 4.5 18h15L12 5Z" />
+                        </svg>
+                      ) : (
+                        <svg className="comment-vote-icon comment-vote-icon-outline" viewBox="0 0 24 24" focusable="false">
+                          <path d="M12 5 4.5 18h15L12 5Z" />
+                        </svg>
+                      )}
+                    </span>
+                    <span className="comment-vote-count">{comment.upvotes}</span>
                   </button>
                 </form>
                 {isAdmin ? (
                   <form action={deleteCommentByAdminAction}>
                     <input type="hidden" name="commentId" value={comment.id} />
                     <input type="hidden" name="returnTo" value={returnTo} />
-                    <button className="ghost-btn" type="submit">
+                    <button className="ghost-btn comment-delete-btn" type="submit">
                       Delete
                     </button>
                   </form>

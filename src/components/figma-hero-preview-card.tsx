@@ -134,6 +134,17 @@ export function FigmaHeroPreviewCard({
     return cells;
   })();
 
+  function resolveTitleSize(title: string): string {
+    const length = title.trim().length;
+    if (length >= 120) return "0.74rem";
+    if (length >= 108) return "0.78rem";
+    if (length >= 96) return "0.82rem";
+    if (length >= 84) return "0.88rem";
+    if (length >= 72) return "0.96rem";
+    if (length >= 62) return "1.04rem";
+    return "1.176rem";
+  }
+
   return (
     <PollCardShell
       href={pollHref}
@@ -154,7 +165,11 @@ export function FigmaHeroPreviewCard({
         ) : null}
       </div>
 
-      <h2 className="figma-hero-preview-title" data-dev-target="title">
+      <h2
+        className="figma-hero-preview-title"
+        data-dev-target="title"
+        style={{ "--hero-title-size": resolveTitleSize(poll.title) } as CSSProperties}
+      >
         <Link href={pollHref}>{poll.title}</Link>
       </h2>
 
