@@ -101,6 +101,8 @@ export default async function Home({ searchParams }: HomePageProps) {
   });
   const featuredPolls = feed.slice(0, 6);
   const gridPolls = feed.slice(featuredPolls.length);
+  const isTrendingHome =
+    feedInput.tab === "trending" && feedInput.category === "all" && normalizedFilter === "trending";
   const sectionTitles = ["Trending Now", "Top Movers", "New"] as const;
   const cardsPerSection = 6; // 3 across x 2 down
   const maxSections = 3;
@@ -209,18 +211,28 @@ export default async function Home({ searchParams }: HomePageProps) {
             </FeaturedPollCarousel>
           ) : null}
 
-          <div className="home-sections-preview">
-            {sectionData.map((section, index) => (
-              <section key={`${section.title}-${index}`} className="home-sections-preview-block">
-                <h2 className="home-sections-preview-title">{section.title}</h2>
-                <div className="feed-cards-grid feed-cards-grid-3">
-                  {section.polls.map((poll) => (
-                    <PollCard key={poll.id} poll={poll} returnTo={returnTo} />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
+          {isTrendingHome ? (
+            <div className="home-sections-preview">
+              <div className="feed-cards-grid feed-cards-grid-3">
+                {gridPolls.map((poll) => (
+                  <PollCard key={poll.id} poll={poll} returnTo={returnTo} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="home-sections-preview">
+              {sectionData.map((section, index) => (
+                <section key={`${section.title}-${index}`} className="home-sections-preview-block">
+                  <h2 className="home-sections-preview-title">{section.title}</h2>
+                  <div className="feed-cards-grid feed-cards-grid-3">
+                    {section.polls.map((poll) => (
+                      <PollCard key={poll.id} poll={poll} returnTo={returnTo} />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
         </div>
         <FeedRail polls={feed} />
       </section>

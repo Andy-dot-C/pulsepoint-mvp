@@ -56,6 +56,7 @@ export function FigmaHeroPreviewCard({
   const ranked = [...poll.options]
     .sort((left, right) => right.votes - left.votes || left.label.localeCompare(right.label))
     .slice(0, Math.max(1, resolvedMaxOptions));
+  const hiddenOptionCount = Math.max(0, poll.options.length - ranked.length);
   const pollHref = `/polls/${poll.slug}`;
   const status = getPollStatus(poll.endsAt);
   const chartPalette = ["#3b82f6", "#22c55e", "#f59e0b"];
@@ -149,7 +150,7 @@ export function FigmaHeroPreviewCard({
     <PollCardShell
       href={pollHref}
       ariaLabel={`Open featured poll: ${poll.title}`}
-      className={`featured-poll-card figma-hero-preview-card${ranked.length >= 3 ? " figma-hero-preview-has-3-options" : ""}${className ? ` ${className}` : ""}`}
+      className={`featured-poll-card figma-hero-preview-card${ranked.length >= 3 ? " figma-hero-preview-has-3-options" : ""}${hiddenOptionCount > 0 ? " figma-hero-preview-show-more-options" : ""}${className ? ` ${className}` : ""}`}
       style={style}
     >
       <div className="figma-hero-preview-topbar" data-dev-target="topbar">
@@ -198,7 +199,11 @@ export function FigmaHeroPreviewCard({
               </div>
             );
           })}
-
+          {hiddenOptionCount > 0 ? (
+            <p className="figma-hero-preview-more-options">
+              <Link href={pollHref}>+{hiddenOptionCount} more options</Link>
+            </p>
+          ) : null}
         </div>
 
         <div className="figma-hero-preview-chart" data-dev-target="chartWrap">
