@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { polls as mockPolls, totalVotes } from "@/lib/mock-data";
+import { polls as mockPolls } from "@/lib/mock-data";
 import {
   CategoryKey,
   FeedTabKey,
@@ -101,8 +101,18 @@ function byTab(tab: FeedTabKey, input: Poll[], velocityByPollId?: Map<string, nu
     return copy.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   }
 
-  if (tab === "most-voted") {
-    return copy.sort((a, b) => totalVotes(b) - totalVotes(a));
+  if (tab === "breaking") {
+    return copy.sort((a, b) => {
+      const aVelocity = velocityByPollId?.get(a.id) ?? 0;
+      const bVelocity = velocityByPollId?.get(b.id) ?? 0;
+      if (bVelocity !== aVelocity) return bVelocity - aVelocity;
+
+      const aRecent = a.trend.find((item) => item.label === "24h")?.totalVotes ?? 0;
+      const bRecent = b.trend.find((item) => item.label === "24h")?.totalVotes ?? 0;
+      if (bRecent !== aRecent) return bRecent - aRecent;
+
+      return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+    });
   }
 
   return copy.sort((a, b) => {

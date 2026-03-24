@@ -2,10 +2,10 @@ export type CategoryKey =
   | "politics"
   | "sport"
   | "entertainment"
-  | "culture"
-  | "hot-takes";
+  | "business"
+  | "technology";
 
-export type FeedTabKey = "trending" | "new" | "most-voted" | "saved";
+export type FeedTabKey = "trending" | "breaking" | "new" | "saved";
 export type FeedFilterKey = FeedTabKey | CategoryKey | "all";
 
 export type PollOption = {

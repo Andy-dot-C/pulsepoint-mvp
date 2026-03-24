@@ -11,16 +11,19 @@ type GlobalSiteHeaderProps = {
 };
 
 function resolveFilter(value: string | null): FeedFilterKey {
+  if (value === "most-voted") {
+    return "breaking";
+  }
   if (
     value === "trending" ||
+    value === "breaking" ||
     value === "new" ||
-    value === "most-voted" ||
     value === "saved" ||
     value === "politics" ||
     value === "sport" ||
     value === "entertainment" ||
-    value === "culture" ||
-    value === "hot-takes"
+    value === "business" ||
+    value === "technology"
   ) {
     return value;
   }

@@ -10,8 +10,8 @@ export const VALID_CATEGORIES: CategoryKey[] = [
   "politics",
   "sport",
   "entertainment",
-  "culture",
-  "hot-takes"
+  "business",
+  "technology"
 ];
 
 export function normalizeOption(value: string): string {

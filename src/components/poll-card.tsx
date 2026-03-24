@@ -64,6 +64,16 @@ function formatCompactCount(value: number): string {
   return `${rounded}`;
 }
 
+function shouldUseCompactThreeLineTitle(title: string): boolean {
+  const normalized = title.trim().replace(/\s+/g, " ");
+  const maxWordLength = normalized
+    .split(" ")
+    .reduce((max, word) => Math.max(max, word.length), 0);
+
+  // Heuristic: long copy or long words likely force a third line in feed cards.
+  return normalized.length >= 56 || maxWordLength >= 13;
+}
+
 export function PollCard({ poll, returnTo }: PollCardProps) {
   const total = totalVotes(poll);
   const status = getPollStatus(poll.endsAt);
@@ -92,6 +102,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
   const leftSplit =
     displayTotal === 0 ? 50 : Math.round((leftVotes / Math.max(displayTotal, 1)) * 100);
   const rightSplit = Math.max(0, 100 - leftSplit);
+  const compactThreeLineTitle = shouldUseCompactThreeLineTitle(poll.title);
 
   return (
     <PollCardShell
@@ -104,7 +115,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
         <span className="poll-icon-badge" aria-hidden="true">
           <img src={pollIconImageUrl(poll)} alt="" loading="lazy" decoding="async" />
         </span>
-        <h2>
+        <h2 className={compactThreeLineTitle ? "poll-title-compact-3" : undefined}>
           <Link href={pollHref}>{poll.title}</Link>
         </h2>
       </div>

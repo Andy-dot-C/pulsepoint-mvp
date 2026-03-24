@@ -152,7 +152,24 @@ function mapDraftItem(row: unknown): PipelineDraftItem | null {
     record.source_evidence && typeof record.source_evidence === "object" && !Array.isArray(record.source_evidence)
       ? (record.source_evidence as Record<string, unknown>)
       : null;
-  const evidenceSources = Array.isArray(sourceEvidenceRaw?.sources) ? sourceEvidenceRaw.sources : [];
+  const evidenceSourcesRaw = Array.isArray(sourceEvidenceRaw?.sources) ? sourceEvidenceRaw.sources : [];
+  const evidenceSources: PipelineEvidenceSource[] = evidenceSourcesRaw.flatMap((source) => {
+    if (!source || typeof source !== "object" || Array.isArray(source)) return [];
+    const sourceRecord = source as Record<string, unknown>;
+    const title = cleanText(sourceRecord.title);
+    if (!title) return [];
+    return [
+      {
+        title,
+        source_type: cleanText(sourceRecord.source_type) ?? null,
+        feed_name: cleanText(sourceRecord.feed_name) ?? null,
+        domain: cleanText(sourceRecord.domain) ?? null,
+        url: cleanText(sourceRecord.url) ?? null,
+        published_at: cleanText(sourceRecord.published_at) ?? null,
+        collected_at: cleanText(sourceRecord.collected_at) ?? null,
+      },
+    ];
+  });
 
   return {
     id,
@@ -207,23 +224,7 @@ function mapDraftItem(row: unknown): PipelineDraftItem | null {
           first_seen_at: cleanText(sourceEvidenceRaw.first_seen_at) ?? null,
           last_seen_at: cleanText(sourceEvidenceRaw.last_seen_at) ?? null,
           latest_source_at: cleanText(sourceEvidenceRaw.latest_source_at) ?? null,
-          sources: evidenceSources
-            .map((source) => {
-              if (!source || typeof source !== "object" || Array.isArray(source)) return null;
-              const sourceRecord = source as Record<string, unknown>;
-              const title = cleanText(sourceRecord.title);
-              if (!title) return null;
-              return {
-                title,
-                source_type: cleanText(sourceRecord.source_type) ?? null,
-                feed_name: cleanText(sourceRecord.feed_name) ?? null,
-                domain: cleanText(sourceRecord.domain) ?? null,
-                url: cleanText(sourceRecord.url) ?? null,
-                published_at: cleanText(sourceRecord.published_at) ?? null,
-                collected_at: cleanText(sourceRecord.collected_at) ?? null,
-              };
-            })
-            .filter((source): source is PipelineEvidenceSource => source !== null),
+          sources: evidenceSources,
         }
       : null,
   };

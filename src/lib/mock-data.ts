@@ -4,14 +4,14 @@ export const categories: Category[] = [
   { key: "politics", label: "Politics" },
   { key: "sport", label: "Sport" },
   { key: "entertainment", label: "Entertainment" },
-  { key: "culture", label: "Culture" },
-  { key: "hot-takes", label: "Hot Takes" }
+  { key: "business", label: "Business" },
+  { key: "technology", label: "Technology" }
 ];
 
 export const feedTabs: FeedTab[] = [
   { key: "trending", label: "Trending" },
+  { key: "breaking", label: "Breaking" },
   { key: "new", label: "New" },
-  { key: "most-voted", label: "Most Voted" }
 ];
 
 export const polls: Poll[] = [

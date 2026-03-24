@@ -179,10 +179,10 @@ h3 {
 }
 
 .create-btn {
-  background: var(--accent);
+  background: #1651ef;
   color: white;
   border-radius: var(--control-radius);
-  border: 1px solid #2563eb;
+  border: 1px solid #1247d1;
   height: var(--control-height);
   padding: 0 16px;
   font-weight: 700;
@@ -193,7 +193,7 @@ h3 {
 }
 
 .create-btn:hover {
-  background: #2563eb;
+  background: #1247d1;
   transform: translateY(-1px);
 }
 
@@ -527,6 +527,16 @@ h3 {
   -webkit-line-clamp: 2;
   overflow: hidden;
   font-weight: 600;
+}
+
+.feed-cards-grid .poll-card .poll-title-row h2.poll-title-compact-3,
+.feed-cards-grid .poll-card .poll-title-row h2.poll-title-compact-3 a {
+  display: block;
+  font-size: 14.5px;
+  line-height: 1.08;
+  max-height: 45px;
+  overflow: hidden;
+  text-overflow: unset;
 }
 
 .feed-cards-grid .poll-card .option-list {

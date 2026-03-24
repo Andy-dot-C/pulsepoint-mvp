@@ -42,15 +42,15 @@ const MOCK_POLLS: MockPoll[] = [
   },
   {
     title: "Who is your favorite movie director?",
-    category: "culture",
+    category: "entertainment",
     votes30d: 2700,
     options: ["Christopher Nolan", "Greta Gerwig", "Steven Spielberg", "Denis Villeneuve"]
   }
 ];
 
-const CATEGORY_SUGGESTIONS = ["Politics", "Sport", "Entertainment", "Culture", "Hot Takes"];
+const CATEGORY_SUGGESTIONS = ["Politics", "Sport", "Entertainment", "Business", "Technology"];
 const FALLBACK_POLLS = [...MOCK_POLLS].sort((a, b) => b.votes30d - a.votes30d).slice(0, 6);
-const FALLBACK_CATEGORIES = ["Politics", "Sport", "Entertainment", "Culture", "Hot Takes"];
+const FALLBACK_CATEGORIES = ["Politics", "Sport", "Entertainment", "Business", "Technology"];
 const MIN_SUGGESTIONS = 5;
 
 function scoreMatch(query: string, title: string): number {

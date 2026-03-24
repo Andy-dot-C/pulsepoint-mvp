@@ -203,7 +203,7 @@ export function SiteHeader({
 
           <div className="header-actions">
             <a className="create-btn" href="/submit">
-              Create poll
+              Create a Poll
             </a>
             {signedIn ? (
               <div className="user-menu" ref={menuRef}>

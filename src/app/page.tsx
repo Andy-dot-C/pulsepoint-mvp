@@ -19,7 +19,10 @@ function asSingleValue(input: string | string[] | undefined): string | undefined
 }
 
 function resolveTab(value?: string): FeedTabKey {
-  if (value === "new" || value === "most-voted" || value === "trending") {
+  if (value === "most-voted") {
+    return "breaking";
+  }
+  if (value === "breaking" || value === "new" || value === "trending") {
     return value;
   }
   return "trending";
@@ -30,8 +33,8 @@ function resolveCategory(value?: string): CategoryKey | "all" {
     value === "politics" ||
     value === "sport" ||
     value === "entertainment" ||
-    value === "culture" ||
-    value === "hot-takes"
+    value === "business" ||
+    value === "technology"
   ) {
     return value;
   }
@@ -39,15 +42,18 @@ function resolveCategory(value?: string): CategoryKey | "all" {
 }
 
 function resolveFilter(value?: string): FeedFilterKey {
+  if (value === "most-voted") {
+    return "breaking";
+  }
   if (
     value === "trending" ||
+    value === "breaking" ||
     value === "new" ||
-    value === "most-voted" ||
     value === "politics" ||
     value === "sport" ||
     value === "entertainment" ||
-    value === "culture" ||
-    value === "hot-takes"
+    value === "business" ||
+    value === "technology"
   ) {
     return value;
   }
@@ -55,15 +61,15 @@ function resolveFilter(value?: string): FeedFilterKey {
 }
 
 function mapFilterToFeedInput(filter: FeedFilterKey): { tab: FeedTabKey; category: CategoryKey | "all" } {
-  if (filter === "new" || filter === "most-voted" || filter === "trending") {
+  if (filter === "breaking" || filter === "new" || filter === "trending") {
     return { tab: filter, category: "all" };
   }
   if (
     filter === "politics" ||
     filter === "sport" ||
     filter === "entertainment" ||
-    filter === "culture" ||
-    filter === "hot-takes"
+    filter === "business" ||
+    filter === "technology"
   ) {
     return { tab: "trending", category: filter };
   }

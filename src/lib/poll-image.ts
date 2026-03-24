@@ -14,8 +14,6 @@ const LOCAL_ICONS = {
   economy: "/poll-icons/economy.svg",
   sport: "/poll-icons/sport.svg",
   entertainment: "/poll-icons/entertainment.svg",
-  culture: "/poll-icons/culture.svg",
-  hotTakes: "/poll-icons/hot-takes.svg",
   world: "/poll-icons/world.svg"
 } as const;
 
@@ -52,12 +50,8 @@ const PHOTO_RULES: ImageRule[] = [
     imageUrl: LOCAL_ICONS.entertainment
   },
   {
-    keywords: ["social platforms", "like counts", "ai", "political ads", "remote work"],
-    imageUrl: LOCAL_ICONS.hotTakes
-  },
-  {
-    keywords: ["museums", "artefacts", "culture"],
-    imageUrl: LOCAL_ICONS.culture
+    keywords: ["ai", "artificial intelligence", "technology", "tech", "software", "chip", "robot", "cloud", "app"],
+    imageUrl: LOCAL_ICONS.world
   },
   {
     keywords: ["high streets", "cities", "pedestrianise"],
@@ -77,12 +71,15 @@ const PHOTO_RULES: ImageRule[] = [
   }
 ];
 
-const CATEGORY_FALLBACKS: Record<Poll["category"], string> = {
+const CATEGORY_FALLBACKS: Record<string, string> = {
   politics: LOCAL_ICONS.politics,
   sport: LOCAL_ICONS.sport,
   entertainment: LOCAL_ICONS.entertainment,
-  culture: LOCAL_ICONS.culture,
-  "hot-takes": LOCAL_ICONS.hotTakes
+  business: LOCAL_ICONS.economy,
+  technology: LOCAL_ICONS.world,
+  // Legacy categories kept for backward compatibility with older seeded rows.
+  culture: LOCAL_ICONS.world,
+  "hot-takes": LOCAL_ICONS.economy
 };
 
 function matchRule(haystack: string, rules: ImageRule[]): string | null {
@@ -102,6 +99,7 @@ export function pollIconImageUrl(poll: Poll): string {
   return (
     matchRule(haystack, LOGO_RULES) ??
     matchRule(haystack, PHOTO_RULES) ??
-    CATEGORY_FALLBACKS[poll.category]
+    CATEGORY_FALLBACKS[poll.category] ??
+    LOCAL_ICONS.world
   );
 }
