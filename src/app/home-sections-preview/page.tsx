@@ -92,7 +92,12 @@ export default async function HomeSectionsPreview({ searchParams }: HomePageProp
   const returnTo = buildFeedHref({ filter: normalizedFilter, q: searchQuery });
   const feed = await fetchFeed({ tab: feedInput.tab, category: feedInput.category, q: searchQuery });
 
-  const featuredPolls = feed.slice(0, 6);
+  const politicsFeaturedFeed = await fetchFeed({
+    tab: "trending",
+    category: "politics",
+    q: ""
+  });
+  const featuredPolls = politicsFeaturedFeed.length > 0 ? politicsFeaturedFeed.slice(0, 6) : feed.slice(0, 6);
   const gridPolls = feed.slice(featuredPolls.length);
 
   const cardsPerSection = 6; // 3 across x 2 rows
@@ -122,7 +127,7 @@ export default async function HomeSectionsPreview({ searchParams }: HomePageProp
                     poll={poll}
                     returnTo={returnTo}
                     showStaticCarouselControls={false}
-                    maxOptions={2}
+                    maxOptions={3}
                     className="figma-hero-native-card figma-hero-live-fixed"
                     chartOffsetX={-34}
                     chartOffsetY={-50}
@@ -133,7 +138,7 @@ export default async function HomeSectionsPreview({ searchParams }: HomePageProp
                     poll={poll}
                     returnTo={returnTo}
                     showStaticCarouselControls={false}
-                    maxOptions={2}
+                    maxOptions={3}
                     chartVariant="donut"
                     className="figma-hero-native-card figma-hero-live-fixed"
                     chartOffsetX={-34}
@@ -145,7 +150,7 @@ export default async function HomeSectionsPreview({ searchParams }: HomePageProp
                     poll={poll}
                     returnTo={returnTo}
                     showStaticCarouselControls={false}
-                    maxOptions={2}
+                    maxOptions={3}
                     chartVariant="dot-grid"
                     className="figma-hero-native-card figma-hero-live-fixed"
                     chartOffsetX={-34}

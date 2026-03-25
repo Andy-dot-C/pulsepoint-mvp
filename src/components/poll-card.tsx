@@ -112,7 +112,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
     >
       <PollImpressionTracker pollId={poll.id} />
       <div className="poll-title-row">
-        <span className="poll-icon-badge" aria-hidden="true">
+        <span className={`poll-icon-badge poll-icon-badge-${poll.category}`} aria-hidden="true">
           <img src={pollIconImageUrl(poll)} alt="" loading="lazy" decoding="async" />
         </span>
         <h2 className={compactThreeLineTitle ? "poll-title-compact-3" : undefined}>

@@ -627,6 +627,195 @@ const demoPolls = [
       "Remote versus hybrid versus office is exactly the kind of structured opinion data people will pay for.",
       "This poll probably matters more commercially than a lot of the fun ones."
     ]
+  },
+  {
+    title: "Has U.S. immigration enforcement gone too far in major cities?",
+    blurb: "A live U.S. fault-line issue with clear opinion split and strong engagement potential.",
+    description:
+      "Measures whether people think recent federal immigration enforcement is proportionate or excessive in large urban areas.",
+    category_key: "politics",
+    options: ["Yes", "No", "Not sure"],
+    biasPercentages: [44, 41, 15],
+    createdDaysAgo: 5,
+    endDays: 14,
+    voteRange: [1800, 2900],
+    activityProfile: "surging",
+    commentSeeds: [
+      "This is exactly the type of polarising issue that drives high return visits.",
+      "People read this through security and civil liberties at the same time.",
+      "A lot depends on whether you live in an affected city.",
+      "Not sure is a realistic option here because the details are complex.",
+      "This one is likely to produce very active comment threads.",
+      "Strong investor demo poll because the split is easy to understand."
+    ]
+  },
+  {
+    title: "Should asylum seekers be allowed to apply at the U.S. border before entry?",
+    blurb: "Border process fairness versus enforcement clarity in one concise policy poll.",
+    description:
+      "Tracks whether people support pre-entry asylum processing at the border or prefer tighter restrictions before claims are heard.",
+    category_key: "politics",
+    options: ["Yes", "No", "Case by case"],
+    biasPercentages: [38, 35, 27],
+    createdDaysAgo: 7,
+    endDays: 16,
+    voteRange: [1500, 2500],
+    activityProfile: "steady",
+    commentSeeds: [
+      "Case-by-case is where many people land once they consider edge cases.",
+      "This is an issue where legal process and public confidence collide.",
+      "Easy to vote on but difficult to govern, which makes it a strong poll topic.",
+      "This should attract both policy-focused and casual voters.",
+      "Good benchmark poll for comparing sentiment shifts over time.",
+      "High-quality demo example because it has real policy trade-offs."
+    ]
+  },
+  {
+    title: "Are U.S. tariffs worth it if they raise consumer prices?",
+    blurb: "Trade policy made simple: economic strategy versus household cost pressure.",
+    description:
+      "Measures whether people accept higher prices as a trade-off for domestic protection and geopolitical leverage.",
+    category_key: "politics",
+    options: ["Yes", "No", "Depends on product"],
+    biasPercentages: [33, 45, 22],
+    createdDaysAgo: 9,
+    endDays: 18,
+    voteRange: [1700, 2800],
+    activityProfile: "event",
+    commentSeeds: [
+      "People support resilience in theory but feel price increases immediately.",
+      "Depends on product is a useful realism option for this topic.",
+      "This question is broad enough to pull in non-political users too.",
+      "Excellent demo poll because everyone can relate to cost-of-living impact.",
+      "Trade strategy sounds abstract until it hits checkout prices.",
+      "Could become one of the most-shared economy polls on the site."
+    ]
+  },
+  {
+    title: "Should the UK legalise assisted dying for terminally ill adults?",
+    blurb: "A major UK conscience issue with sustained cross-party public attention.",
+    description:
+      "Tracks public support for legal assisted dying under strict safeguards for terminally ill adults.",
+    category_key: "politics",
+    options: ["Yes", "No", "Need stronger safeguards first"],
+    biasPercentages: [49, 29, 22],
+    createdDaysAgo: 6,
+    endDays: 20,
+    voteRange: [1900, 3100],
+    activityProfile: "surging",
+    commentSeeds: [
+      "This is one of the highest-engagement UK moral-policy topics available.",
+      "People often support the principle but worry about implementation safeguards.",
+      "A perfect investor demo poll because the issue is immediately legible.",
+      "Strong potential for thoughtful comments rather than just hot takes.",
+      "This should remain relevant across multiple news cycles.",
+      "Need safeguards first is likely to absorb cautious support."
+    ]
+  },
+  {
+    title: "Should the UK restrict social media access for under-16s?",
+    blurb: "A mainstream UK debate with parents, schools, and platforms all in focus.",
+    description:
+      "Measures support for stronger age-based access controls versus concerns about enforceability and overreach.",
+    category_key: "politics",
+    options: ["Yes", "No", "Only with parental controls"],
+    biasPercentages: [46, 24, 30],
+    createdDaysAgo: 8,
+    endDays: 15,
+    voteRange: [1600, 2600],
+    activityProfile: "surging",
+    commentSeeds: [
+      "Parents and younger voters will likely split sharply on this.",
+      "Only with parental controls feels like the practical middle path.",
+      "Great click potential because everyone understands the issue instantly.",
+      "This is ideal for demonstrating policy polls with real social impact.",
+      "Enforcement detail is where the real arguments begin.",
+      "Strong chance this one drives comment depth and repeat visits."
+    ]
+  },
+  {
+    title: "Should governments prioritise ceasefire deals over military escalation?",
+    blurb: "A global conflict framing poll with high relevance and broad emotional engagement.",
+    description:
+      "Tracks whether voters want immediate ceasefire diplomacy prioritised over escalatory military responses in active conflicts.",
+    category_key: "politics",
+    options: ["Yes", "No", "Case by case"],
+    biasPercentages: [43, 21, 36],
+    createdDaysAgo: 11,
+    endDays: 17,
+    voteRange: [1400, 2300],
+    activityProfile: "steady",
+    commentSeeds: [
+      "Case-by-case is likely to be strong because conflicts differ significantly.",
+      "A globally relevant poll that still stays concise.",
+      "This is exactly the kind of question investors expect in civic products.",
+      "The challenge is balancing humanitarian urgency and security concerns.",
+      "Very good for demonstrating international topic coverage.",
+      "This should produce high-quality comment diversity."
+    ]
+  },
+  {
+    title: "Should legal immigration to the U.S. be increased, reduced, or kept the same?",
+    blurb: "A clean benchmark policy poll with consistent public-interest value.",
+    description:
+      "Measures broad sentiment on legal immigration levels without forcing a binary framing.",
+    category_key: "politics",
+    options: ["Increase", "Keep same", "Reduce"],
+    biasPercentages: [24, 46, 30],
+    createdDaysAgo: 10,
+    endDays: 19,
+    voteRange: [1700, 2700],
+    activityProfile: "steady",
+    commentSeeds: [
+      "Keep same often does well when people want stability over abrupt shifts.",
+      "This is a strong recurring benchmark for your platform.",
+      "Excellent for longitudinal trend tracking in the admin analytics view.",
+      "A clear, neutral structure that investors can quickly evaluate.",
+      "Broad issue awareness means high participation potential.",
+      "Could become one of your core policy sentiment indicators."
+    ]
+  },
+  {
+    title: "Should the EU delay stricter AI rules to protect competitiveness?",
+    blurb: "AI governance versus growth pressure in one clear cross-border policy question.",
+    description:
+      "Tracks whether people favor delayed compliance timelines for competitiveness or stricter immediate guardrails.",
+    category_key: "politics",
+    options: ["Yes", "No", "Delay only high-cost rules"],
+    biasPercentages: [31, 34, 35],
+    createdDaysAgo: 12,
+    endDays: 21,
+    voteRange: [1200, 2100],
+    activityProfile: "event",
+    commentSeeds: [
+      "This is where innovation speed and safety concerns directly clash.",
+      "Delay only high-cost rules feels like the likely compromise answer.",
+      "A high-quality global policy poll for investor demos.",
+      "Good example of tech regulation that remains accessible to non-experts.",
+      "This could become a recurring sentiment tracker as rules evolve.",
+      "Expect a strong split between founders and policy-minded users."
+    ]
+  },
+  {
+    title: "Should governments get temporary emergency powers during major border or security surges?",
+    blurb: "A constitutional stress-test poll balancing speed of response and civil safeguards.",
+    description:
+      "Measures whether people support temporary emergency powers during acute crises and under what constraints.",
+    category_key: "politics",
+    options: ["Yes", "No", "Only with strict time limits"],
+    biasPercentages: [22, 27, 51],
+    createdDaysAgo: 13,
+    endDays: 24,
+    voteRange: [1300, 2200],
+    activityProfile: "steady",
+    commentSeeds: [
+      "Time limits are likely the key trust condition for many voters.",
+      "This poll demonstrates nuanced options without becoming wordy.",
+      "Strong constitutional relevance for both UK and US audiences.",
+      "A good investor-facing example of policy design trade-offs.",
+      "Emergency powers always perform well when phrased clearly like this.",
+      "Should produce thoughtful debate rather than purely partisan voting."
+    ]
   }
 ];
 
