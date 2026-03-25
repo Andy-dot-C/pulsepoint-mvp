@@ -2582,7 +2582,7 @@ h3 {
 }
 
 .detail-shell {
-  width: min(960px, 92vw);
+  width: min(1020px, 92vw);
 }
 
 .back-link {
@@ -2600,11 +2600,11 @@ h3 {
 }
 
 .detail-card {
-  padding: 20px 26px 26px;
+  padding: 24px 30px 30px;
 }
 
 .detail-card-opened {
-  border-color: var(--card-border);
+  border-color: #e1e7f0;
   box-shadow: none;
 }
 
@@ -2616,9 +2616,10 @@ h3 {
 }
 
 .detail-hero h1 {
-  margin-top: 14px;
-  font-size: clamp(1.65rem, 2.7vw, 2.15rem);
-  letter-spacing: -0.018em;
+  margin-top: 40px;
+  font-size: clamp(1.78rem, 2.8vw, 2.28rem);
+  line-height: 1.12;
+  letter-spacing: -0.022em;
 }
 
 .detail-top-row {
@@ -2626,18 +2627,68 @@ h3 {
 }
 
 .detail-top-row .poll-category {
-  padding: 8px 12px;
-  font-size: 13px;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  border-color: #d1d5db;
+  padding: 7px 12px;
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: normal;
+  font-weight: 650;
+  font-family: inherit;
+  border-color: #d7dee8;
+  background: #f7f9fc;
+  color: #334155;
+  text-transform: capitalize;
+  display: inline-flex;
+  align-items: center;
+}
+
+.detail-top-row .poll-category,
+.detail-top-actions .share-btn,
+.detail-top-actions .bookmark-icon-btn {
+  height: 34px;
+  border: 1px solid #d7dee8;
+  border-radius: 999px;
+  background: #f7f9fc;
+  color: #334155;
+  box-shadow: none;
+}
+
+.detail-top-actions .share-btn {
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 650;
+  font-family: inherit;
+  gap: 6px;
+}
+
+.detail-top-actions .share-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.detail-top-actions .bookmark-icon-btn {
+  width: 34px;
+}
+
+.detail-top-row .poll-category:hover,
+.detail-top-actions .share-btn:hover,
+.detail-top-actions .bookmark-icon-btn:hover {
+  border-color: #c4cedc;
+  background: #f1f5fa;
+  color: #223248;
+}
+
+.detail-top-actions .bookmark-icon-btn-active {
+  border-color: #b9c6d8;
+  background: #eaf1ff;
+  color: #1f4f9a;
 }
 
 .detail-description {
-  margin-top: 12px;
-  color: var(--muted);
-  line-height: 1.55;
-  max-width: 72ch;
+  margin-top: 10px;
+  color: #526176;
+  line-height: 1.6;
+  max-width: 70ch;
+  font-size: 15px;
 }
 
 .detail-stat-row {
@@ -2680,10 +2731,10 @@ h3 {
 }
 
 .detail-results-main {
-  margin-top: 14px;
+  margin-top: 16px;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(260px, 0.95fr);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
+  gap: 24px;
   align-items: start;
 }
 
@@ -2722,28 +2773,32 @@ h3 {
 .graph-switch {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: 4px;
 }
 
 .graph-switch-btn {
-  border: 1px solid #d1d8e2;
+  border: 0;
   border-radius: 999px;
-  padding: 5px 10px;
-  font-size: 13px;
+  padding: 6px 11px;
+  font-size: 12px;
+  font-weight: 650;
   color: #5b687b;
-  background: #f9fafb;
+  background: transparent;
   transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
 }
 
 .graph-switch-btn:hover {
-  border-color: #bcc8d9;
-  background: #f3f6fa;
+  background: #eef2f7;
   color: #334155;
 }
 
 .graph-switch-btn-active {
-  border-color: #b9c5d6;
-  background: #eaf0f8;
+  border-color: transparent;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
   color: #2f3e54;
 }
 
@@ -2962,34 +3017,37 @@ h3 {
 }
 
 .results-graph-time-switch {
-  margin-top: 14px;
-  display: flex;
+  margin-top: 16px;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   flex-wrap: wrap;
-  border-top: 1px solid #dbe2ec;
-  padding-top: 12px;
+  border-top: 0;
+  padding: 4px;
+  border-radius: 999px;
+  background: #f1f5f9;
 }
 
 .results-graph-time-btn {
-  border: 1px solid #d1d8e2;
+  border: 0;
   border-radius: 999px;
-  padding: 5px 10px;
+  padding: 6px 11px;
   font-size: 12px;
+  font-weight: 650;
   color: #5b687b;
-  background: #f9fafb;
+  background: transparent;
   transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
 }
 
 .results-graph-time-btn:hover {
-  border-color: #bcc8d9;
-  background: #f3f6fa;
+  background: #eef2f7;
   color: #334155;
 }
 
 .results-graph-time-btn-active {
-  border-color: #b9c5d6;
-  background: #eaf0f8;
+  border-color: transparent;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
   color: #2f3e54;
 }
 
@@ -3005,12 +3063,39 @@ h3 {
   border-radius: 0;
   background: transparent;
   padding: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+}
+
+.detail-meta-grid > div {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.detail-meta-grid h3 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.detail-meta-grid p {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
 }
 
 .detail-card-opened > section + section {
-  margin-top: 28px;
-  padding-top: 24px;
-  border-top: 1px solid #e6ebf2;
+  margin-top: 32px;
+  padding-top: 26px;
+  border-top: 1px solid #edf1f7;
 }
 
 .detail-card-opened > section h2 {
@@ -3018,19 +3103,24 @@ h3 {
   letter-spacing: -0.01em;
 }
 
-.detail-card-opened .comments-panel,
+.detail-card-opened .comments-panel {
+  margin-top: 32px;
+  border-top: 1px solid #edf1f7;
+  padding-top: 26px;
+}
+
 .detail-card-opened .report-panel {
   border-top: 0;
   padding-top: 0;
 }
 
 .detail-card .option-btn {
-  border-color: #d6dee8;
-  border-radius: 14px;
-  background: #ffffff;
+  border-color: #d4dce7;
+  border-radius: 12px;
+  background: #fbfdff;
   color: #1f2937;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 650;
   transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
 }
 
@@ -3040,26 +3130,26 @@ h3 {
 }
 
 .detail-card .option-btn:hover {
-  border-color: #c1cddd;
-  background: #f8fafc;
+  border-color: #b8c7db;
+  background: #f6f9fd;
   color: #0f172a;
 }
 
 .detail-card .option-btn-selected {
-  border-color: #9aa8bc;
-  background: #f8fafc;
-  box-shadow: inset 0 0 0 1px #aab7c8;
+  border-color: #9bb0c8;
+  background: #f3f8ff;
+  box-shadow: inset 0 0 0 1px #aabed8;
 }
 
 .detail-card .option-btn-selected:hover {
-  border-color: #8f9fb5;
+  border-color: #8ca5c2;
 }
 
 .comments-panel {
   margin-top: 20px;
   border-top: 1px solid var(--surface-border);
   padding-top: 16px;
-  background: #ffffff;
+  background: transparent;
 }
 
 .comments-head {
@@ -3130,14 +3220,14 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 0;
-  background: #ffffff;
+  background: transparent;
 }
 
 .comment-card {
   border: 0;
   border-bottom: 1px solid #e6ebf2;
   border-radius: 0;
-  background: #ffffff;
+  background: transparent;
   padding: 12px 0;
 }
 
@@ -3182,7 +3272,7 @@ h3 {
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: #111827;
+  color: #4b5563;
 }
 
 .comment-meta .poll-blurb {
@@ -3193,13 +3283,16 @@ h3 {
 
 .comment-card .detail-description {
   margin-top: 6px;
-  font-size: 13px;
-  line-height: 1.45;
-  color: #334155;
+  margin-left: 32px;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: #1f2937;
 }
 
 .comment-actions {
   margin-top: 8px;
+  margin-left: 32px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -3213,6 +3306,7 @@ h3 {
   border: 0;
   border-radius: 10px;
   padding: 3px 6px;
+  margin-left: -6px;
   font-size: 11px;
   font-weight: 700;
   color: var(--muted);
@@ -3358,7 +3452,7 @@ h3 {
   min-height: 14px;
 }
 
-.meta-grid {
+.meta-grid:not(.detail-meta-grid) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
@@ -3533,6 +3627,25 @@ h3 {
 
 .report-panel h2 {
   font-size: 18px;
+}
+
+.report-toggle-btn {
+  height: 34px;
+  border: 1px solid #d7dee8;
+  border-radius: 999px;
+  background: #f7f9fc;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 650;
+  font-family: inherit;
+  padding: 0 12px;
+  box-shadow: none;
+}
+
+.report-toggle-btn:hover {
+  border-color: #c4cedc;
+  background: #f1f5fa;
+  color: #223248;
 }
 
 .duplicate-modal-backdrop {
@@ -3767,6 +3880,10 @@ h3 {
 
   .detail-card {
     padding: 20px;
+  }
+
+  .detail-hero h1 {
+    font-size: clamp(1.5rem, 6.2vw, 1.86rem);
   }
 
   .detail-vote-section {

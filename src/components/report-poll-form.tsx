@@ -16,7 +16,7 @@ export function ReportPollForm({ pollId, returnTo, statusType, statusMessage }: 
 
   return (
     <section className="report-panel">
-      <button className="ghost-btn" type="button" onClick={() => setIsOpen((current) => !current)}>
+      <button className="ghost-btn report-toggle-btn" type="button" onClick={() => setIsOpen((current) => !current)}>
         {isOpen ? "Hide report form" : "Report this poll"}
       </button>
 

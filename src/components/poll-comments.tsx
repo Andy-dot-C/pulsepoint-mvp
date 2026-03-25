@@ -136,11 +136,11 @@ export function PollComments({
                     <span className="comment-vote-arrow" aria-hidden="true">
                       {comment.viewerHasUpvoted ? (
                         <svg className="comment-vote-icon comment-vote-icon-filled" viewBox="0 0 24 24" focusable="false">
-                          <path d="M12 5 4.5 18h15L12 5Z" />
+                          <path d="M12.1 21.35 11 20.34C5.14 15.24 2 12.39 2 8.9 2 6 4.24 3.75 7.1 3.75c1.62 0 3.18.76 4.2 1.96 1.02-1.2 2.58-1.96 4.2-1.96 2.86 0 5.1 2.25 5.1 5.15 0 3.49-3.14 6.34-9 11.45Z" />
                         </svg>
                       ) : (
                         <svg className="comment-vote-icon comment-vote-icon-outline" viewBox="0 0 24 24" focusable="false">
-                          <path d="M12 5 4.5 18h15L12 5Z" />
+                          <path d="M12.1 21.35 11 20.34C5.14 15.24 2 12.39 2 8.9 2 6 4.24 3.75 7.1 3.75c1.62 0 3.18.76 4.2 1.96 1.02-1.2 2.58-1.96 4.2-1.96 2.86 0 5.1 2.25 5.1 5.15 0 3.49-3.14 6.34-9 11.45Z" />
                         </svg>
                       )}
                     </span>
