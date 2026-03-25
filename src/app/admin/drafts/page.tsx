@@ -2,11 +2,12 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   PIPELINE_DRAFT_STATUSES,
+  PIPELINE_REVIEW_TAGS,
   type PipelineDraftStatus,
   isPipelineReviewApiConfigured,
   listPipelineDrafts,
 } from "@/lib/pipeline-review-api";
-import { approvePipelineDraftAction, rejectPipelineDraftAction } from "@/app/actions/pipeline-drafts";
+import { approvePipelineDraftAction, gradePipelineDraftAction, rejectPipelineDraftAction } from "@/app/actions/pipeline-drafts";
 
 type AdminDraftsPageProps = {
   searchParams?:
@@ -52,6 +53,19 @@ function formatTimestamp(value: string | null | undefined): string | null {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function renderRatingSelect(name: string, value?: number | null) {
+  const selected = value && value >= 1 && value <= 5 ? String(value) : "3";
+  return (
+    <select name={name} defaultValue={selected} style={{ minWidth: 70 }}>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
+  );
 }
 
 export default async function AdminDraftsPage({ searchParams }: AdminDraftsPageProps) {
@@ -155,6 +169,7 @@ export default async function AdminDraftsPage({ searchParams }: AdminDraftsPageP
             const canModerate = draft.status !== "published";
             const scorecard = draft.latest_scorecard;
             const sourceEvidence = draft.source_evidence;
+            const latestReview = draft.latest_review;
             return (
               <article key={draft.id} className="detail-card" style={{ marginTop: 16 }}>
                 <p className="eyebrow">
@@ -225,22 +240,120 @@ export default async function AdminDraftsPage({ searchParams }: AdminDraftsPageP
                   </>
                 ) : null}
 
+                {latestReview ? (
+                  <div style={{ marginTop: 12 }}>
+                    <p className="poll-blurb">
+                      <strong>Latest review:</strong>{" "}
+                      {`Overall ${latestReview.overall_grade ?? "-"} / 5`}
+                      {latestReview.reviewed_at ? ` • ${formatTimestamp(latestReview.reviewed_at) ?? latestReview.reviewed_at}` : ""}
+                    </p>
+                    <div className="analytics-chip-group" style={{ marginTop: 8 }}>
+                      {latestReview.click_potential ? <span className="pill">Click {latestReview.click_potential}/5</span> : null}
+                      {latestReview.clarity ? <span className="pill">Clarity {latestReview.clarity}/5</span> : null}
+                      {latestReview.neutrality ? <span className="pill">Neutrality {latestReview.neutrality}/5</span> : null}
+                      {latestReview.relevance_now ? <span className="pill">Relevance {latestReview.relevance_now}/5</span> : null}
+                      {latestReview.answer_quality ? <span className="pill">Answers {latestReview.answer_quality}/5</span> : null}
+                      {latestReview.tags.map((tag) => (
+                        <span key={`${draft.id}-${tag}`} className="pill">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    {latestReview.notes ? (
+                      <p className="poll-blurb" style={{ marginTop: 8 }}>
+                        <strong>Review notes:</strong> {latestReview.notes}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 {canModerate ? (
-                  <div className="submit-actions-row" style={{ marginTop: 12 }}>
-                    <form action={approvePipelineDraftAction}>
+                  <div style={{ marginTop: 12 }}>
+                    <form action={gradePipelineDraftAction}>
                       <input type="hidden" name="draftId" value={draft.id} />
                       <input type="hidden" name="returnTo" value={statusHref} />
-                      <button type="submit" className="ghost-btn">
-                        Approve
-                      </button>
+                      <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", marginBottom: 8 }}>
+                        <label className="poll-blurb">
+                          Click potential
+                          <div>{renderRatingSelect("clickPotential", latestReview?.click_potential)}</div>
+                        </label>
+                        <label className="poll-blurb">
+                          Clarity
+                          <div>{renderRatingSelect("clarity", latestReview?.clarity)}</div>
+                        </label>
+                        <label className="poll-blurb">
+                          Neutrality
+                          <div>{renderRatingSelect("neutrality", latestReview?.neutrality)}</div>
+                        </label>
+                        <label className="poll-blurb">
+                          Relevance now
+                          <div>{renderRatingSelect("relevanceNow", latestReview?.relevance_now)}</div>
+                        </label>
+                        <label className="poll-blurb">
+                          Answer quality
+                          <div>{renderRatingSelect("answerQuality", latestReview?.answer_quality)}</div>
+                        </label>
+                        <label className="poll-blurb">
+                          Overall grade
+                          <div>{renderRatingSelect("overallGrade", latestReview?.overall_grade)}</div>
+                        </label>
+                      </div>
+                      <div className="analytics-chip-group" style={{ marginBottom: 8 }}>
+                        {PIPELINE_REVIEW_TAGS.map((tag) => (
+                          <label key={`${draft.id}-tag-${tag}`} className="pill" style={{ cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              name="reviewTag"
+                              value={tag}
+                              defaultChecked={Boolean(latestReview?.tags.includes(tag))}
+                              style={{ marginRight: 6 }}
+                            />
+                            {tag}
+                          </label>
+                        ))}
+                      </div>
+                      <label className="poll-blurb">
+                        Review notes
+                        <textarea
+                          name="reviewNotes"
+                          defaultValue={latestReview?.notes ?? ""}
+                          rows={2}
+                          placeholder="Optional notes on why this poll is strong/weak."
+                          style={{ width: "100%", marginTop: 4 }}
+                        />
+                      </label>
+                      <label className="poll-blurb" style={{ display: "block", marginTop: 8 }}>
+                        Internal owner notes
+                        <textarea
+                          name="ownerNotes"
+                          defaultValue={draft.owner_notes ?? ""}
+                          rows={2}
+                          placeholder="Optional admin notes."
+                          style={{ width: "100%", marginTop: 4 }}
+                        />
+                      </label>
+                      <div className="submit-actions-row" style={{ marginTop: 10 }}>
+                        <button type="submit" className="ghost-btn">
+                          Save review
+                        </button>
+                      </div>
                     </form>
-                    <form action={rejectPipelineDraftAction}>
-                      <input type="hidden" name="draftId" value={draft.id} />
-                      <input type="hidden" name="returnTo" value={statusHref} />
-                      <button type="submit" className="ghost-btn">
-                        Reject
-                      </button>
-                    </form>
+                    <div className="submit-actions-row" style={{ marginTop: 10 }}>
+                      <form action={approvePipelineDraftAction}>
+                        <input type="hidden" name="draftId" value={draft.id} />
+                        <input type="hidden" name="returnTo" value={statusHref} />
+                        <button type="submit" className="ghost-btn">
+                          Approve
+                        </button>
+                      </form>
+                      <form action={rejectPipelineDraftAction}>
+                        <input type="hidden" name="draftId" value={draft.id} />
+                        <input type="hidden" name="returnTo" value={statusHref} />
+                        <button type="submit" className="ghost-btn">
+                          Reject
+                        </button>
+                      </form>
+                    </div>
                   </div>
                 ) : (
                   <p className="poll-blurb" style={{ marginTop: 12 }}>

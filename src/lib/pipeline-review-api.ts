@@ -50,6 +50,29 @@ type PipelineSourceEvidence = {
   sources: PipelineEvidenceSource[];
 };
 
+export const PIPELINE_REVIEW_TAGS = [
+  "too_speculative",
+  "too_wordy",
+  "not_trending",
+  "too_niche",
+  "great_as_is",
+] as const;
+export type PipelineReviewTag = (typeof PIPELINE_REVIEW_TAGS)[number];
+
+type PipelineDraftReview = {
+  id?: string;
+  click_potential?: number | null;
+  clarity?: number | null;
+  neutrality?: number | null;
+  relevance_now?: number | null;
+  answer_quality?: number | null;
+  overall_grade?: number | null;
+  tags: PipelineReviewTag[];
+  notes?: string | null;
+  reviewed_at?: string | null;
+  created_at?: string | null;
+};
+
 export type PipelineDraftItem = {
   id: string;
   story_candidate_id?: string | null;
@@ -67,6 +90,7 @@ export type PipelineDraftItem = {
   story_candidates?: PipelineStorySummary | null;
   latest_scorecard?: PipelineScorecard | null;
   source_evidence?: PipelineSourceEvidence | null;
+  latest_review?: PipelineDraftReview | null;
 };
 
 export type PipelineDraftListResult = {
@@ -96,6 +120,25 @@ function toStringArray(value: unknown): string[] {
 
 function toNumber(value: unknown): number | undefined {
   return typeof value === "number" ? value : undefined;
+}
+
+function toIntegerInRange(value: unknown, min: number, max: number): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  const rounded = Math.round(value);
+  if (rounded < min || rounded > max) return null;
+  return rounded;
+}
+
+function toReviewTags(value: unknown): PipelineReviewTag[] {
+  if (!Array.isArray(value)) return [];
+  const out: PipelineReviewTag[] = [];
+  for (const item of value) {
+    const tag = cleanText(item);
+    if (tag && PIPELINE_REVIEW_TAGS.includes(tag as PipelineReviewTag)) {
+      out.push(tag as PipelineReviewTag);
+    }
+  }
+  return [...new Set(out)];
 }
 
 function toStatus(value: unknown): PipelineDraftStatus | undefined {
@@ -151,6 +194,10 @@ function mapDraftItem(row: unknown): PipelineDraftItem | null {
   const sourceEvidenceRaw =
     record.source_evidence && typeof record.source_evidence === "object" && !Array.isArray(record.source_evidence)
       ? (record.source_evidence as Record<string, unknown>)
+      : null;
+  const latestReviewRaw =
+    record.latest_review && typeof record.latest_review === "object" && !Array.isArray(record.latest_review)
+      ? (record.latest_review as Record<string, unknown>)
       : null;
   const evidenceSourcesRaw = Array.isArray(sourceEvidenceRaw?.sources) ? sourceEvidenceRaw.sources : [];
   const evidenceSources: PipelineEvidenceSource[] = evidenceSourcesRaw.flatMap((source) => {
@@ -227,6 +274,21 @@ function mapDraftItem(row: unknown): PipelineDraftItem | null {
           sources: evidenceSources,
         }
       : null,
+    latest_review: latestReviewRaw
+      ? {
+          id: cleanText(latestReviewRaw.id),
+          click_potential: toIntegerInRange(latestReviewRaw.click_potential, 1, 5),
+          clarity: toIntegerInRange(latestReviewRaw.clarity, 1, 5),
+          neutrality: toIntegerInRange(latestReviewRaw.neutrality, 1, 5),
+          relevance_now: toIntegerInRange(latestReviewRaw.relevance_now, 1, 5),
+          answer_quality: toIntegerInRange(latestReviewRaw.answer_quality, 1, 5),
+          overall_grade: toIntegerInRange(latestReviewRaw.overall_grade, 1, 5),
+          tags: toReviewTags(latestReviewRaw.tags),
+          notes: cleanText(latestReviewRaw.notes) ?? null,
+          reviewed_at: cleanText(latestReviewRaw.reviewed_at) ?? null,
+          created_at: cleanText(latestReviewRaw.created_at) ?? null,
+        }
+      : null,
   };
 }
 
@@ -296,9 +358,19 @@ export async function listPipelineDrafts(params?: {
 }
 
 export async function updatePipelineDraft(params: {
-  action: "approve" | "reject";
+  action: "approve" | "reject" | "grade";
   draftId: string;
   ownerNotes?: string;
+  review?: {
+    clickPotential: number;
+    clarity: number;
+    neutrality: number;
+    relevanceNow: number;
+    answerQuality: number;
+    overallGrade: number;
+    tags?: PipelineReviewTag[];
+    notes?: string;
+  };
 }): Promise<PipelineDraftUpdateResult> {
   try {
     const { url: baseUrl, token } = readApiConfigOrThrow();
@@ -313,6 +385,19 @@ export async function updatePipelineDraft(params: {
         action: params.action,
         draft_id: params.draftId,
         owner_notes: params.ownerNotes ?? undefined,
+        review:
+          params.action === "grade"
+            ? {
+                click_potential: params.review?.clickPotential,
+                clarity: params.review?.clarity,
+                neutrality: params.review?.neutrality,
+                relevance_now: params.review?.relevanceNow,
+                answer_quality: params.review?.answerQuality,
+                overall_grade: params.review?.overallGrade,
+                tags: params.review?.tags ?? [],
+                notes: params.review?.notes ?? undefined,
+              }
+            : undefined,
       }),
     });
 
