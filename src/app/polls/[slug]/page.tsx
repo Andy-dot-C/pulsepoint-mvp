@@ -8,12 +8,13 @@ import { PollComments } from "@/components/poll-comments";
 import { SharePollButton } from "@/components/share-poll-button";
 import { PollViewTracker } from "@/components/poll-view-tracker";
 import { PollResultsGraph } from "@/components/poll-results-graph";
+import { formatVoteLabel } from "@/lib/format-votes";
 import { fetchPollBySlug } from "@/lib/data/polls";
 import { fetchPollMetaBySlug } from "@/lib/data/polls";
 import { fetchPollComments, resolveCommentSort } from "@/lib/data/comments";
 import { buildFeedHref } from "@/lib/feed-query";
 import { getPollStatus } from "@/lib/poll-status";
-import { getPollOptionFillColor } from "@/lib/poll-colors";
+import { getPollOptionFillColor, getPollOptionLineColor } from "@/lib/poll-colors";
 import { buildPollChartData, parsePollGraphTimeframe, parsePollGraphVariant } from "@/lib/poll-chart-data";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
@@ -107,6 +108,10 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
   const endsLabel = formatDetailDate(poll.endsAt);
   const statusLabel = status.isClosed ? "Closed" : status.isClosingSoon ? "Closing soon" : "Open";
   const returnTo = `/polls/${poll.slug}?comments=${commentSort}&graph=${graphVariant}&time=${graphTimeframe}`;
+  const isTwoOptionLayout = rankedOptions.length === 2;
+  const selectedTimeframeVotes =
+    chartData.timeframes.find((timeframe) => timeframe.id === graphTimeframe)?.totalVotes ?? chartData.totalVotes;
+  const showLeftVoteCount = isTwoOptionLayout && graphVariant !== "donut";
 
   return (
     <main className="page-shell detail-shell">
@@ -145,8 +150,12 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
         </section>
 
         <section className="detail-results-vote-section">
-          <div className="detail-results-main">
-            <div className="detail-results-left">
+          <div className={`detail-results-main${graphVariant === "horizontal-bars" ? " detail-results-main-bars" : ""}`}>
+            <div className={`detail-results-left${isTwoOptionLayout ? " detail-results-left-two" : ""}`}>
+              <div className="detail-vote-head">
+                <h2>Vote</h2>
+                <span className="detail-vote-head-spacer" aria-hidden="true" />
+              </div>
               <div className="option-list">
                 {rankedOptions.map((option, optionIndex) => (
                   <VoteOptionForm
@@ -157,12 +166,17 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
                     label={option.label}
                     rightText={`${Math.round(option.percent)}%`}
                     percent={option.percent}
-                    fillColor={getPollOptionFillColor(poll.id, optionIndex)}
+                    fillColor={
+                      isTwoOptionLayout
+                        ? getPollOptionLineColor(poll.id, optionIndex)
+                        : getPollOptionFillColor(poll.id, optionIndex)
+                    }
                     selected={poll.viewerVoteOptionId === option.id}
                     disabled={status.isClosed}
                   />
                 ))}
               </div>
+              {showLeftVoteCount ? <p className="detail-vote-footer-count">{formatVoteLabel(selectedTimeframeVotes)}</p> : null}
             </div>
             <div className="detail-results-right">
               <PollResultsGraph

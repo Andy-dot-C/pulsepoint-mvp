@@ -60,6 +60,27 @@ export function PollComments({
     };
   }
 
+  function formatRelativeTime(value: string): string {
+    const date = new Date(value);
+    const time = date.getTime();
+    if (Number.isNaN(time)) return "just now";
+    const diffMs = Date.now() - time;
+    const past = diffMs >= 0;
+    const absMinutes = Math.max(0, Math.round(Math.abs(diffMs) / 60000));
+    if (absMinutes < 1) return "just now";
+    if (absMinutes < 60) return `${absMinutes} minute${absMinutes === 1 ? "" : "s"} ${past ? "ago" : "from now"}`;
+    const hours = Math.round(absMinutes / 60);
+    if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ${past ? "ago" : "from now"}`;
+    const days = Math.round(hours / 24);
+    if (days < 7) return `${days} day${days === 1 ? "" : "s"} ${past ? "ago" : "from now"}`;
+    const weeks = Math.round(days / 7);
+    if (weeks < 5) return `${weeks} week${weeks === 1 ? "" : "s"} ${past ? "ago" : "from now"}`;
+    const months = Math.round(days / 30);
+    if (months < 12) return `${months} month${months === 1 ? "" : "s"} ${past ? "ago" : "from now"}`;
+    const years = Math.round(days / 365);
+    return `${years} year${years === 1 ? "" : "s"} ${past ? "ago" : "from now"}`;
+  }
+
   return (
     <section className="comments-panel" id="comments">
       <div className="comments-head">
@@ -112,16 +133,18 @@ export function PollComments({
         ) : (
           comments.map((comment) => (
             <article key={comment.id} className="comment-card">
-              <div className="comment-meta">
-                <div className="comment-author">
-                  <span className="comment-avatar" style={avatarStyle(comment.username)} aria-hidden="true">
-                    {avatarText(comment.username)}
-                  </span>
-                  <p className="comment-username">{comment.username}</p>
+              <div className="comment-row">
+                <span className="comment-avatar" style={avatarStyle(comment.username)} aria-hidden="true">
+                  {avatarText(comment.username)}
+                </span>
+                <div className="comment-bubble">
+                  <div className="comment-author-meta">
+                    <p className="comment-username">{comment.username}</p>
+                    <p className="comment-time-ago">{formatRelativeTime(comment.createdAt)}</p>
+                  </div>
+                  <p className="detail-description">{comment.body}</p>
                 </div>
-                <p className="poll-blurb">{new Date(comment.createdAt).toLocaleString()}</p>
               </div>
-              <p className="detail-description">{comment.body}</p>
               <div className="comment-actions">
                 <form action={toggleCommentUpvoteAction}>
                   <input type="hidden" name="pollId" value={pollId} />
@@ -136,11 +159,11 @@ export function PollComments({
                     <span className="comment-vote-arrow" aria-hidden="true">
                       {comment.viewerHasUpvoted ? (
                         <svg className="comment-vote-icon comment-vote-icon-filled" viewBox="0 0 24 24" focusable="false">
-                          <path d="M12.1 21.35 11 20.34C5.14 15.24 2 12.39 2 8.9 2 6 4.24 3.75 7.1 3.75c1.62 0 3.18.76 4.2 1.96 1.02-1.2 2.58-1.96 4.2-1.96 2.86 0 5.1 2.25 5.1 5.15 0 3.49-3.14 6.34-9 11.45Z" />
+                          <path d="M12 21 4.8 13.9a5.2 5.2 0 1 1 7.2-7.5 5.2 5.2 0 1 1 7.2 7.5L12 21Z" />
                         </svg>
                       ) : (
                         <svg className="comment-vote-icon comment-vote-icon-outline" viewBox="0 0 24 24" focusable="false">
-                          <path d="M12.1 21.35 11 20.34C5.14 15.24 2 12.39 2 8.9 2 6 4.24 3.75 7.1 3.75c1.62 0 3.18.76 4.2 1.96 1.02-1.2 2.58-1.96 4.2-1.96 2.86 0 5.1 2.25 5.1 5.15 0 3.49-3.14 6.34-9 11.45Z" />
+                          <path d="M12 21 4.8 13.9a5.2 5.2 0 1 1 7.2-7.5 5.2 5.2 0 1 1 7.2 7.5L12 21Z" />
                         </svg>
                       )}
                     </span>

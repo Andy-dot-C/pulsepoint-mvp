@@ -1,7 +1,7 @@
 import { totalVotes } from "@/lib/mock-data";
 import { Poll } from "@/lib/types";
 
-export const GRAPH_VARIANTS = ["horizontal-bars", "donut", "dot-grid", "trend-line", "trend-stack"] as const;
+export const GRAPH_VARIANTS = ["horizontal-bars", "donut", "dot-grid"] as const;
 export const GRAPH_TIMEFRAMES = ["24h", "7d", "30d", "all"] as const;
 
 export type PollGraphVariant = (typeof GRAPH_VARIANTS)[number];
@@ -52,7 +52,7 @@ export type PollChartLineTimeframeData = {
 
 export function parsePollGraphVariant(value: string | undefined): PollGraphVariant {
   if (!value) return "horizontal-bars";
-  if (value === "horizontal-bars" || value === "donut" || value === "dot-grid" || value === "trend-line" || value === "trend-stack") {
+  if (value === "horizontal-bars" || value === "donut" || value === "dot-grid") {
     return value;
   }
   return "horizontal-bars";
