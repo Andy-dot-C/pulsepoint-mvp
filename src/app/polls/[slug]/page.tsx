@@ -14,7 +14,7 @@ import { fetchPollMetaBySlug } from "@/lib/data/polls";
 import { fetchPollComments, resolveCommentSort } from "@/lib/data/comments";
 import { buildFeedHref } from "@/lib/feed-query";
 import { getPollStatus } from "@/lib/poll-status";
-import { getPollOptionFillColor, getPollOptionLineColor } from "@/lib/poll-colors";
+import { getPollOptionLineColor } from "@/lib/poll-colors";
 import { buildPollChartData, parsePollGraphTimeframe, parsePollGraphVariant } from "@/lib/poll-chart-data";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
@@ -109,9 +109,10 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
   const statusLabel = status.isClosed ? "Closed" : status.isClosingSoon ? "Closing soon" : "Open";
   const returnTo = `/polls/${poll.slug}?comments=${commentSort}&graph=${graphVariant}&time=${graphTimeframe}`;
   const isTwoOptionLayout = rankedOptions.length === 2;
+  const isMultiOptionLayout = rankedOptions.length > 2;
   const selectedTimeframeVotes =
     chartData.timeframes.find((timeframe) => timeframe.id === graphTimeframe)?.totalVotes ?? chartData.totalVotes;
-  const showLeftVoteCount = isTwoOptionLayout && graphVariant !== "donut";
+  const showLeftVoteCount = graphVariant !== "donut";
 
   return (
     <main className="page-shell detail-shell">
@@ -150,8 +151,12 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
         </section>
 
         <section className="detail-results-vote-section">
-          <div className={`detail-results-main${graphVariant === "horizontal-bars" ? " detail-results-main-bars" : ""}`}>
-            <div className={`detail-results-left${isTwoOptionLayout ? " detail-results-left-two" : ""}`}>
+          <div
+            className={`detail-results-main${graphVariant === "horizontal-bars" ? " detail-results-main-bars" : " detail-results-main-nonbars"}`}
+          >
+            <div
+              className={`detail-results-left${isTwoOptionLayout ? " detail-results-left-two" : ""}${isMultiOptionLayout ? " detail-results-left-multi" : ""}`}
+            >
               <div className="detail-vote-head">
                 <h2>Vote</h2>
                 <span className="detail-vote-head-spacer" aria-hidden="true" />
@@ -169,7 +174,7 @@ export default async function PollPage({ params, searchParams }: PollPageProps) 
                     fillColor={
                       isTwoOptionLayout
                         ? getPollOptionLineColor(poll.id, optionIndex)
-                        : getPollOptionFillColor(poll.id, optionIndex)
+                        : option.color
                     }
                     selected={poll.viewerVoteOptionId === option.id}
                     disabled={status.isClosed}
