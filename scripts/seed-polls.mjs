@@ -819,6 +819,102 @@ const demoPolls = [
   }
 ];
 
+const LOCKED_SEED_TITLES = [
+  "Are U.S. tariffs worth it if they raise consumer prices?",
+  "Has U.S. immigration enforcement gone too far in major cities?",
+  "Should legal immigration to the U.S. be increased, reduced, or kept the same?",
+  "Should live VAR audio be broadcast during Premier League matches?",
+  "Should remote work remain the default for office-based jobs?",
+  "Should the EU delay stricter AI rules to protect competitiveness?",
+  "Should the UK legalise assisted dying for terminally ill adults?",
+  "Should the UK lower the voting age to 16?",
+  "Should the UK restrict social media access for under-16s?",
+  "Should UK commuter rail be fully renationalised?",
+  "Should the UK adopt proportional representation for general elections?",
+  "Should social media platforms verify age with mandatory ID checks?",
+  "Should the UK rejoin the EU single market?",
+  "Should zero-hours contracts be banned?",
+  "Would you support lowering the UK voting age to 16?",
+  "Would you back a nationwide ban on congressional stock trading?",
+  "Do you think AI-generated content should be clearly watermarked?",
+  "Would you back a UK sovereign AI investment fund?",
+  "Do you think wealth taxes should apply above $10m/£10m?",
+  "Do you think repeat violent offenders should face tougher sentencing?",
+  "Do you think digital ID should be required for financial accounts?",
+  "Would you support lowering inheritance-tax thresholds?",
+  "Are you happy with the current level of immigration in your country?",
+  "Would you support a nationwide ban on congressional stock trading?",
+  "Would you vote for a party that promised rail renationalisation?",
+  "Would you support salary controls in the Premier League?",
+  "Are you in favour of replacing council tax with a land-value tax?",
+  "Are you happy with Formula 1 sprint weekends being part of the calendar?"
+];
+
+function inferCategoryFromTitle(title) {
+  const lower = title.toLowerCase();
+  if (lower.includes("premier league") || lower.includes("formula 1") || lower.includes("var")) {
+    return "sport";
+  }
+  return "politics";
+}
+
+function inferOptionsFromTitle(title) {
+  const lower = title.toLowerCase();
+
+  if (lower.includes("legal immigration") && lower.includes("increased") && lower.includes("reduced")) {
+    return ["Increase", "Keep same", "Reduce"];
+  }
+
+  if (lower.includes("happy with") || lower.includes("do you think")) {
+    return ["Yes", "No", "Not sure"];
+  }
+
+  return ["Yes", "No"];
+}
+
+function inferBiasFromOptions(options) {
+  if (options.length === 2) return [56, 44];
+  if (options.length === 3) return [42, 36, 22];
+  return Array.from({ length: options.length }, () => Math.round(100 / options.length));
+}
+
+function buildGeneratedPoll(title, index) {
+  const options = inferOptionsFromTitle(title);
+  const category_key = inferCategoryFromTitle(title);
+  const daysOffset = 5 + (index % 12);
+  const endOffset = 12 + (index % 14);
+  const voteRange = category_key === "sport" ? [1400, 2400] : [1700, 2900];
+
+  return {
+    title,
+    blurb: "Investor demo poll with high-recognition framing and strong comment potential.",
+    description:
+      "Opinion-led benchmark question designed for reliable engagement and clear sentiment tracking over time.",
+    category_key,
+    options,
+    biasPercentages: inferBiasFromOptions(options),
+    createdDaysAgo: daysOffset,
+    endDays: endOffset,
+    voteRange,
+    activityProfile: options.length > 2 ? "steady" : "surging",
+    commentSeeds: [
+      "This one would drive strong engagement because people can answer instantly.",
+      "I can see this performing well with both votes and comments.",
+      "The framing is clear and makes trend movement easy to understand.",
+      "This is exactly the kind of poll people would share into group chats.",
+      "Good benchmark question for recurring sentiment tracking.",
+      "This feels investor-friendly because the signal is easy to read."
+    ]
+  };
+}
+
+const basePollByTitle = new Map(demoPolls.map((poll) => [poll.title, poll]));
+const seededPolls = LOCKED_SEED_TITLES.map((title, index) => {
+  const existing = basePollByTitle.get(title);
+  if (existing) return existing;
+  return buildGeneratedPoll(title, index);
+});
+
 const commentUpvotePresets = [
   [42, 33, 28, 21, 18, 15, 12, 10, 8, 6, 5, 4],
   [55, 41, 34, 29, 25, 18, 16, 12, 9, 8, 6, 5],
@@ -1011,11 +1107,12 @@ async function deleteObsoleteSeedPolls(nextSlugs) {
   if (obsolete.length === 0) return;
 
   const obsoleteIds = obsolete.map((row) => row.id);
-  await clearSeededPollDependencies(obsoleteIds);
-
-  const { error: deletePollsError } = await supabase.from("polls").delete().in("id", obsoleteIds);
-  if (deletePollsError) {
-    throw new Error(`Failed deleting obsolete seeded polls: ${deletePollsError.message}`);
+  for (const batchIds of chunk(obsoleteIds, 80)) {
+    await clearSeededPollDependencies(batchIds);
+    const { error: deletePollsError } = await supabase.from("polls").delete().in("id", batchIds);
+    if (deletePollsError) {
+      throw new Error(`Failed deleting obsolete seeded polls: ${deletePollsError.message}`);
+    }
   }
 }
 
@@ -1208,10 +1305,10 @@ if (profileIds.length < 400) {
   throw new Error("Not enough demo profiles to seed varied demo activity.");
 }
 
-const nextSlugs = new Set(demoPolls.map((poll) => slugify(poll.title)));
+const nextSlugs = new Set(seededPolls.map((poll) => slugify(poll.title)));
 await deleteObsoleteSeedPolls(nextSlugs);
 
-for (const poll of demoPolls) {
+for (const poll of seededPolls) {
   const slug = slugify(poll.title);
   const createdAt = new Date(Date.now() - poll.createdDaysAgo * 24 * 60 * 60 * 1000).toISOString();
   const endAt = new Date(Date.now() + poll.endDays * 24 * 60 * 60 * 1000).toISOString();

@@ -143,7 +143,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
       <div className="option-list">
         {visibleOptions.map((option, optionIndex) => (
           <VoteOptionForm
-            key={option.id}
+            key={`${option.id}-${optionIndex}`}
             pollId={poll.id}
             optionId={option.id}
             returnTo={returnTo}

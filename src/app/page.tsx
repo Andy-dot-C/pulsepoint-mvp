@@ -5,7 +5,9 @@ import { FigmaHeroPreviewCard } from "@/components/figma-hero-preview-card";
 import { FeaturedPollCarousel } from "@/components/featured-poll-carousel";
 import { buildFeedHref } from "@/lib/feed-query";
 import { fetchFeed } from "@/lib/data/polls";
-import { CategoryKey, FeedFilterKey, FeedTabKey } from "@/lib/types";
+import { CategoryKey, FeedFilterKey, FeedTabKey, Poll } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
 
 type HomePageProps = {
   searchParams?:
@@ -83,6 +85,69 @@ function resolveSubmissionMessage(value?: string): string | null {
   return null;
 }
 
+const INVESTOR_HOME_LAYOUT = {
+  heroOrder: [
+    "has-us-immigration-enforcement-gone-too-far-in-major-cities",
+    "should-the-uk-restrict-social-media-access-for-under-16s",
+    "are-us-tariffs-worth-it-if-they-raise-consumer-prices",
+    "who-would-you-vote-for-if-a-uk-general-election-were-held-tomorrow",
+    "should-uk-commuter-rail-be-fully-renationalised",
+    "should-live-var-audio-be-broadcast-during-premier-league-matches"
+  ],
+  gridOrder: [
+    "should-the-uk-legalise-assisted-dying-for-terminally-ill-adults",
+    "should-live-var-audio-be-broadcast-during-premier-league-matches",
+    "should-the-uk-rejoin-the-eu-single-market",
+    "should-legal-immigration-to-the-us-be-increased-reduced-or-kept-the-same",
+    "would-you-support-a-nationwide-ban-on-congressional-stock-trading",
+    "should-the-eu-delay-stricter-ai-rules-to-protect-competitiveness",
+    "should-remote-work-remain-the-default-for-office-based-jobs",
+    "would-you-vote-for-a-party-that-promised-rail-renationalisation",
+    "would-you-support-salary-controls-in-the-premier-league",
+    "are-you-in-favour-of-replacing-council-tax-with-a-land-value-tax",
+    "are-you-happy-with-formula-1-sprint-weekends-being-part-of-the-calendar",
+    "would-you-support-lowering-the-uk-voting-age-to-16",
+    "do-you-think-ai-generated-content-should-be-clearly-watermarked",
+    "would-you-back-a-uk-sovereign-ai-investment-fund",
+    "do-you-think-wealth-taxes-should-apply-above-10m10m",
+    "do-you-think-repeat-violent-offenders-should-face-tougher-sentencing",
+    "do-you-think-digital-id-should-be-required-for-financial-accounts",
+    "would-you-support-lowering-inheritance-tax-thresholds",
+    "are-you-happy-with-the-current-level-of-immigration-in-your-country",
+    "would-you-support-a-nationwide-ban-on-congressional-stock-trading"
+  ]
+} as const;
+
+function uniquePolls(polls: Poll[]): Poll[] {
+  const seen = new Set<string>();
+  const result: Poll[] = [];
+  for (const poll of polls) {
+    if (seen.has(poll.id)) continue;
+    seen.add(poll.id);
+    result.push(poll);
+  }
+  return result;
+}
+
+function orderPollsBySlugs(polls: Poll[], orderedSlugs: readonly string[]): Poll[] {
+  const unique = uniquePolls(polls);
+  const ordered: Poll[] = [];
+  const usedIds = new Set<string>();
+
+  for (const slug of orderedSlugs) {
+    const found = unique.find((poll) => !usedIds.has(poll.id) && poll.slug === slug);
+    if (!found) continue;
+    ordered.push(found);
+    usedIds.add(found.id);
+  }
+
+  const fallback = unique
+    .filter((poll) => !usedIds.has(poll.id))
+    .sort((left, right) => left.title.localeCompare(right.title, undefined, { sensitivity: "base" }));
+
+  return [...ordered, ...fallback];
+}
+
 export default async function Home({ searchParams }: HomePageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const activeFilter = resolveFilter(asSingleValue(resolvedSearchParams.filter));
@@ -94,6 +159,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       : mapFilterToFeedInput(activeFilter);
   const normalizedFilter = activeFilter === "all" ? "trending" : activeFilter;
   const searchQuery = asSingleValue(resolvedSearchParams.q)?.trim() ?? "";
+  const isTrendingHome =
+    feedInput.tab === "trending" && feedInput.category === "all" && normalizedFilter === "trending" && searchQuery.length === 0;
   const bookmarkError = asSingleValue(resolvedSearchParams.bookmarkError);
   const submissionMessage = resolveSubmissionMessage(asSingleValue(resolvedSearchParams.submission));
   const returnTo = buildFeedHref({
@@ -110,16 +177,26 @@ export default async function Home({ searchParams }: HomePageProps) {
     category: "politics",
     q: ""
   });
-  const featuredPolls = politicsFeaturedFeed.length > 0 ? politicsFeaturedFeed.slice(0, 6) : feed.slice(0, 6);
-  const gridPolls = feed.slice(featuredPolls.length);
-  const isTrendingHome =
-    feedInput.tab === "trending" && feedInput.category === "all" && normalizedFilter === "trending";
+  const investorFeed = await fetchFeed({
+    tab: "trending",
+    category: "all",
+    q: ""
+  });
+  const featuredSource = politicsFeaturedFeed.length > 0 ? politicsFeaturedFeed : feed;
+  const combinedHomePool = uniquePolls([...feed, ...featuredSource, ...investorFeed]);
+  const featuredPolls = isTrendingHome
+    ? orderPollsBySlugs(combinedHomePool, INVESTOR_HOME_LAYOUT.heroOrder).slice(0, 6)
+    : featuredSource.slice(0, 6);
+  const featuredIds = new Set(featuredPolls.map((poll) => poll.id));
+  const displayGridPolls = isTrendingHome
+    ? orderPollsBySlugs(combinedHomePool, INVESTOR_HOME_LAYOUT.gridOrder)
+    : uniquePolls(feed).filter((poll) => !featuredIds.has(poll.id));
   const sectionTitles = ["Trending Now", "Top Movers", "New"] as const;
   const cardsPerSection = 6; // 3 across x 2 down
   const maxSections = 3;
-  const sectionData = Array.from({ length: Math.min(maxSections, Math.ceil(gridPolls.length / cardsPerSection)) }, (_, index) => ({
+  const sectionData = Array.from({ length: Math.min(maxSections, Math.ceil(displayGridPolls.length / cardsPerSection)) }, (_, index) => ({
     title: sectionTitles[index % sectionTitles.length],
-    polls: gridPolls.slice(index * cardsPerSection, index * cardsPerSection + cardsPerSection)
+    polls: displayGridPolls.slice(index * cardsPerSection, index * cardsPerSection + cardsPerSection)
   })).filter((section) => section.polls.length > 0);
 
   return (
@@ -225,8 +302,8 @@ export default async function Home({ searchParams }: HomePageProps) {
           {isTrendingHome ? (
             <div className="home-sections-preview">
               <div className="feed-cards-grid feed-cards-grid-3">
-                {gridPolls.map((poll) => (
-                  <PollCard key={poll.id} poll={poll} returnTo={returnTo} />
+                {displayGridPolls.map((poll, index) => (
+                  <PollCard key={`${poll.id}-home-${index}`} poll={poll} returnTo={returnTo} />
                 ))}
               </div>
             </div>
@@ -236,8 +313,8 @@ export default async function Home({ searchParams }: HomePageProps) {
                 <section key={`${section.title}-${index}`} className="home-sections-preview-block">
                   <h2 className="home-sections-preview-title">{section.title}</h2>
                   <div className="feed-cards-grid feed-cards-grid-3">
-                    {section.polls.map((poll) => (
-                      <PollCard key={poll.id} poll={poll} returnTo={returnTo} />
+                    {section.polls.map((poll, pollIndex) => (
+                      <PollCard key={`${poll.id}-section-${index}-${pollIndex}`} poll={poll} returnTo={returnTo} />
                     ))}
                   </div>
                 </section>
