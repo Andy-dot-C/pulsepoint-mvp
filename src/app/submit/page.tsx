@@ -22,10 +22,10 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
       <Link href="/" className="back-link">
         Back to feed
       </Link>
-      <article className="detail-card">
-        <h1>Submit a Poll</h1>
-        <p className="poll-blurb">
-          Create text polls with 2-10 options. Use AI assist for neutral wording and quick descriptions.
+      <article className="detail-card detail-card-opened submit-card">
+        <h1>Create a Poll</h1>
+        <p className="detail-description">
+          Create your question and options. Pollzone handles category detection and summary writing for you.
         </p>
         <SubmitPollForm statusType={statusType} statusMessage={statusMessage} />
       </article>

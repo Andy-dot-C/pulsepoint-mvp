@@ -4487,41 +4487,111 @@ form.comment-form:focus-within .create-btn {
 }
 
 .submit-shell {
-  width: min(860px, 92vw);
+  width: min(1020px, 92vw);
+}
+
+.submit-card {
+  padding: 24px 30px 30px;
+}
+
+.submit-card h1 {
+  margin-top: 10px;
+  font-size: clamp(1.78rem, 2.8vw, 2.28rem);
+  line-height: 1.12;
+  letter-spacing: -0.022em;
+}
+
+.submit-card .detail-description {
+  max-width: none;
+  white-space: nowrap;
 }
 
 .submit-form {
-  margin-top: 16px;
+  margin-top: 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
 }
 
-.submit-form label {
+.submit-section {
+  padding-top: 18px;
+  border-top: 1px solid #e6ebf2;
+}
+
+.submit-section:first-of-type {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.submit-section-actions {
+  padding-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .submit-card .detail-description {
+    white-space: normal;
+  }
+}
+
+.submit-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 14px;
-  color: var(--muted);
+  gap: 7px;
+}
+
+.submit-field-label {
+  font-size: 13px;
+  font-weight: 650;
+  color: #4f6077;
 }
 
 .submit-form input,
 .submit-form select,
 .submit-form textarea {
-  border: 1px solid var(--surface-border);
-  border-radius: 10px;
-  padding: 10px 12px;
+  border: 1px solid #d8dee7;
+  border-radius: 12px;
+  padding: 11px 13px;
   font-size: 14px;
   font-family: inherit;
+  background: #ffffff;
+  color: #0f172a;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+
+.submit-form input:focus,
+.submit-form select:focus,
+.submit-form textarea:focus {
+  outline: none;
+  border-color: #c0ccdb;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.16);
 }
 
 .submit-options {
-  border: 1px dashed var(--surface-border);
-  border-radius: 12px;
-  padding: 12px;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+}
+
+.submit-options-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.submit-mini-pill {
+  border-radius: 999px;
+  border: 1px solid #d8dee7;
+  background: #f8fafc;
+  color: #4f6077;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .option-row {
@@ -4535,6 +4605,15 @@ form.comment-form:focus-within .create-btn {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.submit-actions-row-main {
+  justify-content: space-between;
+}
+
+.submit-actions-row-main .create-btn,
+.submit-actions-row-main .ghost-btn {
+  min-height: 38px;
 }
 
 .submit-hint {
@@ -4553,6 +4632,59 @@ form.comment-form:focus-within .create-btn {
 
 .submit-options-change p + p {
   margin-top: 4px;
+}
+
+.submit-form .ghost-btn {
+  border: 0;
+  border-radius: 999px;
+  height: 34px;
+  padding: 0 12px;
+  color: #5b687b;
+  font-size: 12px;
+  font-weight: 650;
+  background: transparent;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.submit-form .ghost-btn:hover {
+  background: #f6f8fc;
+  color: #334155;
+}
+
+.submit-form .ghost-btn:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.submit-form .submit-summary-btn {
+  padding-left: 0;
+}
+
+.submit-form .submit-add-option-btn {
+  padding-left: 0;
+}
+
+.submit-form .create-btn {
+  border-radius: 999px;
+  min-width: 146px;
+  border: 0;
+  box-shadow: none;
+  height: 36px;
+  padding: 0 14px;
+}
+
+.submit-form .create-btn:hover {
+  transform: none;
+  box-shadow: none;
+  background: rgba(22, 81, 239, 0.78);
+}
+
+.submit-form .create-btn:disabled {
+  background: rgba(22, 81, 239, 0.68);
+  border: 0;
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 .inline-form {

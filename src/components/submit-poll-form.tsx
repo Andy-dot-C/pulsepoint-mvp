@@ -2,11 +2,9 @@
 
 import { useMemo, useRef, useState } from "react";
 import { submitPollAction } from "@/app/actions/submissions";
-import { categories } from "@/lib/mock-data";
 import { OPTION_MAX_LENGTH, SUMMARY_MAX_LENGTH, TITLE_MAX_LENGTH } from "@/lib/submissions";
 
 type SubmitPollFormProps = {
-  defaultCategory?: string;
   statusType?: string;
   statusMessage?: string;
 };
@@ -19,7 +17,6 @@ type DuplicateMatch = {
 };
 
 export function SubmitPollForm({
-  defaultCategory = "politics",
   statusType,
   statusMessage
 }: SubmitPollFormProps) {
@@ -38,10 +35,9 @@ export function SubmitPollForm({
   const [possibleDuplicates, setPossibleDuplicates] = useState<DuplicateMatch[]>([]);
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
-  const [category, setCategory] = useState(defaultCategory);
+  const [showSummaryEditor, setShowSummaryEditor] = useState(false);
+  const [isAiPrepared, setIsAiPrepared] = useState(false);
   const [options, setOptions] = useState<string[]>(["", ""]);
-  const [durationPreset, setDurationPreset] = useState("30d");
-  const [endAt, setEndAt] = useState("");
   const [optionChanges, setOptionChanges] = useState<Array<{ from: string; to: string }>>([]);
 
   const canAddOption = options.length < 10;
@@ -73,7 +69,6 @@ export function SubmitPollForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          category,
           options: cleanedOptions
         })
       });
@@ -137,6 +132,14 @@ export function SubmitPollForm({
       return;
     }
 
+    if (!isAiPrepared) {
+      const prepared = await improveDraft();
+      if (prepared) {
+        setSubmitError("AI prep complete. Review if needed, then click Submit poll again.");
+      }
+      return;
+    }
+
     if (duplicateOverrideRef.current) {
       submitNow();
       return;
@@ -148,7 +151,7 @@ export function SubmitPollForm({
     }
   }
 
-  async function improveDraft() {
+  async function improveDraft(): Promise<boolean> {
     setImproveError(null);
     setIsImproving(true);
 
@@ -156,7 +159,7 @@ export function SubmitPollForm({
       const response = await fetch("/api/polls/improve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, category, options: cleanedOptions })
+        body: JSON.stringify({ title, options: cleanedOptions })
       });
 
       const payload = await response.json();
@@ -166,6 +169,8 @@ export function SubmitPollForm({
 
       setTitle(String(payload.title ?? title));
       setSummary(String(payload.summary ?? payload.description ?? summary));
+      setShowSummaryEditor(true);
+      setIsAiPrepared(true);
 
       if (Array.isArray(payload.options) && payload.options.length >= 2) {
         setOptions(payload.options.map((value: unknown) => String(value)));
@@ -188,8 +193,10 @@ export function SubmitPollForm({
       } else {
         setOptionChanges([]);
       }
+      return true;
     } catch (error) {
       setImproveError(error instanceof Error ? error.message : "Could not improve draft");
+      return false;
     } finally {
       setIsImproving(false);
     }
@@ -215,121 +222,121 @@ export function SubmitPollForm({
         <p className={statusType === "error" ? "auth-error" : "auth-success"}>{statusMessage}</p>
       ) : null}
 
-      <label>
-        Poll title
-        <input
+      <section className="submit-section">
+        <label className="submit-field">
+          <span className="submit-field-label">Poll question</span>
+          <input
           name="title"
           value={title}
-          onChange={(event) => setTitle(event.target.value)}
+          onChange={(event) => {
+            setTitle(event.target.value);
+            setIsAiPrepared(false);
+          }}
           maxLength={TITLE_MAX_LENGTH}
           required
           placeholder="Should the UK lower the voting age to 16?"
-        />
-      </label>
+          />
+        </label>
+      </section>
 
-      <label>
-        Category
-        <select name="category" value={category} onChange={(event) => setCategory(event.target.value)}>
-          {categories.map((item) => (
-            <option key={item.key} value={item.key}>
-              {item.label}
-            </option>
+      <section className="submit-section">
+        <div className="submit-options">
+          <div className="submit-options-head">
+            <p className="submit-field-label">Options</p>
+            <span className="submit-mini-pill">{cleanedOptions.length}/10 filled</span>
+          </div>
+          {options.map((value, index) => (
+            <div key={`option-${index}`} className="option-row">
+              <input
+                name="options"
+                value={value}
+                onChange={(event) => {
+                  setOptions((current) =>
+                    current.map((item, itemIndex) => (itemIndex === index ? event.target.value : item))
+                  );
+                  setIsAiPrepared(false);
+                }}
+                maxLength={OPTION_MAX_LENGTH}
+                placeholder={`Option ${index + 1}`}
+                required={index < 2}
+              />
+              {canRemoveOption ? (
+                <button
+                  type="button"
+                  className="ghost-btn"
+                  onClick={() =>
+                    setOptions((current) => current.filter((_, itemIndex) => itemIndex !== index))
+                  }
+                >
+                  Remove
+                </button>
+              ) : null}
+            </div>
           ))}
-        </select>
-      </label>
+          <div className="submit-actions-row">
+            <button
+              type="button"
+              className="ghost-btn submit-add-option-btn"
+              disabled={!canAddOption}
+              onClick={() => setOptions((current) => [...current, ""])}
+            >
+              Add option
+            </button>
+          </div>
+        </div>
+      </section>
 
-      <div className="submit-options">
-        <p>Options (2-10)</p>
-        {options.map((value, index) => (
-          <div key={`option-${index}`} className="option-row">
-            <input
-              name="options"
-              value={value}
-              onChange={(event) => {
-                setOptions((current) =>
-                  current.map((item, itemIndex) => (itemIndex === index ? event.target.value : item))
-                );
-              }}
-              maxLength={OPTION_MAX_LENGTH}
-              placeholder={`Option ${index + 1}`}
-              required={index < 2}
+      <input type="hidden" name="durationPreset" value="30d" />
+      <input type="hidden" name="endAt" value="" />
+
+      {showSummaryEditor ? (
+        <section className="submit-section">
+          <label className="submit-field">
+            <span className="submit-field-label">Summary (optional)</span>
+            <textarea
+              name="summary"
+              value={summary}
+              onChange={(event) => setSummary(event.target.value)}
+              maxLength={SUMMARY_MAX_LENGTH}
+              rows={3}
+              placeholder="AI will populate this automatically. You can edit it."
             />
-            {canRemoveOption ? (
+          </label>
+        </section>
+      ) : (
+        <input type="hidden" name="summary" value="" />
+      )}
+
+      <section className="submit-section submit-section-actions">
+        <div className="submit-actions-row submit-actions-row-main">
+          <div className="submit-actions-row">
+            {!showSummaryEditor ? (
               <button
                 type="button"
-                className="ghost-btn"
-                onClick={() =>
-                  setOptions((current) => current.filter((_, itemIndex) => itemIndex !== index))
-                }
+                className="ghost-btn submit-summary-btn"
+                onClick={() => setShowSummaryEditor(true)}
+                disabled={!title}
               >
-                Remove
+                Add/edit summary
               </button>
             ) : null}
           </div>
-        ))}
-        <div className="submit-actions-row">
           <button
             type="button"
-            className="ghost-btn"
-            disabled={!canAddOption}
-            onClick={() => setOptions((current) => [...current, ""])}
+            className="create-btn"
+            onClick={handleSubmitClick}
+            disabled={isCheckingDuplicates || isImproving || !title.trim()}
           >
-            Add option
+            {isImproving
+              ? "Preparing with AI..."
+              : isCheckingDuplicates
+                ? "Checking for duplicates..."
+                : isAiPrepared
+                  ? "Submit poll now"
+                  : "Submit poll"}
           </button>
-          <span>{cleanedOptions.length}/10 filled</span>
         </div>
-      </div>
-
-      <label>
-        Summary
-        <textarea
-          name="summary"
-          value={summary}
-          onChange={(event) => setSummary(event.target.value)}
-          maxLength={SUMMARY_MAX_LENGTH}
-          required
-          rows={4}
-          placeholder="Brief context users need before voting."
-        />
-      </label>
-
-      <label>
-        Poll duration
-        <select
-          name="durationPreset"
-          value={durationPreset}
-          onChange={(event) => setDurationPreset(event.target.value)}
-        >
-          <option value="1d">1 day</option>
-          <option value="7d">7 days</option>
-          <option value="30d">30 days</option>
-          <option value="90d">90 days</option>
-          <option value="all-time">No end date</option>
-          <option value="custom">Custom date</option>
-        </select>
-      </label>
-      {durationPreset === "custom" ? (
-        <label>
-          Custom end date
-          <input
-            type="datetime-local"
-            name="endAt"
-            value={endAt}
-            onChange={(event) => setEndAt(event.target.value)}
-          />
-        </label>
-      ) : (
-        <input type="hidden" name="endAt" value="" />
-      )}
-
-      <div className="submit-actions-row">
-          <button type="button" className="ghost-btn" onClick={improveDraft} disabled={isImproving || !title}>
-            {isImproving ? "Improving..." : "AI improve wording + summary"}
-          </button>
-        <button type="button" className="create-btn" onClick={handleSubmitClick} disabled={isCheckingDuplicates}>
-          {isCheckingDuplicates ? "Checking for duplicates..." : "Submit poll"}
-        </button>
-      </div>
+      </section>
       {duplicateError ? <p className="auth-error">{duplicateError}</p> : null}
       {submitError ? <p className="auth-error">{submitError}</p> : null}
 
@@ -346,9 +353,6 @@ export function SubmitPollForm({
       ) : null}
       <p className="submit-hint">
         AI assist is instructed to keep wording neutral, improve clarity, and preserve intended names/options.
-      </p>
-      <p className="submit-hint">
-        Politics and flagged wording go to moderation. Lower-risk polls can auto-publish.
       </p>
 
       {duplicateWarningOpen ? (

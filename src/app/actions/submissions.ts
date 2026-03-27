@@ -7,7 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   clampFutureDate,
   defaultEndDate,
-  isCategory,
+  generateFallbackSummary,
+  inferCategoryFromPollContent,
   OPTION_MAX_COUNT,
   OPTION_MIN_COUNT,
   OPTION_MAX_LENGTH,
@@ -21,6 +22,7 @@ import {
 import { shouldRequireModeration } from "@/lib/moderation/rules";
 import { findPossibleDuplicates } from "@/lib/duplicate-check";
 import { isEntityId } from "@/lib/id-validation";
+import { assistPollDraft } from "@/lib/ai/poll-assist";
 
 const SUBMISSION_SAVE_ERROR_MESSAGE = "Could not save submission right now.";
 const SUBMISSION_PUBLISH_ERROR_MESSAGE = "Could not publish poll right now.";
@@ -171,28 +173,19 @@ export async function submitPollAction(formData: FormData) {
   }
 
   const title = sanitizeText(formData.get("title"));
-  const summary = sanitizeText(formData.get("summary")) || sanitizeText(formData.get("description"));
-  const categoryRaw = sanitizeText(formData.get("category"));
+  const summaryInput = sanitizeText(formData.get("summary")) || sanitizeText(formData.get("description"));
   const options = parseOptions(formData.getAll("options"));
   const endAtRaw = sanitizeText(formData.get("endAt"));
   const durationPreset = sanitizeText(formData.get("durationPreset")) || "30d";
   const endAt = resolveEndAt(durationPreset, endAtRaw);
   const duplicateOverride = sanitizeText(formData.get("duplicateOverride")) === "1";
 
-  if (!title || !summary) {
-    toStatusMessage("error", "Title and summary are required.");
+  if (!title) {
+    toStatusMessage("error", "Title is required.");
   }
 
   if (title.length > TITLE_MAX_LENGTH) {
     toStatusMessage("error", `Title must be ${TITLE_MAX_LENGTH} characters or fewer.`);
-  }
-
-  if (summary.length > SUMMARY_MAX_LENGTH) {
-    toStatusMessage("error", `Summary must be ${SUMMARY_MAX_LENGTH} characters or fewer.`);
-  }
-
-  if (!isCategory(categoryRaw)) {
-    toStatusMessage("error", "Please choose a valid category.");
   }
 
   if (options.length < OPTION_MIN_COUNT || options.length > OPTION_MAX_COUNT) {
@@ -206,8 +199,34 @@ export async function submitPollAction(formData: FormData) {
     toStatusMessage("error", `Each option must be ${OPTION_MAX_LENGTH} characters or fewer.`);
   }
 
+  const inferredCategory = inferCategoryFromPollContent({
+    title,
+    options,
+    summary: summaryInput
+  });
+
+  let summary = summaryInput;
+  if (!summary) {
+    try {
+      const assisted = await assistPollDraft({
+        title,
+        category: inferredCategory,
+        options
+      });
+      summary = sanitizeText(assisted.summary);
+    } catch {
+      summary = "";
+    }
+  }
+  if (!summary) {
+    summary = generateFallbackSummary(title);
+  }
+  if (summary.length > SUMMARY_MAX_LENGTH) {
+    summary = summary.slice(0, SUMMARY_MAX_LENGTH).trim();
+  }
+
   const requiresModeration = shouldRequireModeration({
-    category: categoryRaw,
+    category: inferredCategory,
     title,
     summary
   });
@@ -228,7 +247,7 @@ export async function submitPollAction(formData: FormData) {
       title,
       blurb: summary,
       description: summary,
-      category_key: categoryRaw,
+      category_key: inferredCategory,
       options,
       end_at: endAt,
       status: willRequireModeration ? "pending" : "approved",
@@ -258,7 +277,7 @@ export async function submitPollAction(formData: FormData) {
       slug,
       title,
       summary,
-      categoryKey: categoryRaw,
+      categoryKey: inferredCategory,
       userId: user.id,
       endAt,
       options
