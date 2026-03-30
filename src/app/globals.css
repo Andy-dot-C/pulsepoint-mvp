@@ -532,8 +532,8 @@ h3 {
 .feed-cards-grid .poll-card .poll-title-row h2.poll-title-compact-3,
 .feed-cards-grid .poll-card .poll-title-row h2.poll-title-compact-3 a {
   display: block;
-  font-size: 14.5px;
-  line-height: 1.08;
+  font-size: 14px;
+  line-height: 1.06;
   max-height: 45px;
   overflow: hidden;
   text-overflow: unset;
@@ -2062,7 +2062,7 @@ h3 {
 }
 
 .poll-card:not(.featured-poll-card) .option-btn-line .option-btn-line-content {
-  padding: 4px 6px;
+  padding: 3px 6px;
   border-radius: 12px;
   box-sizing: border-box;
   overflow: hidden;
