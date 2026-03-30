@@ -18,6 +18,7 @@ const LOCAL_ICONS = {
   culture: "/poll-icons/culture.svg",
   hotTakes: "/poll-icons/hot-takes.svg",
   ukFlag: "/poll-icons/uk-flag.svg",
+  englandFlag: "/poll-icons/england-flag.svg",
   usFlag: "/poll-icons/us-flag.svg",
   ai: "/poll-icons/ai.svg",
   social: "/poll-icons/social.svg"
@@ -86,6 +87,23 @@ const LOGO_RULES: ImageRule[] = [
   {
     keywords: ["parliament", "uk election", "referendum", "voting age", "mps"],
     imageUrl: LOCAL_ICONS.ukFlag
+  }
+];
+
+const PRIORITY_PHOTO_RULES: ImageRule[] = [
+  {
+    keywords: [
+      "fia revise battery deployment and harvesting rules",
+      "bearman incident",
+      "bearman incident",
+      "battery deployment and harvesting rules",
+      "battery/harvesting rules"
+    ],
+    imageUrl: favicon("https://www.formula1.com")
+  },
+  {
+    keywords: ["trent alexander-arnold", "trent alexander arnold"],
+    imageUrl: LOCAL_ICONS.englandFlag
   }
 ];
 
@@ -166,6 +184,7 @@ export function pollIconImageUrl(poll: Poll): string {
     .replace(/\s+/g, " ");
 
   return (
+    matchRule(haystack, PRIORITY_PHOTO_RULES) ??
     matchRule(haystack, LOGO_RULES) ??
     matchRule(haystack, PHOTO_RULES) ??
     CATEGORY_FALLBACKS[poll.category] ??

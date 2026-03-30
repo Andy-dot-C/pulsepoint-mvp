@@ -847,12 +847,25 @@ const LOCKED_SEED_TITLES = [
   "Would you vote for a party that promised rail renationalisation?",
   "Would you support salary controls in the Premier League?",
   "Are you in favour of replacing council tax with a land-value tax?",
-  "Are you happy with Formula 1 sprint weekends being part of the calendar?"
+  "Are you happy with Formula 1 sprint weekends being part of the calendar?",
+  "Should Trent Alexander-Arnold be in the England World Cup squad?",
+  "Should the FIA revise battery/harvesting rules following the Bearman incident?"
 ];
 
 function inferCategoryFromTitle(title) {
   const lower = title.toLowerCase();
-  if (lower.includes("premier league") || lower.includes("formula 1") || lower.includes("var")) {
+  if (
+    lower.includes("premier league") ||
+    lower.includes("formula 1") ||
+    lower.includes("fia") ||
+    lower.includes("bearman") ||
+    lower.includes("battery deployment") ||
+    lower.includes("harvesting rules") ||
+    lower.includes("var") ||
+    lower.includes("world cup") ||
+    lower.includes("england squad") ||
+    lower.includes("alexander-arnold")
+  ) {
     return "sport";
   }
   return "politics";
