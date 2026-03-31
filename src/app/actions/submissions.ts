@@ -9,6 +9,7 @@ import {
   defaultEndDate,
   generateFallbackSummary,
   inferCategoryFromPollContent,
+  isCategory,
   OPTION_MAX_COUNT,
   OPTION_MIN_COUNT,
   OPTION_MAX_LENGTH,
