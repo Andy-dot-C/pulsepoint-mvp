@@ -186,11 +186,11 @@ export default async function Home({ searchParams }: HomePageProps) {
   const combinedHomePool = uniquePolls([...feed, ...featuredSource, ...investorFeed]);
   const featuredPolls = isTrendingHome
     ? orderPollsBySlugs(combinedHomePool, INVESTOR_HOME_LAYOUT.heroOrder).slice(0, 6)
-    : featuredSource.slice(0, 6);
+    : [];
   const featuredIds = new Set(featuredPolls.map((poll) => poll.id));
   const displayGridPolls = isTrendingHome
     ? orderPollsBySlugs(combinedHomePool, INVESTOR_HOME_LAYOUT.gridOrder)
-    : uniquePolls(feed).filter((poll) => !featuredIds.has(poll.id));
+    : uniquePolls(feed);
   const sectionTitles = ["Trending Now", "Top Movers", "New"] as const;
   const cardsPerSection = 6; // 3 across x 2 down
   const maxSections = 3;
@@ -210,7 +210,7 @@ export default async function Home({ searchParams }: HomePageProps) {
 
       <section className="feed-grid feed-grid-cards-3">
         <div className="feed-column">
-          {featuredPolls.length > 0 ? (
+          {isTrendingHome && featuredPolls.length > 0 ? (
             <FeaturedPollCarousel>
               {featuredPolls.map((poll, index) => {
                 return index === 0 ? (

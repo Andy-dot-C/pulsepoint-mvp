@@ -136,7 +136,6 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
       <div className="poll-top-row poll-top-row-right">
         <div className="poll-badge-row">
           {status.isClosed ? <span className="poll-state-badge poll-state-badge-closed">Closed</span> : null}
-          {poll.isTrending ? <span className="trend-badge">Trending</span> : null}
         </div>
       </div>
 

@@ -1,5 +1,6 @@
+"use client";
+
 import Link from "next/link";
-import { submitVoteAction } from "@/app/actions/votes";
 import { SharePollButton } from "@/components/share-poll-button";
 import { BookmarkToggleForm } from "@/components/bookmark-toggle-form";
 import { PollCardShell } from "@/components/poll-card-shell";
