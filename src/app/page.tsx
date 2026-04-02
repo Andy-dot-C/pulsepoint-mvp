@@ -90,31 +90,31 @@ const INVESTOR_HOME_LAYOUT = {
     "has-us-immigration-enforcement-gone-too-far-in-major-cities",
     "should-the-uk-restrict-social-media-access-for-under-16s",
     "are-us-tariffs-worth-it-if-they-raise-consumer-prices",
-    "who-would-you-vote-for-if-a-uk-general-election-were-held-tomorrow",
+    "if-a-uk-general-election-were-held-tomorrow-which-party-would-get-your-vote",
     "should-uk-commuter-rail-be-fully-renationalised",
     "should-live-var-audio-be-broadcast-during-premier-league-matches"
   ],
   gridOrder: [
-    "should-the-uk-legalise-assisted-dying-for-terminally-ill-adults",
+    "which-public-service-needs-the-biggest-overhaul-first-nhs-rail-local-councils-schools",
     "should-live-var-audio-be-broadcast-during-premier-league-matches",
+    "what-should-happen-next-on-assisted-dying-in-the-uk-legalise-now-trial-it-delay-it-or-reject-it",
     "should-the-uk-rejoin-the-eu-single-market",
     "should-trent-alexander-arnold-be-in-the-england-world-cup-squad",
-    "would-you-support-a-nationwide-ban-on-congressional-stock-trading",
+    "what-should-happen-to-congressional-stock-trading-full-ban-blind-trusts-only-tighter-disclosure-or-no-change",
     "should-the-fia-revise-batteryharvesting-rules-following-the-bearman-incident",
     "should-remote-work-remain-the-default-for-office-based-jobs",
     "would-you-vote-for-a-party-that-promised-rail-renationalisation",
-    "would-you-support-salary-controls-in-the-premier-league",
+    "who-will-win-the-next-champions-league-real-madrid-manchester-city-bayern-munich-arsenal-or-another-side",
     "are-you-in-favour-of-replacing-council-tax-with-a-land-value-tax",
     "are-you-happy-with-formula-1-sprint-weekends-being-part-of-the-calendar",
-    "would-you-support-lowering-the-uk-voting-age-to-16",
-    "do-you-think-ai-generated-content-should-be-clearly-watermarked",
+    "which-voting-age-option-feels-most-reasonable-for-the-uk-16-17-18-or-21",
+    "what-is-the-bigger-ai-risk-right-now-misinformation-job-losses-bias-cyber-misuse-or-concentration-of-power",
     "would-you-back-a-uk-sovereign-ai-investment-fund",
-    "do-you-think-wealth-taxes-should-apply-above-10m10m",
-    "do-you-think-repeat-violent-offenders-should-face-tougher-sentencing",
-    "do-you-think-digital-id-should-be-required-for-financial-accounts",
-    "would-you-support-lowering-inheritance-tax-thresholds",
+    "which-economic-issue-worries-you-most-right-now-inflation-housing-costs-jobs-taxes-or-public-debt",
+    "which-issue-matters-most-to-your-vote-right-now-immigration-cost-of-living-nhs-housing-or-crime",
+    "which-sport-is-doing-the-best-job-using-technology-in-officiating-right-now-football-tennis-cricket-rugby-or-formula-1",
     "are-you-happy-with-the-current-level-of-immigration-in-your-country",
-    "would-you-support-a-nationwide-ban-on-congressional-stock-trading"
+    "do-you-think-ai-generated-content-should-be-clearly-watermarked"
   ]
 } as const;
 
@@ -255,7 +255,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                     returnTo={returnTo}
                     showStaticCarouselControls={false}
                     maxOptions={3}
-                    className="figma-hero-native-card figma-hero-live-fixed"
+                    className="figma-hero-native-card figma-hero-live-fixed figma-hero-tight-title"
                     chartOffsetX={-34}
                     chartOffsetY={-50}
                   />

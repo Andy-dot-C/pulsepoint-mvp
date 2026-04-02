@@ -539,6 +539,13 @@ h3 {
   text-overflow: unset;
 }
 
+.feed-cards-grid .poll-card .poll-title-row h2.poll-title-compact-3.poll-title-compact-tight,
+.feed-cards-grid .poll-card .poll-title-row h2.poll-title-compact-3.poll-title-compact-tight a {
+  font-size: 13px;
+  line-height: 1.1;
+  max-height: 43px;
+}
+
 .feed-cards-grid .poll-card .option-list {
   flex: 1;
   min-height: 0;
@@ -5067,6 +5074,12 @@ form.comment-form:focus-within .create-btn {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.figma-hero-native-card.figma-hero-tight-title .figma-hero-preview-title {
+  max-width: min(56%, 590px);
+  font-size: 0.9rem;
+  letter-spacing: -0.01em;
 }
 
 .figma-hero-native-card .figma-hero-preview-left {

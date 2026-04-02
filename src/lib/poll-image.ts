@@ -92,6 +92,14 @@ const LOGO_RULES: ImageRule[] = [
 
 const PRIORITY_PHOTO_RULES: ImageRule[] = [
   {
+    keywords: ["which public service needs the biggest overhaul first", "public service", "local councils schools"],
+    imageUrl: LOCAL_ICONS.politics
+  },
+  {
+    keywords: ["assisted dying", "terminally ill", "euthanasia"],
+    imageUrl: LOCAL_ICONS.ukFlag
+  },
+  {
     keywords: [
       "fia revise battery deployment and harvesting rules",
       "bearman incident",

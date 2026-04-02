@@ -160,7 +160,7 @@ export function QuestionBankChecklist({ lockedQuestions, currentQuestions, propo
         </article>
 
         <article className="question-bank-column">
-          <h2>100 New Suggestions ({proposedItems.length})</h2>
+          <h2>New Suggestions ({proposedItems.length})</h2>
           <ul>
             {proposedItems.map((item) => (
               <li key={item.id}>

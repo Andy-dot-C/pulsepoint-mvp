@@ -74,6 +74,11 @@ function shouldUseCompactThreeLineTitle(title: string): boolean {
   return normalized.length >= 56 || maxWordLength >= 13;
 }
 
+function shouldUseExtraCompactThreeLineTitle(title: string): boolean {
+  const normalized = title.trim().replace(/\s+/g, " ");
+  return normalized.length >= 86;
+}
+
 export function PollCard({ poll, returnTo }: PollCardProps) {
   const total = totalVotes(poll);
   const status = getPollStatus(poll.endsAt);
@@ -103,6 +108,14 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
     displayTotal === 0 ? 50 : Math.round((leftVotes / Math.max(displayTotal, 1)) * 100);
   const rightSplit = Math.max(0, 100 - leftSplit);
   const compactThreeLineTitle = shouldUseCompactThreeLineTitle(poll.title);
+  const extraCompactThreeLineTitle =
+    compactThreeLineTitle && shouldUseExtraCompactThreeLineTitle(poll.title);
+  const titleClassName = [
+    compactThreeLineTitle ? "poll-title-compact-3" : null,
+    extraCompactThreeLineTitle ? "poll-title-compact-tight" : null
+  ]
+    .filter(Boolean)
+    .join(" ") || undefined;
 
   return (
     <PollCardShell
@@ -115,7 +128,7 @@ export function PollCard({ poll, returnTo }: PollCardProps) {
         <span className={`poll-icon-badge poll-icon-badge-${poll.category}`} aria-hidden="true">
           <img src={pollIconImageUrl(poll)} alt="" loading="lazy" decoding="async" />
         </span>
-        <h2 className={compactThreeLineTitle ? "poll-title-compact-3" : undefined}>
+        <h2 className={titleClassName}>
           <Link href={pollHref}>{poll.title}</Link>
         </h2>
       </div>

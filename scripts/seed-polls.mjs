@@ -209,24 +209,28 @@ function buildCommentBodies(poll, count) {
 
 const demoPolls = [
   {
-    title: "Should the UK lower the voting age to 16?",
-    blurb: "A high-engagement Westminster debate that plays well with both politics and youth audiences.",
+    title: "Which voting-age option feels most reasonable for the UK: 16, 17, 18, or 21?",
+    legacySlugs: [
+      "should-the-uk-lower-the-voting-age-to-16",
+      "would-you-support-lowering-the-uk-voting-age-to-16"
+    ],
+    blurb: "A more useful version of the voting-age debate that shows where people actually want the line drawn.",
     description:
-      "This tracks whether people think voting age reform would modernise democracy or create more political noise without real participation gains.",
+      "Tracks whether sentiment is moving toward a lower voting age, staying at 18, or pushing in the opposite direction.",
     category_key: "politics",
-    options: ["Yes", "No"],
-    biasPercentages: [57, 43],
+    options: ["16", "17", "18", "21"],
+    biasPercentages: [24, 11, 51, 14],
     createdDaysAgo: 16,
     endDays: 18,
     voteRange: [1800, 2600],
     activityProfile: "surging",
     commentSeeds: [
-      "If 16-year-olds can work and pay tax, they should have a vote.",
-      "Schools would need much better civic education for this to work well.",
-      "This would become one of the most-shared politics polls on the app.",
-      "I think turnout would be lower than people assume at first.",
-      "This is exactly the kind of issue where opinion shifts once campaign season starts.",
-      "The split between principle and practicality is what makes this interesting."
+      "This is better than a yes-no because you can see whether people are open to 17 without going all the way to 16.",
+      "Keeping it at 18 still feels like the baseline most people are comfortable with.",
+      "This is a much stronger product question because it reveals the shape of opinion, not just direction.",
+      "I can see 16 polling well in principle but 18 still winning when people have to pick one.",
+      "A four-option version like this feels much more useful for trend data.",
+      "This is exactly the kind of reform question where nuance matters."
     ]
   },
   {
@@ -251,8 +255,9 @@ const demoPolls = [
     ]
   },
   {
-    title: "Who would you vote for if a UK general election were held tomorrow?",
-    blurb: "A high-frequency benchmark poll for the homepage and any investor demo.",
+    title: "If a UK general election were held tomorrow, which party would get your vote?",
+    legacySlugs: ["who-would-you-vote-for-if-a-uk-general-election-were-held-tomorrow"],
+    blurb: "A flagship UK benchmark poll built for repeat visits, social sharing, and trend watching.",
     description:
       "A broad snapshot of immediate voting intention built for repeat visits, social sharing, and trend comparisons over time.",
     category_key: "politics",
@@ -356,24 +361,25 @@ const demoPolls = [
     ]
   },
   {
-    title: "Who will win the 2026 Champions League?",
-    blurb: "A premium sports poll that works especially well with visible trend changes over time.",
+    title: "Who will win the next Champions League: Real Madrid, Manchester City, Bayern Munich, Arsenal, or another side?",
+    legacySlugs: ["who-will-win-the-2026-champions-league"],
+    blurb: "A premium sports poll with recognisable clubs and plenty of room for momentum swings.",
     description:
-      "Tracks current confidence in Europe’s top clubs and shows momentum shifts as knockout rounds, injuries, and draw paths reshape sentiment.",
+      "Tracks confidence in Europe’s top contenders and keeps an open lane for a surprise winner as form and injuries shift.",
     category_key: "sport",
-    options: ["Arsenal", "Real Madrid", "Bayern Munich", "Paris Saint-Germain", "Inter"],
-    biasPercentages: [21, 28, 18, 20, 13],
+    options: ["Real Madrid", "Manchester City", "Bayern Munich", "Arsenal", "Another side"],
+    biasPercentages: [31, 24, 17, 16, 12],
     createdDaysAgo: 7,
     endDays: 26,
     voteRange: [1900, 3100],
     activityProfile: "event",
     commentSeeds: [
-      "This is exactly the sort of sports poll that feels alive when the graph moves.",
-      "Madrid still being feared no matter what is basically a law of football.",
-      "Arsenal polls incredibly well online, which makes this useful for demo purposes.",
-      "This kind of question is why showing only the top two options on cards works.",
-      "If PSG start rolling people, this line would move a lot in a week.",
-      "This is the sort of poll casual users can answer without reading any extra context."
+      "Madrid always poll strongly because people trust them in this competition.",
+      "City remain the obvious alternative, but Arsenal make this more interesting for UK users.",
+      "Another side is a good pressure-release option so the poll does not feel over-framed.",
+      "This should be one of the strongest non-binary sports polls on the site.",
+      "Exactly the type of question where the chart becomes more interesting as the rounds progress.",
+      "You can imagine fans checking this every week once the knockout bracket tightens."
     ]
   },
   {
@@ -692,24 +698,50 @@ const demoPolls = [
     ]
   },
   {
-    title: "Should the UK legalise assisted dying for terminally ill adults?",
-    blurb: "A major UK conscience issue with sustained cross-party public attention.",
+    title: "What should happen next on assisted dying in the UK: legalise now, trial it, delay it, or reject it?",
+    legacySlugs: ["should-the-uk-legalise-assisted-dying-for-terminally-ill-adults"],
+    blurb: "A stronger version of the assisted-dying debate that reveals how quickly people want change to happen.",
     description:
-      "Tracks public support for legal assisted dying under strict safeguards for terminally ill adults.",
+      "Measures whether people want immediate legalisation, a staged trial, a slower review process, or no change at all.",
     category_key: "politics",
-    options: ["Yes", "No", "Need stronger safeguards first"],
-    biasPercentages: [49, 29, 22],
+    options: ["Legalise now", "Trial it first", "Delay it", "Reject it"],
+    biasPercentages: [38, 29, 19, 14],
     createdDaysAgo: 6,
     endDays: 20,
     voteRange: [1900, 3100],
     activityProfile: "surging",
     commentSeeds: [
-      "This is one of the highest-engagement UK moral-policy topics available.",
-      "People often support the principle but worry about implementation safeguards.",
-      "A perfect investor demo poll because the issue is immediately legible.",
-      "Strong potential for thoughtful comments rather than just hot takes.",
-      "This should remain relevant across multiple news cycles.",
-      "Need safeguards first is likely to absorb cautious support."
+      "This is much better than yes-no because you can see the size of the cautious middle.",
+      "Trial it first feels like the most realistic swing option in a poll like this.",
+      "A really strong investor-demo question because the topic is familiar and the answers are nuanced.",
+      "You learn much more from this version than from a simple legalise-or-not frame.",
+      "This should drive thoughtful comments, not just reactive voting.",
+      "Delay it versus reject it is an important distinction that most polls miss."
+    ]
+  },
+  {
+    title: "What should happen to congressional stock trading: full ban, blind trusts only, tighter disclosure, or no change?",
+    legacySlugs: [
+      "would-you-back-a-nationwide-ban-on-congressional-stock-trading",
+      "would-you-support-a-nationwide-ban-on-congressional-stock-trading"
+    ],
+    blurb: "A clearer, more useful reform poll that shows which fix people actually prefer.",
+    description:
+      "Tracks whether voters want a full ban, a blind-trust compromise, stricter transparency, or no new rule at all.",
+    category_key: "politics",
+    options: ["Full ban", "Blind trusts only", "Tighter disclosure", "No change"],
+    biasPercentages: [43, 24, 22, 11],
+    createdDaysAgo: 9,
+    endDays: 18,
+    voteRange: [1800, 2800],
+    activityProfile: "surging",
+    commentSeeds: [
+      "This is a much better version because it shows whether people prefer a hard ban or a softer reform.",
+      "Blind trusts only feels like the establishment compromise answer.",
+      "A four-way structure gives you a far better read than a straight ban question.",
+      "This is exactly the sort of anti-corruption poll investors immediately understand.",
+      "Tighter disclosure might win more support than people assume once the arguments start.",
+      "No change being low is probably part of what makes this poll feel so decisive."
     ]
   },
   {
@@ -816,6 +848,112 @@ const demoPolls = [
       "Emergency powers always perform well when phrased clearly like this.",
       "Should produce thoughtful debate rather than purely partisan voting."
     ]
+  },
+  {
+    title: "Which issue matters most to your vote right now: immigration, cost of living, NHS, housing, or crime?",
+    blurb: "A strong political priorities poll that reveals what is really driving voter attention.",
+    description:
+      "Measures which headline issue matters most at the ballot box right now rather than asking for an abstract approval score.",
+    category_key: "politics",
+    options: ["Immigration", "Cost of living", "NHS", "Housing", "Crime"],
+    biasPercentages: [19, 29, 24, 15, 13],
+    createdDaysAgo: 7,
+    endDays: 16,
+    voteRange: [2100, 3200],
+    activityProfile: "surging",
+    commentSeeds: [
+      "This is the kind of question that tells you what the election is really about.",
+      "Cost of living and the NHS are usually close, but campaign events can change that fast.",
+      "A much stronger homepage poll than another generic approval question.",
+      "People may vote on one issue and talk about another, which makes this especially interesting.",
+      "This would work brilliantly with a trend line during a campaign.",
+      "A perfect example of why multi-option political polls are more useful than yes-no."
+    ]
+  },
+  {
+    title: "Which economic issue worries you most right now: inflation, housing costs, jobs, taxes, or public debt?",
+    blurb: "A broad macro question that feels credible, topical, and easy for users to answer instantly.",
+    description:
+      "Tracks which pressure point people feel most sharply in everyday life and where economic anxiety is concentrating.",
+    category_key: "politics",
+    options: ["Inflation", "Housing costs", "Jobs", "Taxes", "Public debt"],
+    biasPercentages: [24, 31, 12, 16, 17],
+    createdDaysAgo: 8,
+    endDays: 17,
+    voteRange: [1900, 2900],
+    activityProfile: "steady",
+    commentSeeds: [
+      "Housing costs are where the macro story becomes personal for a lot of people.",
+      "Inflation still matters, but people often answer with the thing they feel every month.",
+      "This gives you a much richer economic snapshot than a simple confidence poll.",
+      "Very investor-friendly because the categories are intuitive and comparable over time.",
+      "Good chance this splits differently by age and geography too.",
+      "This is one of those polls that feels instantly useful rather than just interesting."
+    ]
+  },
+  {
+    title: "Which public service needs the biggest overhaul first: NHS, rail, local councils, schools?",
+    blurb: "A high-recognition services poll that turns broad frustration into a readable priority ranking.",
+    description:
+      "Measures where people think reform urgency is highest across the public services they interact with most often.",
+    category_key: "politics",
+    options: ["NHS", "Rail", "Local councils", "Schools"],
+    biasPercentages: [39, 26, 13, 22],
+    createdDaysAgo: 9,
+    endDays: 19,
+    voteRange: [1800, 2800],
+    activityProfile: "steady",
+    legacySlugs: ["which-public-service-needs-the-biggest-overhaul-first-nhs-rail-local-councils-schools-or-policing"],
+    commentSeeds: [
+      "This is a really strong civic-product question because everyone has a view on at least one of these.",
+      "The NHS probably leads, but rail has the kind of daily pain that drives comments.",
+      "This feels much more useful than asking whether services are good or bad overall.",
+      "A great question for comparing regional sentiment later on.",
+      "Local councils could be the sleeper option because people notice them when things go wrong.",
+      "This is exactly the sort of ranked-priority question the site should have more of."
+    ]
+  },
+  {
+    title: "What is the bigger AI risk right now: misinformation, job losses, bias, cyber misuse, or concentration of power?",
+    blurb: "A more revealing AI question that focuses on which risk feels most urgent, not whether AI is good or bad.",
+    description:
+      "Tracks where concern is concentrating across the main AI risk narratives shaping policy, business, and public debate.",
+    category_key: "politics",
+    options: ["Misinformation", "Job losses", "Bias", "Cyber misuse", "Concentration of power"],
+    biasPercentages: [26, 22, 11, 17, 24],
+    createdDaysAgo: 6,
+    endDays: 18,
+    voteRange: [1700, 2700],
+    activityProfile: "surging",
+    commentSeeds: [
+      "This is a much better AI poll because it asks people to choose the risk they actually care about most.",
+      "Misinformation gets attention, but concentration of power is the long-term issue many people worry about.",
+      "A useful investor-demo question because it shows policy and product risk in one view.",
+      "Bias always matters, but it may underpoll against the bigger headline fears.",
+      "This should generate better discussion than a generic pro- or anti-AI question.",
+      "Exactly the kind of multi-option tech poll that makes the charts more interesting."
+    ]
+  },
+  {
+    title: "Which sport is doing the best job using technology in officiating right now: football, tennis, cricket, rugby, or Formula 1?",
+    blurb: "A broad sports-tech poll that works well because every option feels familiar and arguable.",
+    description:
+      "Measures which sport fans think has integrated officiating technology most effectively without damaging trust or flow.",
+    category_key: "sport",
+    options: ["Football", "Tennis", "Cricket", "Rugby", "Formula 1"],
+    biasPercentages: [10, 37, 24, 15, 14],
+    createdDaysAgo: 5,
+    endDays: 17,
+    voteRange: [1600, 2500],
+    activityProfile: "event",
+    commentSeeds: [
+      "Football will probably suffer here because VAR still shapes how people think about officiating tech.",
+      "Tennis feels like the benchmark because Hawkeye is so accepted.",
+      "This is a great cross-sport question because the answer says something about trust, not just fandom.",
+      "Cricket tends to poll well whenever DRS gets compared with VAR.",
+      "A really strong addition because it broadens the sports section beyond single-league questions.",
+      "Exactly the kind of multi-option sports poll that makes the dot and donut views feel worthwhile."
+    ]
   }
 ];
 
@@ -826,16 +964,16 @@ const LOCKED_SEED_TITLES = [
   "Should live VAR audio be broadcast during Premier League matches?",
   "Should remote work remain the default for office-based jobs?",
   "Should the EU delay stricter AI rules to protect competitiveness?",
-  "Should the UK legalise assisted dying for terminally ill adults?",
-  "Should the UK lower the voting age to 16?",
+  "What should happen next on assisted dying in the UK: legalise now, trial it, delay it, or reject it?",
+  "Which voting-age option feels most reasonable for the UK: 16, 17, 18, or 21?",
   "Should the UK restrict social media access for under-16s?",
   "Should UK commuter rail be fully renationalised?",
   "Should the UK adopt proportional representation for general elections?",
   "Should social media platforms verify age with mandatory ID checks?",
   "Should the UK rejoin the EU single market?",
   "Should zero-hours contracts be banned?",
-  "Would you support lowering the UK voting age to 16?",
-  "Would you back a nationwide ban on congressional stock trading?",
+  "If a UK general election were held tomorrow, which party would get your vote?",
+  "What should happen to congressional stock trading: full ban, blind trusts only, tighter disclosure, or no change?",
   "Do you think AI-generated content should be clearly watermarked?",
   "Would you back a UK sovereign AI investment fund?",
   "Do you think wealth taxes should apply above $10m/£10m?",
@@ -843,7 +981,12 @@ const LOCKED_SEED_TITLES = [
   "Do you think digital ID should be required for financial accounts?",
   "Would you support lowering inheritance-tax thresholds?",
   "Are you happy with the current level of immigration in your country?",
-  "Would you support a nationwide ban on congressional stock trading?",
+  "Which issue matters most to your vote right now: immigration, cost of living, NHS, housing, or crime?",
+  "Which economic issue worries you most right now: inflation, housing costs, jobs, taxes, or public debt?",
+  "Which public service needs the biggest overhaul first: NHS, rail, local councils, schools?",
+  "What is the bigger AI risk right now: misinformation, job losses, bias, cyber misuse, or concentration of power?",
+  "Which sport is doing the best job using technology in officiating right now: football, tennis, cricket, rugby, or Formula 1?",
+  "Who will win the next Champions League: Real Madrid, Manchester City, Bayern Munich, Arsenal, or another side?",
   "Would you vote for a party that promised rail renationalisation?",
   "Would you support salary controls in the Premier League?",
   "Are you in favour of replacing council tax with a land-value tax?",
@@ -927,6 +1070,39 @@ const seededPolls = LOCKED_SEED_TITLES.map((title, index) => {
   if (existing) return existing;
   return buildGeneratedPoll(title, index);
 });
+
+function collectFlagValues(flag) {
+  const values = [];
+  for (let index = 0; index < process.argv.length; index += 1) {
+    if (process.argv[index] !== flag) continue;
+    const next = process.argv[index + 1];
+    if (next && !next.startsWith("--")) {
+      values.push(next);
+    }
+  }
+  return values;
+}
+
+const onlyFilters = [...collectFlagValues("--only-title"), ...collectFlagValues("--only-slug")];
+const onlyFilterSet = new Set(onlyFilters.map((value) => value.trim()).filter(Boolean));
+const activeSeededPolls =
+  onlyFilterSet.size === 0
+    ? seededPolls
+    : seededPolls.filter((poll) => {
+        const currentSlug = slugify(poll.title);
+        const legacySlugs = poll.legacySlugs ?? [];
+        return onlyFilterSet.has(poll.title) || onlyFilterSet.has(currentSlug) || legacySlugs.some((value) => onlyFilterSet.has(value));
+      });
+
+if (onlyFilterSet.size > 0) {
+  const matchedFilters = new Set(
+    activeSeededPolls.flatMap((poll) => [poll.title, slugify(poll.title), ...(poll.legacySlugs ?? [])])
+  );
+  const missing = [...onlyFilterSet].filter((value) => !matchedFilters.has(value));
+  if (missing.length > 0) {
+    throw new Error(`Unknown poll filters: ${missing.join(", ")}`);
+  }
+}
 
 const commentUpvotePresets = [
   [42, 33, 28, 21, 18, 15, 12, 10, 8, 6, 5, 4],
@@ -1129,6 +1305,37 @@ async function deleteObsoleteSeedPolls(nextSlugs) {
   }
 }
 
+async function findExistingSeedPoll(poll) {
+  const matchSlugs = [slugify(poll.title), ...(poll.legacySlugs ?? [])];
+  const { data, error } = await supabase
+    .from("polls")
+    .select("id,slug")
+    .eq("source_type", "admin_seed")
+    .in("slug", matchSlugs);
+
+  if (error) {
+    throw new Error(`Failed finding existing poll for ${poll.title}: ${error.message}`);
+  }
+
+  if (!data || data.length === 0) {
+    return null;
+  }
+
+  const preferred = data.find((row) => row.slug === slugify(poll.title)) ?? data[0];
+  const extras = data.filter((row) => row.id !== preferred.id);
+
+  if (extras.length > 0) {
+    const extraIds = extras.map((row) => row.id);
+    await clearSeededPollDependencies(extraIds);
+    const { error: deletePollsError } = await supabase.from("polls").delete().in("id", extraIds);
+    if (deletePollsError) {
+      throw new Error(`Failed deleting duplicate legacy polls for ${poll.title}: ${deletePollsError.message}`);
+    }
+  }
+
+  return preferred;
+}
+
 async function seedVotesForPoll({ pollId, optionRows, poll, profileIds }) {
   const [minVotes, maxVotes] = poll.voteRange;
   const targetVotes = randomInt(minVotes, maxVotes);
@@ -1318,44 +1525,52 @@ if (profileIds.length < 400) {
   throw new Error("Not enough demo profiles to seed varied demo activity.");
 }
 
-const nextSlugs = new Set(seededPolls.map((poll) => slugify(poll.title)));
-await deleteObsoleteSeedPolls(nextSlugs);
+const nextSlugs = new Set(activeSeededPolls.map((poll) => slugify(poll.title)));
+if (onlyFilterSet.size === 0) {
+  await deleteObsoleteSeedPolls(nextSlugs);
+}
 
-for (const poll of seededPolls) {
+for (const poll of activeSeededPolls) {
   const slug = slugify(poll.title);
   const createdAt = new Date(Date.now() - poll.createdDaysAgo * 24 * 60 * 60 * 1000).toISOString();
   const endAt = new Date(Date.now() + poll.endDays * 24 * 60 * 60 * 1000).toISOString();
+  const existingPoll = await findExistingSeedPoll(poll);
+  let pollId = existingPoll?.id ?? null;
 
-  const { data: pollRow, error: pollErr } = await supabase
-    .from("polls")
-    .upsert(
-      {
-        slug,
-        title: poll.title,
-        blurb: poll.blurb,
-        description: buildDetailDescription(poll),
-        category_key: poll.category_key,
-        status: "published",
-        source_type: "admin_seed",
-        start_at: createdAt,
-        end_at: endAt,
-        created_at: createdAt
-      },
-      { onConflict: "slug" }
-    )
-    .select("id")
-    .single();
+  if (!pollId) {
+    const { data: pollRow, error: pollErr } = await supabase
+      .from("polls")
+      .upsert(
+        {
+          slug,
+          title: poll.title,
+          blurb: poll.blurb,
+          description: buildDetailDescription(poll),
+          category_key: poll.category_key,
+          status: "published",
+          source_type: "admin_seed",
+          start_at: createdAt,
+          end_at: endAt,
+          created_at: createdAt
+        },
+        { onConflict: "slug" }
+      )
+      .select("id")
+      .single();
 
-  if (pollErr) {
-    throw new Error(`Poll upsert failed for ${poll.title}: ${pollErr.message}`);
+    if (pollErr) {
+      throw new Error(`Poll upsert failed for ${poll.title}: ${pollErr.message}`);
+    }
+
+    pollId = pollRow.id;
+  } else {
+    await clearSeededPollDependencies([pollId]);
   }
-
-  const pollId = pollRow.id;
-  await clearSeededPollDependencies([pollId]);
 
   const { error: pollRefreshError } = await supabase
     .from("polls")
     .update({
+      slug,
       title: poll.title,
       blurb: poll.blurb,
       description: buildDetailDescription(poll),
